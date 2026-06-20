@@ -1,9 +1,10 @@
 
 from PySide6.QtWidgets import QMainWindow, QTextEdit, QToolBar, QFileDialog, QMenu, QPushButton, QWidget, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy
-from PySide6.QtGui import QAction, QIntValidator, QGuiApplication, QIcon
-from PySide6.QtCore import QTimer, Qt, QSize
+from PySide6.QtGui import QAction, QIntValidator, QGuiApplication, QIcon, QPainter, QColor
+from PySide6.QtCore import QTimer, Qt, QSize, QRect
 from PySide6.QtWebEngineCore import QWebEnginePage
-from PySide6.QtGui import QPdfWriter, QPageLayout, QPageSize, QCursor
+from PySide6.QtGui import QPageLayout, QPageSize, QCursor
+from PySide6.QtPrintSupport import QPrinter
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -48,7 +49,7 @@ class MainWindow(QMainWindow):
         save_as_option.triggered.connect(self.save_as)
         
         open_option = file_menu.addAction("Open")
-        open_option.triggered.connect(self.open)
+        open_option.triggered.connect(self.open_file)
 
         export = file_menu.addAction("Export")
         export.triggered.connect(self.export_file)
@@ -122,7 +123,7 @@ class MainWindow(QMainWindow):
                     data = self.editor.toPlainText()
                 file.write(data)
 
-    def open(self):
+    def open_file(self):
         file_name, format_filter = QFileDialog.getOpenFileName(self, "Open", "", "Kitab File (*.ktb);;Text File (*.txt)")
         if not file_name:
             return
@@ -132,7 +133,13 @@ class MainWindow(QMainWindow):
                     data = file.read()
                     self.editor.setHtml(data)
                 elif format_filter == "Text File (*.txt)":
-                    data = self.editor.toPlainText()
+                    data = file.read()
+                    self.editor.setPlainText(data)
+
+                self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
+                total_pages = self.editor.document().pageCount()
+                self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
+                
 
 
     def export_file(self):
@@ -140,15 +147,10 @@ class MainWindow(QMainWindow):
         if not file_name:
             return
         else:
-            pdf_writer = QPdfWriter(file_name)
-            
-            # 2. Force structural A4 paper layout scaling so content fits correctly
-            pdf_writer.setPageSize(QPageSize.PageSizeId.A4)
-            pdf_writer.setPageMargins(QPageLayout.MarginsF(10, 10, 10, 10), QPageLayout.Unit.Millimeter)
-            
-            # 3. Synchronously push the text document data directly into the renderer engine
-            self.editor.document().print_(pdf_writer)    
-    
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setOutputFormat(QPrinter.PdfFormat)
+            printer.setOutputFileName(file_name)
+            self.editor.print_(printer)
 
     def shortcuts(self):
 
@@ -175,8 +177,11 @@ class MainWindow(QMainWindow):
 
     def sync_font(self):
             if not self.editor.textCursor().hasSelection():
-                font = self.editor.currentFont().pointSize()
-                self.font_size_menu.setCurrentText(str(font))
+                font_size = self.editor.currentFont().pointSize()
+                self.font_size_menu.setCurrentText(str(font_size))
+                
+                bold_status = self.editor.currentFont().bold()
+                self.bold_button.setChecked(bold_status)
 
     def change_font_size(self):
         self.font_size = int(self.font_size_menu.currentText())
@@ -185,6 +190,8 @@ class MainWindow(QMainWindow):
         self.editor.setCurrentFont(font)
 
         self.view.viewport().setFocus()
+
+    
 
     def toggle_bold(self):
         font = self.editor.currentFont()
@@ -204,7 +211,7 @@ class Editor(QTextEdit):
         self.document().setDocumentMargin(20*(96/25.4)) #mm to pt (inch is 72 pt and is 25.4mm)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         
-        self.setStyleSheet("QTextEdit {background-color: white; color: black;}")
+        self.setStyleSheet("QTextEdit {background-color: white; color: black; border: none;}")
 
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -216,12 +223,46 @@ class Editor(QTextEdit):
         self.textChanged.connect(self.printinfo)
 
     def printinfo(self):
-        print(self.document().pageCount())
+        total_pages = self.document().pageCount()
+        print(total_pages)
         
     def check_page_limit(self):
-        self.setFixedSize(self.width(), self.document().pageCount() * self.base_height)
+        total_pages = self.document().pageCount()
+        self.setFixedSize(self.width(), total_pages * self.base_height)
         self.document().setPageSize(QSize(self.base_width, self.base_height))
         
+    def paintEvent(self, event):
+        """
+        Intercepts the paint engine to draw white sheets of paper 
+        separated by distinct grey visual gaps over the widget background.
+        """
+        painter = QPainter(self.viewport())
+        
+        # 1. Total dimensions to keep track of
+        total_pages = self.document().pageCount()
+        gap_height = 5  # The thickness of the visual separator gap (in pixels)
+        
+        # 2. Draw a clean white background rectangle for each page sheet
+        for page_index in range(total_pages):
+            # Calculate top coordinate where this specific page sheet starts
+            page_top = page_index * self.base_height
+            
+            # The printable area of the sheet (shrunk slightly at the bottom to form the gap)
+            sheet_rect = QRect(0, page_top, self.width(), self.base_height - gap_height)
+            
+            # Paint the physical paper sheet white
+            painter.fillRect(sheet_rect, QColor("white"))
+            
+            # Paint the gap area between pages a distinctive window-grey color
+            if page_index < total_pages - 1:
+                gap_rect = QRect(0, page_top + (self.base_height - gap_height), self.width(), gap_height)
+                painter.fillRect(gap_rect, QColor("#1e1e1e")) # Visual page separator bar
+        
+        painter.end()
+        
+        # 3. Allow standard Qt text rendering to draw your typed words cleanly over our painted sheets
+        super().paintEvent(event)
+
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.RightButton:
             menu = QMenu()
