@@ -290,6 +290,7 @@ class MainWindow(QMainWindow):
         font = self.editor.currentFont()
         font.setPointSize(self.font_size)
         self.editor.setCurrentFont(font)
+        self.editor.setFont(font)
 
         self.view.viewport().setFocus()
 
