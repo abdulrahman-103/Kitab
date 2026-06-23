@@ -1,0 +1,2 @@
+- name: Build executables or extension modules from Python projects
+  uses: Nuitka/Nuitka-Action@v1.3
