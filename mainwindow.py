@@ -1,9 +1,8 @@
 
-from PySide6.QtWidgets import QMainWindow, QTextEdit, QToolBar, QFileDialog, QMenu, QPushButton, QWidget, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy
-from PySide6.QtGui import QAction, QIntValidator, QGuiApplication, QIcon, QPainter, QColor
-from PySide6.QtCore import QTimer, Qt, QSize, QRect, QMarginsF
-from PySide6.QtGui import QPageLayout, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QShortcut, QKeySequence, QTextCursor, QTextBlockFormat
+from PySide6.QtWidgets import QMainWindow, QTextEdit, QToolBar, QFileDialog, QMenu, QPushButton, QWidget, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup
+from PySide6.QtGui import QAction, QIntValidator, QGuiApplication, QIcon, QPainter, QColor, QPageLayout, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QShortcut, QKeySequence, QTextCursor, QTextBlockFormat
 from PySide6.QtPrintSupport import QPrinter
+from PySide6.QtCore import QTimer, Qt, QSize, QRect, QMarginsF
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
 import base64
@@ -40,12 +39,15 @@ class MainWindow(QMainWindow):
         
         self.scene.addWidget(self.editor)
         self.view = QGraphicsView(self.scene)
-        self.view.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.view.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.view.setStyleSheet("background-color: #1e1e1e;")
         self.view.centerOn(self.editor.width() / 2, 0)
         
         self.setCentralWidget(self.view)
+
         self.editor.cursorPositionChanged.connect(self.sync_font)
+        self.editor.textChanged.connect(self.sync_font)
+
         self.zoom_factor = resolution.height() / self.editor.height()
         self.view.scale(self.zoom_factor, self.zoom_factor)
         self.view.viewport().installEventFilter(self)
@@ -56,6 +58,7 @@ class MainWindow(QMainWindow):
         if len(sys.argv) == 2:
             self.file_path = sys.argv[1]
             print(self.file_path[-3:])
+            self.editor.blockSignals(True)
             with open(self.file_path, "r", encoding="utf-8") as file:
                 if self.file_path[-3:] == "ktb":
                     self.format_filter = "Kitab File (*.ktb)"
@@ -71,6 +74,7 @@ class MainWindow(QMainWindow):
                 self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
                 self.file_name = Path(self.file_path).name
                 self.setWindowTitle(f"{self.file_name}  –  Kitab")
+            self.editor.blockSignals(False)
                 
         
     def add_menubar(self):
@@ -140,7 +144,7 @@ class MainWindow(QMainWindow):
         self.align_center_button.setFixedSize(self.bold_button.sizeHint().height()*1.5, self.bold_button.sizeHint().height())
         self.align_center_button.setCheckable(True)
         self.align_center_button.setStyleSheet("font-size: 18pt")
-        self.align_center_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignCenter))
+        self.align_center_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignHCenter))
         toolbar.addWidget(self.align_center_button)
 
         self.align_right_button = QPushButton("→", self)
@@ -149,6 +153,11 @@ class MainWindow(QMainWindow):
         self.align_right_button.setStyleSheet("font-size: 18pt")
         self.align_right_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignRight))
         toolbar.addWidget(self.align_right_button)
+        self.alignment_group = QButtonGroup(self)
+        self.alignment_group.setExclusive(True)
+        self.alignment_group.addButton(self.align_left_button)
+        self.alignment_group.addButton(self.align_center_button)
+        self.alignment_group.addButton(self.align_right_button)
 
         self.addToolBar(toolbar)
 
@@ -223,6 +232,7 @@ class MainWindow(QMainWindow):
                 self.setWindowTitle(f"{self.file_name}  –  Kitab")
 
     def open_file(self):
+        self.editor.blockSignals(True)
         self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", "", "Kitab File (*.ktb);;Text File (*.txt)")
         if not self.file_path:
             return
@@ -240,6 +250,7 @@ class MainWindow(QMainWindow):
                 self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
                 self.file_name = Path(self.file_path).name
                 self.setWindowTitle(f"{self.file_name}  –  Kitab")
+        self.editor.blockSignals(False)
                 
 
 
@@ -282,6 +293,9 @@ class MainWindow(QMainWindow):
 
         self.view.viewport().setFocus()
 
+
+
+
     def sync_font(self):
         if not self.editor.textCursor().hasSelection():
             font_size = self.editor.currentFont().pointSize()
@@ -296,20 +310,28 @@ class MainWindow(QMainWindow):
             cursor = self.editor.textCursor()
             block_format = cursor.blockFormat()
             alignment_status = block_format.alignment()
-            match alignment_status:
-                case Qt.AlignmentFlag.AlignLeft:
-                    self.align_left_button.setChecked(True)
-                    self.align_center_button.setChecked(False)
-                    self.align_right_button.setChecked(False)
-                case Qt.AlignmentFlag.AlignCenter:
-                    self.align_left_button.setChecked(False)
-                    self.align_center_button.setChecked(True)
-                    self.align_right_button.setChecked(False)
-                case Qt.AlignmentFlag.AlignRight:
-                    self.align_left_button.setChecked(False)
-                    self.align_center_button.setChecked(False)
-                    self.align_right_button.setChecked(True)
 
+            print(alignment_status)
+            if alignment_status == (Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute) or alignment_status == (Qt.AlignmentFlag.AlignLeft):
+                self.align_left_button.setChecked(True)
+            elif alignment_status == (Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignAbsolute) or alignment_status == (Qt.AlignmentFlag.AlignHCenter):
+                self.align_center_button.setChecked(True)
+            elif alignment_status == (Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignAbsolute) or alignment_status == (Qt.AlignmentFlag.AlignRight):
+                self.align_right_button.setChecked(True)
+            else:
+                text = cursor.block().text().strip()
+                if text:
+                    first_char = text[0]
+                    is_arabic = '\u0600' <= first_char <= '\u06FF' or '\u0750' <= first_char <= '\u077F'
+                else:
+                    is_arabic = False
+                    
+                if is_arabic:
+                    self.align_right_button.setChecked(True)
+                else:
+                    self.align_left_button.setChecked(True)
+                
+            
     def toggle_bold(self):
         font = self.editor.currentFont()
         font.setBold(not font.bold())
@@ -325,24 +347,20 @@ class MainWindow(QMainWindow):
         self.view.viewport().setFocus()
 
     def align(self, alignment):
-        cursor = self.editor.textCursor()
-        block_format = cursor.blockFormat()
-        block_format.setAlignment(alignment)
-        cursor.mergeBlockFormat(block_format)
-        self.view.viewport().setFocus()
         match alignment:
                 case Qt.AlignmentFlag.AlignLeft:
                     self.align_left_button.setChecked(True)
-                    self.align_center_button.setChecked(False)
-                    self.align_right_button.setChecked(False)
-                case Qt.AlignmentFlag.AlignCenter:
-                    self.align_left_button.setChecked(False)
+                case Qt.AlignmentFlag.AlignHCenter:
                     self.align_center_button.setChecked(True)
-                    self.align_right_button.setChecked(False)
                 case Qt.AlignmentFlag.AlignRight:
-                    self.align_left_button.setChecked(False)
-                    self.align_center_button.setChecked(False)
                     self.align_right_button.setChecked(True)
+        cursor = self.editor.textCursor()
+        block_format = cursor.blockFormat()
+        alignment = alignment | Qt.AlignmentFlag.AlignAbsolute
+        block_format.setAlignment(alignment)
+        block_format.setProperty(0x010000, True) 
+        cursor.mergeBlockFormat(block_format)
+        self.view.viewport().setFocus()
 
 class Editor(QTextEdit):
     def __init__(self, main_window):
@@ -367,6 +385,13 @@ class Editor(QTextEdit):
         self.document().setDocumentMargin(20*(96/25.4)) #mm to pt (inch is 72 pt and is 25.4mm)
         self.page_count = self.document().pageCount()
         
+
+        from PySide6.QtGui import QTextOption
+        text_option = self.document().defaultTextOption()
+        text_option.setFlags(text_option.flags() | QTextOption.Flag.IncludeTrailingSpaces)
+        self.document().setDefaultTextOption(text_option)
+
+
 
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setStyleSheet("QTextEdit {background-color: white; color: black; border: none;}")
