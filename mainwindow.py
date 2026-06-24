@@ -1,8 +1,8 @@
 
-from PySide6.QtWidgets import QMainWindow, QTextEdit, QToolBar, QFileDialog, QMenu, QPushButton, QWidget, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup
+from PySide6.QtWidgets import QMainWindow, QTextEdit, QToolBar, QFileDialog, QMenu, QPushButton, QWidget, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog
 from PySide6.QtGui import QAction, QIntValidator, QGuiApplication, QIcon, QPainter, QColor, QPageLayout, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QShortcut, QKeySequence, QTextCursor, QTextBlockFormat
 from PySide6.QtPrintSupport import QPrinter
-from PySide6.QtCore import QTimer, Qt, QSize, QRect, QMarginsF
+from PySide6.QtCore import QTimer, Qt, QSize, QRect, QMarginsF, QElapsedTimer, QRectF
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
 import base64
@@ -81,6 +81,13 @@ class MainWindow(QMainWindow):
 
         file_menu = menubar.addMenu("File")
 
+        new_option = file_menu.addAction("New")
+        new_option.triggered.connect(self.new)
+        new_option.setShortcut("Ctrl+N")
+
+        open_option = file_menu.addAction("Open")
+        open_option.triggered.connect(self.open_file)
+        open_option.setShortcut("Ctrl+O")
 
         save_option = file_menu.addAction("Save")
         save_option.triggered.connect(self.save)
@@ -89,9 +96,6 @@ class MainWindow(QMainWindow):
         save_as_option = file_menu.addAction("Save As")
         save_as_option.triggered.connect(self.save_as)
         save_as_option.setShortcut("Ctrl+Shift+S")
-        
-        open_option = file_menu.addAction("Open")
-        open_option.triggered.connect(self.open_file)
 
         export = file_menu.addAction("Export")
         export.triggered.connect(self.export_file)
@@ -197,6 +201,12 @@ class MainWindow(QMainWindow):
             if not self.file_path:
                 return
             else:
+                saving = QProgressDialog("Saving...", None, 0, 0, self)
+                saving.setWindowTitle("Saving...")
+                saving.setWindowModality(Qt.WindowModality.WindowModal)
+                save_timer = QElapsedTimer()
+                save_timer.start()
+                saving.show()
                 with open(self.file_path, "w", encoding="utf-8") as file:
                     if self.format_filter == "Kitab File (*.ktb)":
                         data = self.editor.toHtml()
@@ -205,19 +215,45 @@ class MainWindow(QMainWindow):
                     file.write(data)
                     self.file_name = Path(self.file_path).name
                     self.setWindowTitle(f"{self.file_name}  –  Kitab")
+                time_taken = save_timer.elapsed()
+                minimum_time = 500
+                if time_taken >= minimum_time:
+                    saving.close()
+                else:
+                    remaining_time = minimum_time - time_taken
+                    QTimer.singleShot(remaining_time, saving.close)
         else:
+            saving = QProgressDialog("Saving...", None, 0, 0, self)
+            saving.setWindowTitle("Saving...")
+            saving.setWindowModality(Qt.WindowModality.WindowModal)
+            save_timer = QElapsedTimer()
+            save_timer.start()
+            saving.show()
             with open(self.file_path, "w", encoding="utf-8") as file:
                 if self.format_filter == "Kitab File (*.ktb)":
                     data = self.editor.toHtml()
                 elif self.format_filter == "Text File (*.txt)":
                     data = self.editor.toPlainText()
                 file.write(data)
+            time_taken = save_timer.elapsed()
+            minimum_time = 500
+            if time_taken >= minimum_time:
+                saving.close()
+            else:
+                remaining_time = minimum_time - time_taken
+                QTimer.singleShot(remaining_time, saving.close)
 
 
 
     def save_as(self):
         file_path, format_filter = self.file_path, self.format_filter
         self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", "", "Kitab File (*.ktb);;Text File (*.txt)")
+        saving = QProgressDialog("Saving...", None, 0, 0, self)
+        saving.setWindowTitle("Saving...")
+        saving.setWindowModality(Qt.WindowModality.WindowModal)
+        save_timer = QElapsedTimer()
+        save_timer.start()
+        saving.show()
         if not self.file_path:
             self.file_path, self.format_filter = file_path, format_filter
         else:
@@ -229,6 +265,20 @@ class MainWindow(QMainWindow):
                 file.write(data)
                 self.file_name = Path(self.file_path).name
                 self.setWindowTitle(f"{self.file_name}  –  Kitab")
+        time_taken = save_timer.elapsed()
+        minimum_time = 500
+        if time_taken >= minimum_time:
+            saving.close()
+        else:
+            remaining_time = minimum_time - time_taken
+            QTimer.singleShot(remaining_time, saving.close)
+
+    def new(self):
+        self.setWindowTitle("Kitab")
+        self.file_path = None
+        self.format_filter = None
+        self.file_name = None
+        self.editor.clear()
 
     def open_file(self):
         self.editor.blockSignals(True)
@@ -258,10 +308,23 @@ class MainWindow(QMainWindow):
         if not self.file_path:
             return
         else:
+            exporting = QProgressDialog("Exporting...", None, 0, 0, self)
+            exporting.setWindowTitle("Exporting...")
+            exporting.setWindowModality(Qt.WindowModality.WindowModal)
+            export_timer = QElapsedTimer()
+            export_timer.start()
+            exporting.show()
             pdf_writer = QPdfWriter(self.file_path)
             pdf_writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
             document = self.editor.document()
             document.print_(pdf_writer)
+            time_taken = export_timer.elapsed()
+            minimum_time = 500
+            if time_taken >= minimum_time:
+                exporting.close()
+            else:
+                remaining_time = minimum_time - time_taken
+                QTimer.singleShot(remaining_time, exporting.close)
 
     def shortcuts(self):
         #fullscreen
@@ -422,7 +485,6 @@ class Editor(QTextEdit):
         cursor.movePosition(QTextCursor.MoveOperation.Left, QTextCursor.MoveMode.KeepAnchor, 1)
         last_char_index = cursor.position()
 
-        from PySide6.QtCore import QRectF
         self.page_count = self.document().pageCount()
         self.setFixedSize(self.width(), self.page_count * self.base_height)
         self.main_window.scene.setSceneRect(QRectF(self.rect()))
