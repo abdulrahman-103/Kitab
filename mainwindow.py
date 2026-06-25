@@ -602,29 +602,23 @@ class Editor(QTextEdit):
     def paintEvent(self, event):
         painter = QPainter(self.viewport())
         
-        # 1. Total dimensions to keep track of
         total_pages = self.document().pageCount()
-        gap_height = 5  # The thickness of the visual separator gap (in pixels)
+        gap_height = 5  #The thickness of the gap (in pixels)
         
-        # 2. Draw a clean white background rectangle for each page sheet
         for page_index in range(total_pages):
-            # Calculate top coordinate where this specific page sheet starts
             page_top = page_index * self.base_height
-            
-            # The printable area of the sheet (shrunk slightly at the bottom to form the gap)
+        
             sheet_rect = QRect(0, page_top, self.width(), self.base_height - gap_height)
             
-            # Paint the physical paper sheet white
-            painter.fillRect(sheet_rect, QColor("white"))
+            painter.fillRect(sheet_rect, QColor("white")) #draw page
             
-            # Paint the gap area between pages a distinctive window-grey color
             if page_index < total_pages - 1:
                 gap_rect = QRect(0, page_top + (self.base_height - gap_height), self.width(), gap_height)
-                painter.fillRect(gap_rect, QColor("#1e1e1e")) # Visual page separator bar
+                painter.fillRect(gap_rect, QColor("#1e1e1e")) #draw gap
         
         painter.end()
         
-        # 3. Allow standard Qt text rendering to draw your typed words cleanly over our painted sheets
+        #draw text
         super().paintEvent(event)
     #############################
 
