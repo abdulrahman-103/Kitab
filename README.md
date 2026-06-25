@@ -12,7 +12,6 @@ It can save as .ktb format (kitab file format) and export to pdf.
 bugs:
 1. the visual gap between pages eats 5 pixels off of the bottom of the pages.
 2. optimization of viewing system (instead of making a very long editor i need to take small chunks of the document and scroll through it to not crash)
-3. fix pasting text (sometimes pasted text looks weird)
  
 features to add:
 1. an insert menu that has (quran, images, tables and charts (matplotlib))
@@ -28,6 +27,7 @@ features to add:
 11. Improve zooming system (anchor and unify resolutions)
 12. paginated html export (export as html where the html file has pages and looks like a pdf and adapts to screen resolution)
 13. تعريب
+14. add a clear formatting button
 
 
 
