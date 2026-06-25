@@ -1,4 +1,5 @@
 <img width="960" height="504" alt="Screenshot 2026-06-25 213709" src="https://github.com/user-attachments/assets/260e02eb-bb3a-4052-a75c-ac4864a00b6c" />
+
 معالج نصوص مكتوب بمكتبة qt (pyside6).
 بديل خفيف وبسيط لlibreoffice write وmicrosoft word.
 يستطيع حفظ المستند بصيغة ktb (صيغة ملفات كتاب) وتصدير ملفات الpdf.
