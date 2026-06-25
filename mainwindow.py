@@ -1,6 +1,6 @@
 
-from PySide6.QtWidgets import QMainWindow, QTextEdit, QToolBar, QFileDialog, QMenu, QPushButton, QWidget, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog
-from PySide6.QtGui import QAction, QIntValidator, QGuiApplication, QIcon, QPainter, QColor, QPageLayout, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QShortcut, QKeySequence, QTextCursor, QTextBlockFormat
+from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QWidget, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog
+from PySide6.QtGui import QAction, QIntValidator, QGuiApplication, QIcon, QPainter, QColor, QPageLayout, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QShortcut, QKeySequence, QTextCursor, QTextBlockFormat, QFont, QTextCharFormat
 from PySide6.QtPrintSupport import QPrinter
 from PySide6.QtCore import QTimer, Qt, QSize, QRect, QMarginsF, QElapsedTimer, QRectF
 from PySide6.QtWebEngineCore import QWebEnginePage
@@ -8,12 +8,14 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 import base64
 import sys
 from pathlib import Path
-
+import asyncio
+import time
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        open_with_commandline = False
         app = QApplication.instance()
         resolution = app.primaryScreen().availableSize()
         self.resize(resolution.width()/2, resolution.height())
@@ -55,6 +57,7 @@ class MainWindow(QMainWindow):
 
         #opening file with commandline
         if len(sys.argv) == 2:
+            open_with_commandline = True
             self.file_path = sys.argv[1]
             print(self.file_path[-3:])
             self.editor.blockSignals(True)
@@ -74,7 +77,11 @@ class MainWindow(QMainWindow):
                 self.file_name = Path(self.file_path).name
                 self.setWindowTitle(f"{self.file_name}  –  Kitab")
             self.editor.blockSignals(False)
-                
+        self.view.viewport().setFocus()
+        if not open_with_commandline:
+            self.editor.setFocus()
+            self.sync_font()
+        
         
     def add_menubar(self):
         menubar = self.menuBar()
@@ -120,6 +127,13 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.font_size_menu)
         toolbar.addSeparator()
 
+        self.color_button = QPushButton("C", self)
+        self.color_button.setFixedSize(self.color_button.sizeHint().height()*1.5, self.color_button.sizeHint().height())
+        self.color_button.setStyleSheet("font-weight: bold; background-color: black")
+        self.color_button.clicked.connect(self.font_color)
+        toolbar.addWidget(self.color_button)
+        toolbar.addSeparator()
+
         self.bold_button = QPushButton("B", self)
         self.bold_button.setFixedSize(self.bold_button.sizeHint().height()*1.5, self.bold_button.sizeHint().height())
         self.bold_button.setCheckable(True)
@@ -134,6 +148,14 @@ class MainWindow(QMainWindow):
         self.strikethrough_button.setStyleSheet("font-weight: bold")
         self.strikethrough_button.clicked.connect(self.toggle_strikethrough)
         toolbar.addWidget(self.strikethrough_button)
+        toolbar.addSeparator()
+
+        self.underline_button = QPushButton("—", self)
+        self.underline_button.setFixedSize(self.underline_button.sizeHint().height()*1.5, self.underline_button.sizeHint().height())
+        self.underline_button.setCheckable(True)
+        self.underline_button.setStyleSheet("font-weight: bold; text-align: bottom;")
+        self.underline_button.clicked.connect(self.toggle_underline)
+        toolbar.addWidget(self.underline_button)
         toolbar.addSeparator()
 
         self.align_left_button = QPushButton("←", self)
@@ -352,7 +374,6 @@ class MainWindow(QMainWindow):
         font = self.editor.currentFont()
         font.setPointSize(self.font_size)
         self.editor.setCurrentFont(font)
-        self.editor.setFont(font)
 
         self.view.viewport().setFocus()
 
@@ -364,11 +385,16 @@ class MainWindow(QMainWindow):
             font_size = self.editor.currentFont().pointSize()
             self.font_size_menu.setCurrentText(str(font_size))
             
+            self.color_button.setStyleSheet(f"font-weight: bold; background-color: {self.editor.textColor().name()}")
+
             bold_status = self.editor.currentFont().bold()
             self.bold_button.setChecked(bold_status)
 
             strikethrough_status = self.editor.currentFont().strikeOut()
             self.strikethrough_button.setChecked(strikethrough_status)
+
+            underline_status = self.editor.currentFont().underline()
+            self.underline_button.setChecked(underline_status)
 
             cursor = self.editor.textCursor()
             block_format = cursor.blockFormat()
@@ -394,8 +420,22 @@ class MainWindow(QMainWindow):
                 else:
                     self.align_left_button.setChecked(True)
                 
-            
+    
+    def font_color(self):
+        dialog = QColorDialog()
+        labels = dialog.findChildren(QLabel)
+        for label in labels:
+            if label.text() == "&HTML:":
+                label.setText("&HEX:")
+                label.adjustSize()
+        dialog.exec()
+        color = dialog.selectedColor()
+        self.editor.setTextColor(color)
+        self.color_button.setStyleSheet(f"font-weight: bold; background-color: {color.name()}")
+        self.view.viewport().setFocus()
+
     def toggle_bold(self):
+
         font = self.editor.currentFont()
         font.setBold(not font.bold())
         self.bold_button.setChecked(font.bold())
@@ -409,6 +449,13 @@ class MainWindow(QMainWindow):
         self.editor.setCurrentFont(font)
         self.view.viewport().setFocus()
 
+    def toggle_underline(self):
+        font = self.editor.currentFont()
+        font.setUnderline(not font.underline())
+        self.underline_button.setChecked(font.underline())
+        self.editor.setCurrentFont(font)
+        self.view.viewport().setFocus()
+
     def align(self, alignment):
         match alignment:
                 case Qt.AlignmentFlag.AlignLeft:
@@ -419,8 +466,8 @@ class MainWindow(QMainWindow):
                     self.align_right_button.setChecked(True)
         cursor = self.editor.textCursor()
         block_format = cursor.blockFormat()
-        alignment = alignment | Qt.AlignmentFlag.AlignAbsolute
-        block_format.setAlignment(alignment)
+        self.editor.text_alignment = alignment | Qt.AlignmentFlag.AlignAbsolute
+        block_format.setAlignment(self.editor.text_alignment)
         block_format.setProperty(0x010000, True) 
         cursor.mergeBlockFormat(block_format)
         self.view.viewport().setFocus()
@@ -428,16 +475,8 @@ class MainWindow(QMainWindow):
 class Editor(QTextEdit):
     def __init__(self, main_window):
         super().__init__()
-        cursor = self.textCursor()
-
-        # 2. Extract the block format of the current paragraph
-        block_format = cursor.blockFormat()
-
-        # 3. Read the line spacing multiplier value (e.g., 1.0, 1.5, 2.0)
-        current_spacing = block_format.lineHeight()
-
-        print(f"Current line spacing: {current_spacing}")
-
+        self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute
+        self.set_paper_color("black")
         self.last_page_char_index_list = []
         self.pages = []
         self.current_page = None
@@ -473,11 +512,41 @@ class Editor(QTextEdit):
     def printinfo(self):
         print(f"page count: {self.page_count}")
         
+    def set_paper_color(self, color):
+        self.setStyleSheet(f"QTextEdit {{ background-color: {color}; }}")
+        self.paper_color = color
+
     def check_current_page(self):
         block_rect = self.cursorRect()
         cursor_y = block_rect.top()
         self.current_page = int( cursor_y // self.base_height + 1 )
         print(f"current page: {self.current_page}")
+
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            font = self.currentFont()
+            self.old_text_color = self.textColor()
+            self.old_text_align = self.text_alignment
+            super().keyPressEvent(event)
+            super().keyPressEvent(event)
+            color = self.textColor()
+            if color == self.paper_color:
+                color = self.old_text_color
+            else:
+                self.old_text_color = self.textColor()
+            QTimer.singleShot(0, lambda: self.update_enter(font, color))
+        else:
+            super().keyPressEvent(event)
+    
+    def update_enter(self, font, color):
+        self.setCurrentFont(font)
+        self.main_window.align(self.old_text_align)
+        self.setTextColor(color)
+        self.main_window.color_button.setStyleSheet(f"font-weight: bold; background-color: {color.name()}")
+        self.main_window.bold_button.setChecked(font.bold())
+        self.main_window.strikethrough_button.setChecked(font.strikeOut())
+        self.main_window.underline_button.setChecked(font.underline()) 
+        self.main_window.font_size_menu.setCurrentText(str(font.pointSize()))
 
     def check_page_limit(self):
         old_page_count = self.page_count
@@ -496,6 +565,13 @@ class Editor(QTextEdit):
             self.last_page_char_index_list.append(last_char_index)
             print(f"last page char list: {self.last_page_char_index_list}")
         ##########################
+
+    def set_line_height(self, value):
+        cursor = self.textCursor()
+        cursor.select(QTextCursor.SelectionType.Document)
+        block_format = cursor.blockFormat()
+        block_format.setLineHeight(float(value), QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+        cursor.setBlockFormat(block_format)
 
     #############################
     def paintEvent(self, event):
