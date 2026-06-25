@@ -1,5 +1,5 @@
 
-from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QWidget, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog
+from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QWidget, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog, QMessageBox
 from PySide6.QtGui import QAction, QIntValidator, QGuiApplication, QIcon, QPainter, QColor, QPageLayout, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QShortcut, QKeySequence, QTextCursor, QTextBlockFormat, QFont, QTextCharFormat
 from PySide6.QtPrintSupport import QPrinter
 from PySide6.QtCore import QTimer, Qt, QSize, QRect, QMarginsF, QElapsedTimer, QRectF
@@ -62,15 +62,13 @@ class MainWindow(QMainWindow):
             print(self.file_path[-3:])
             self.editor.blockSignals(True)
             with open(self.file_path, "r", encoding="utf-8") as file:
+                data = file.read()
                 if self.file_path[-3:] == "ktb":
                     self.format_filter = "Kitab File (*.ktb)"
-                    data = file.read()
                     self.editor.setHtml(data)
                 elif self.file_path[-3:] == "txt":
                     self.format_filter = "Text File (*.txt)"
-                    data = file.read()
                     self.editor.setPlainText(data)
-
                 self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
                 total_pages = self.editor.document().pageCount()
                 self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
@@ -82,7 +80,31 @@ class MainWindow(QMainWindow):
             self.editor.setFocus()
             self.sync_font()
         
-        
+    def closeEvent(self, event):
+        if self.editor.document().isModified():
+            msg_box = QMessageBox(self)
+            msg_box.setWindowTitle("Unsaved changes")
+            msg_box.setText("Do you want to save the file?")
+            msg_box.setIcon(QMessageBox.Icon.Warning)
+
+            save_button = msg_box.addButton("Save", QMessageBox.ButtonRole.AcceptRole)
+            donotsave_button = msg_box.addButton("Don't Save", QMessageBox.ButtonRole.DestructiveRole)
+            cancel_button = msg_box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+
+            msg_box.setDefaultButton(save_button)
+            msg_box.exec()
+            clicked = msg_box.clickedButton()
+
+            if clicked == save_button:
+                self.save()
+                event.accept() 
+                
+            elif clicked == donotsave_button:
+                event.accept()
+                
+            else:
+                event.ignore()
+
     def add_menubar(self):
         menubar = self.menuBar()
 
@@ -235,6 +257,7 @@ class MainWindow(QMainWindow):
                     elif self.format_filter == "Text File (*.txt)":
                         data = self.editor.toPlainText()
                     file.write(data)
+                    self.editor.document().setModified(False)
                     self.file_name = Path(self.file_path).name
                     self.setWindowTitle(f"{self.file_name}  –  Kitab")
                 time_taken = save_timer.elapsed()
@@ -257,6 +280,7 @@ class MainWindow(QMainWindow):
                 elif self.format_filter == "Text File (*.txt)":
                     data = self.editor.toPlainText()
                 file.write(data)
+                self.editor.document().setModified(False)
             time_taken = save_timer.elapsed()
             minimum_time = 500
             if time_taken >= minimum_time:
@@ -285,6 +309,7 @@ class MainWindow(QMainWindow):
                 elif self.format_filter == "Text File (*.txt)":
                     data = self.editor.toPlainText()
                 file.write(data)
+                self.editor.document().setModified(False)
                 self.file_name = Path(self.file_path).name
                 self.setWindowTitle(f"{self.file_name}  –  Kitab")
         time_taken = save_timer.elapsed()
@@ -301,6 +326,7 @@ class MainWindow(QMainWindow):
         self.format_filter = None
         self.file_name = None
         self.editor.clear()
+        self.editor.document().setModified(False)
 
     def open_file(self):
         self.editor.blockSignals(True)
@@ -309,13 +335,12 @@ class MainWindow(QMainWindow):
             return
         else:
             with open(self.file_path, "r", encoding="utf-8") as file:
+                data = file.read()
                 if self.format_filter == "Kitab File (*.ktb)":
-                    data = file.read()
                     self.editor.setHtml(data)
                 elif self.format_filter == "Text File (*.txt)":
-                    data = file.read()
                     self.editor.setPlainText(data)
-
+                self.editor.document().setModified(False)
                 self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
                 total_pages = self.editor.document().pageCount()
                 self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
