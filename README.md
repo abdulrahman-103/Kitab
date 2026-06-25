@@ -1,6 +1,6 @@
 معالج نصوص مكتوب بمكتبة qt (pyside6).
 بديل خفيف وبسيط لlibreoffice write وmicrosoft word.
-يستطيع حفظ المستند بصيغة ktb (صيغة ملفات كتاب).
+يستطيع حفظ المستند بصيغة ktb (صيغة ملفات كتاب) وتصدير ملفات الpdf.
 
 A word processor written in qt (pyside6).
 A simple lightweight and simple alternative to libreoffice write and microsoft word.
