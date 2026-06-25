@@ -1,7 +1,8 @@
+
 from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QWidget, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog, QMessageBox
-from PySide6.QtGui import QAction, QIntValidator, QGuiApplication, QIcon, QPainter, QColor, QPageLayout, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QShortcut, QKeySequence, QTextCursor, QTextBlockFormat, QFont, QTextCharFormat
+from PySide6.QtGui import QAction, QIntValidator, QGuiApplication, QIcon, QPainter, QColor, QPageLayout, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QShortcut, QKeySequence, QTextCursor, QTextBlockFormat, QFont, QTextCharFormat, QTextOption
 from PySide6.QtPrintSupport import QPrinter
-from PySide6.QtCore import QTimer, Qt, QSize, QRect, QMarginsF, QElapsedTimer, QRectF
+from PySide6.QtCore import QTimer, Qt, QSize, QRect, QMarginsF, QElapsedTimer, QRectF, QPoint
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
 import base64
@@ -9,6 +10,7 @@ import sys
 from pathlib import Path
 import asyncio
 import time
+from pyqttooltip import Tooltip, TooltipPlacement
 
 
 class MainWindow(QMainWindow):
@@ -80,6 +82,13 @@ class MainWindow(QMainWindow):
             self.sync_font()
         
     def closeEvent(self, event):
+        def close_tooltips():
+            tooltips = [self.color_tooltip, self.bold_tooltip, self.strikethrough_tooltip, self.underline_tooltip, self.clear_formatting_tooltip, self.align_left_tooltip, self.align_right_tooltip, self.align_center_tooltip]
+            for tooltip in tooltips:
+                try:
+                    tooltip.deleteLater()
+                except Exception:
+                    pass
         if self.editor.document().isModified():
             msg_box = QMessageBox(self)
             msg_box.setWindowTitle("Unsaved changes")
@@ -95,14 +104,17 @@ class MainWindow(QMainWindow):
             clicked = msg_box.clickedButton()
 
             if clicked == save_button:
+                close_tooltips()
                 self.save()
                 event.accept() 
                 
             elif clicked == donotsave_button:
+                close_tooltips()
                 event.accept()
                 
             else:
                 event.ignore()
+        close_tooltips()
 
     def add_menubar(self):
         menubar = self.menuBar()
@@ -148,14 +160,20 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.font_size_menu)
         toolbar.addSeparator()
 
-        self.color_button = QPushButton("C", self)
+        self.color_button = QPushButton("", self)
+        self.color_tooltip = Tooltip(self.color_button, "Font Color")
+        self.color_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.color_button.sizeHint().height()*1.25))
+        self.color_tooltip.setShowDelay(500) 
         self.color_button.setFixedSize(self.color_button.sizeHint().height()*1.5, self.color_button.sizeHint().height())
-        self.color_button.setStyleSheet("font-weight: bold; background-color: black")
+        self.color_button.setStyleSheet("background-color: black")
         self.color_button.clicked.connect(self.font_color)
         toolbar.addWidget(self.color_button)
         toolbar.addSeparator()
 
         self.bold_button = QPushButton("B", self)
+        self.bold_tooltip = Tooltip(self.bold_button, "Bold")
+        self.bold_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.bold_button.sizeHint().height()*1.25))
+        self.bold_tooltip.setShowDelay(500) 
         self.bold_button.setFixedSize(self.bold_button.sizeHint().height()*1.5, self.bold_button.sizeHint().height())
         self.bold_button.setCheckable(True)
         self.bold_button.setStyleSheet("font-weight: bold")
@@ -164,6 +182,9 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
 
         self.strikethrough_button = QPushButton("—", self)
+        self.strikethrough_tooltip = Tooltip(self.strikethrough_button, "Strikethrough")
+        self.strikethrough_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.strikethrough_button.sizeHint().height()*1.25))
+        self.strikethrough_tooltip.setShowDelay(500) 
         self.strikethrough_button.setFixedSize(self.strikethrough_button.sizeHint().height()*1.5, self.strikethrough_button.sizeHint().height())
         self.strikethrough_button.setCheckable(True)
         self.strikethrough_button.setStyleSheet("font-weight: bold")
@@ -172,6 +193,9 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
 
         self.underline_button = QPushButton("—", self)
+        self.underline_tooltip = Tooltip(self.underline_button, "Underline")
+        self.underline_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.underline_button.sizeHint().height()*1.25))
+        self.underline_tooltip.setShowDelay(500) 
         self.underline_button.setFixedSize(self.underline_button.sizeHint().height()*1.5, self.underline_button.sizeHint().height())
         self.underline_button.setCheckable(True)
         self.underline_button.setStyleSheet("font-weight: bold; text-align: bottom;")
@@ -179,7 +203,20 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.underline_button)
         toolbar.addSeparator()
 
+        self.clear_formatting_button = QPushButton("X", self)
+        self.clear_formatting_tooltip = Tooltip(self.clear_formatting_button, "Clear Formatting")
+        self.clear_formatting_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.clear_formatting_button.sizeHint().height()*1.25))
+        self.clear_formatting_tooltip.setShowDelay(500) 
+        self.clear_formatting_button.setFixedSize(self.clear_formatting_button.sizeHint().height()*1.5, self.clear_formatting_button.sizeHint().height())
+        self.clear_formatting_button.setStyleSheet("font-weight: bold")
+        self.clear_formatting_button.clicked.connect(self.new)
+        toolbar.addWidget(self.clear_formatting_button)
+        toolbar.addSeparator()
+
         self.align_left_button = QPushButton("←", self)
+        self.align_left_tooltip = Tooltip(self.align_left_button, "Align Left")
+        self.align_left_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.align_left_button.sizeHint().height()*1.25))
+        self.align_left_tooltip.setShowDelay(500) 
         self.align_left_button.setFixedSize(self.bold_button.sizeHint().height()*1.5, self.bold_button.sizeHint().height())
         self.align_left_button.setCheckable(True)
         self.align_left_button.setStyleSheet("font-size: 18pt")
@@ -187,6 +224,9 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.align_left_button)
 
         self.align_center_button = QPushButton("•", self)
+        self.align_center_tooltip = Tooltip(self.align_center_button, "Align Center")
+        self.align_center_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.align_center_button.sizeHint().height()*1.25))
+        self.align_center_tooltip.setShowDelay(500) 
         self.align_center_button.setFixedSize(self.bold_button.sizeHint().height()*1.5, self.bold_button.sizeHint().height())
         self.align_center_button.setCheckable(True)
         self.align_center_button.setStyleSheet("font-size: 18pt")
@@ -194,6 +234,9 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.align_center_button)
 
         self.align_right_button = QPushButton("→", self)
+        self.align_right_tooltip = Tooltip(self.align_right_button, "Align Right")
+        self.align_right_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.align_right_button.sizeHint().height()*1.25))
+        self.align_right_tooltip.setShowDelay(500) 
         self.align_right_button.setFixedSize(self.bold_button.sizeHint().height()*1.5, self.bold_button.sizeHint().height())
         self.align_right_button.setCheckable(True)
         self.align_right_button.setStyleSheet("font-size: 18pt")
@@ -512,7 +555,6 @@ class Editor(QTextEdit):
         self.page_count = self.document().pageCount()
         
 
-        from PySide6.QtGui import QTextOption
         text_option = self.document().defaultTextOption()
         text_option.setFlags(text_option.flags() | QTextOption.Flag.IncludeTrailingSpaces)
         self.document().setDefaultTextOption(text_option)
@@ -533,6 +575,8 @@ class Editor(QTextEdit):
         self.cursorPositionChanged.connect(self.check_current_page)
         self.was_zooming = False 
 
+        self.document().setModified(False)
+        
     def printinfo(self):
         print(f"page count: {self.page_count}")
         
@@ -600,25 +644,18 @@ class Editor(QTextEdit):
     #############################
     def paintEvent(self, event):
         painter = QPainter(self.viewport())
-        
-        total_pages = self.document().pageCount()
         gap_height = 5  #The thickness of the gap (in pixels)
-        
-        for page_index in range(total_pages):
+        self.page_count = self.document().pageCount()
+        for page_index in range(self.page_count):
             page_top = page_index * self.base_height
-        
-            sheet_rect = QRect(0, page_top, self.width(), self.base_height - gap_height)
-            
-            painter.fillRect(sheet_rect, QColor("white")) #draw page
-            
-            if page_index < total_pages - 1:
+            if page_index < self.page_count - 1: #excludes last page
                 gap_rect = QRect(0, page_top + (self.base_height - gap_height), self.width(), gap_height)
                 painter.fillRect(gap_rect, QColor("#1e1e1e")) #draw gap
         
         painter.end()
-        
-        #draw text
         super().paintEvent(event)
+
+        
     #############################
 
     def mouseReleaseEvent(self, event):
