@@ -2,9 +2,6 @@ from PySide6.QtWidgets import QApplication
 from mainwindow import MainWindow
 import sys
 
-
-#minimize terminal remove later
-import os
 if sys.platform == "win32":
     import ctypes
     console_window = ctypes.windll.kernel32.GetConsoleWindow()

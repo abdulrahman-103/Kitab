@@ -1,15 +1,10 @@
-
-from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QWidget, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog, QMessageBox
-from PySide6.QtGui import QAction, QIntValidator, QGuiApplication, QIcon, QPainter, QColor, QPageLayout, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QShortcut, QKeySequence, QTextCursor, QTextBlockFormat, QFont, QTextCharFormat, QTextOption
-from PySide6.QtPrintSupport import QPrinter
-from PySide6.QtCore import QTimer, Qt, QSize, QRect, QMarginsF, QElapsedTimer, QRectF, QPoint
-from PySide6.QtWebEngineCore import QWebEnginePage
-from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QFontComboBox, QInputDialog
+from PySide6.QtGui import QAction, QIntValidator, QIcon, QPainter, QColor, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextOption, QTextDocument, QTextTableFormat, QTextLength, QTextImageFormat
+from PySide6.QtPrintSupport import QPrinter, QPrintDialog
+from PySide6.QtCore import QTimer, Qt, QSize, QRect, QElapsedTimer, QRectF, QPoint
 import base64
 import sys
 from pathlib import Path
-import asyncio
-import time
 from pyqttooltip import Tooltip, TooltipPlacement
 
 
@@ -32,10 +27,10 @@ class MainWindow(QMainWindow):
 
         self.showNormal()
         self.scene = QGraphicsScene()
-
+        self.editor = Editor(self)
         self.add_menubar()
         self.add_toolbar()
-        self.editor = Editor(self)
+        
 
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         
@@ -60,7 +55,6 @@ class MainWindow(QMainWindow):
         if len(sys.argv) == 2:
             open_with_commandline = True
             self.file_path = sys.argv[1]
-            print(self.file_path[-3:])
             self.editor.blockSignals(True)
             with open(self.file_path, "r", encoding="utf-8") as file:
                 data = file.read()
@@ -83,7 +77,7 @@ class MainWindow(QMainWindow):
         
     def closeEvent(self, event):
         def close_tooltips():
-            tooltips = [self.color_tooltip, self.bold_tooltip, self.strikethrough_tooltip, self.underline_tooltip, self.clear_formatting_tooltip, self.align_left_tooltip, self.align_right_tooltip, self.align_center_tooltip]
+            tooltips = [self.color_tooltip, self.bold_tooltip, self.strikethrough_tooltip, self.underline_tooltip, self.clear_formatting_tooltip, self.align_left_tooltip, self.align_right_tooltip, self.align_center_tooltip, self.italic_tooltip, self.font_family_tooltip, self.font_size_tooltip]
             for tooltip in tooltips:
                 try:
                     tooltip.deleteLater()
@@ -139,19 +133,51 @@ class MainWindow(QMainWindow):
 
         export = file_menu.addAction("Export")
         export.triggered.connect(self.export_file)
+        export.setShortcut("Ctrl+E")
 
+        print_option = file_menu.addAction("Print")
+        print_option.triggered.connect(self.print_document)
+        print_option.setShortcut("Ctrl+P")
+
+        insert_menu = menubar.addMenu("Insert")
+
+        table_option = insert_menu.addAction("Table")
+        table_option.triggered.connect(self.insert_table)
+        table_option.setShortcut("Ctrl+T")
+
+        image_option = insert_menu.addAction("Image")
+        image_option.triggered.connect(self.insert_image)
+        image_option.setShortcut("Ctrl+I")
+
+        page_menu = menubar.addMenu("Page")
+
+        page_size_option = page_menu.addAction("Page Size")
+        page_size_option.triggered.connect(self.page_size)
     
     def add_toolbar(self):
         toolbar = QToolBar()
         toolbar.setMovable(False)
-        
+        self.font_family_menu = QFontComboBox()
+        self.size_unit = self.font_family_menu.sizeHint().height()
+        self.font_family_tooltip = Tooltip(self.font_family_menu, "Font Family")
+        self.font_family_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
+        self.font_family_tooltip.setShowDelay(500) 
+        self.font_family_menu.setFontFilters(QFontComboBox.FontFilter.ScalableFonts)
+        self.font_family_menu.setFixedWidth(self.size_unit*6)
+        self.font_family_menu.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        self.font_family_menu.currentFontChanged.connect(self.font_family)
+        toolbar.addWidget(self.font_family_menu)
+        toolbar.addSeparator()
+
         self.font_size_menu = QComboBox()
+        self.font_size_tooltip = Tooltip(self.font_size_menu, "Font Size")
+        self.font_size_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
+        self.font_size_tooltip.setShowDelay(500) 
         self.font_size_menu.addItems(["6","7","8","9","10","11","12","13","14","15","16","18","20","21","22","24","26","28","32","36","40","42","44","48","54","60","66","72","80","88","96"])
-        self.font_size_menu.setCurrentText("16")
+        self.font_size_menu.setCurrentText("14")
         self.font_size = int(self.font_size_menu.currentText())
         self.font_size_menu.setEditable(True)
-        validator = QIntValidator(6, 500, self)
-        self.font_size_menu.lineEdit().setValidator(validator)
+        self.font_size_menu.lineEdit().setValidator(QIntValidator(6, 500, self))
         self.font_size_menu.activated.connect(self.change_font_size)
         self.font_size_menu.lineEdit().returnPressed.connect(self.change_font_size)
         self.font_size_menu.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
@@ -162,9 +188,9 @@ class MainWindow(QMainWindow):
 
         self.color_button = QPushButton("", self)
         self.color_tooltip = Tooltip(self.color_button, "Font Color")
-        self.color_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.color_button.sizeHint().height()*1.25))
+        self.color_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.color_tooltip.setShowDelay(500) 
-        self.color_button.setFixedSize(self.color_button.sizeHint().height()*1.5, self.color_button.sizeHint().height())
+        self.color_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.color_button.setStyleSheet("background-color: black")
         self.color_button.clicked.connect(self.font_color)
         toolbar.addWidget(self.color_button)
@@ -172,9 +198,9 @@ class MainWindow(QMainWindow):
 
         self.bold_button = QPushButton("B", self)
         self.bold_tooltip = Tooltip(self.bold_button, "Bold")
-        self.bold_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.bold_button.sizeHint().height()*1.25))
+        self.bold_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.bold_tooltip.setShowDelay(500) 
-        self.bold_button.setFixedSize(self.bold_button.sizeHint().height()*1.5, self.bold_button.sizeHint().height())
+        self.bold_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.bold_button.setCheckable(True)
         self.bold_button.setStyleSheet("font-weight: bold")
         self.bold_button.clicked.connect(self.toggle_bold)
@@ -183,9 +209,9 @@ class MainWindow(QMainWindow):
 
         self.strikethrough_button = QPushButton("—", self)
         self.strikethrough_tooltip = Tooltip(self.strikethrough_button, "Strikethrough")
-        self.strikethrough_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.strikethrough_button.sizeHint().height()*1.25))
+        self.strikethrough_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.strikethrough_tooltip.setShowDelay(500) 
-        self.strikethrough_button.setFixedSize(self.strikethrough_button.sizeHint().height()*1.5, self.strikethrough_button.sizeHint().height())
+        self.strikethrough_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.strikethrough_button.setCheckable(True)
         self.strikethrough_button.setStyleSheet("font-weight: bold")
         self.strikethrough_button.clicked.connect(self.toggle_strikethrough)
@@ -194,30 +220,41 @@ class MainWindow(QMainWindow):
 
         self.underline_button = QPushButton("—", self)
         self.underline_tooltip = Tooltip(self.underline_button, "Underline")
-        self.underline_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.underline_button.sizeHint().height()*1.25))
+        self.underline_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.underline_tooltip.setShowDelay(500) 
-        self.underline_button.setFixedSize(self.underline_button.sizeHint().height()*1.5, self.underline_button.sizeHint().height())
+        self.underline_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.underline_button.setCheckable(True)
         self.underline_button.setStyleSheet("font-weight: bold; text-align: bottom;")
         self.underline_button.clicked.connect(self.toggle_underline)
         toolbar.addWidget(self.underline_button)
         toolbar.addSeparator()
 
+        self.italic_button = QPushButton("𝐼", self)
+        self.italic_tooltip = Tooltip(self.italic_button, "Italic")
+        self.italic_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
+        self.italic_tooltip.setShowDelay(500) 
+        self.italic_button.setFixedSize(self.size_unit*1.5, self.size_unit)
+        self.italic_button.setCheckable(True)
+        self.italic_button.setStyleSheet("font-weight: bold; text-align: bottom; font-size:12pt;")
+        self.italic_button.clicked.connect(self.toggle_italic)
+        toolbar.addWidget(self.italic_button)
+        toolbar.addSeparator()
+
         self.clear_formatting_button = QPushButton("X", self)
         self.clear_formatting_tooltip = Tooltip(self.clear_formatting_button, "Clear Formatting")
-        self.clear_formatting_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.clear_formatting_button.sizeHint().height()*1.25))
+        self.clear_formatting_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.clear_formatting_tooltip.setShowDelay(500) 
-        self.clear_formatting_button.setFixedSize(self.clear_formatting_button.sizeHint().height()*1.5, self.clear_formatting_button.sizeHint().height())
+        self.clear_formatting_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.clear_formatting_button.setStyleSheet("font-weight: bold")
-        self.clear_formatting_button.clicked.connect(self.new)
+        self.clear_formatting_button.clicked.connect(self.clear_formatting)
         toolbar.addWidget(self.clear_formatting_button)
         toolbar.addSeparator()
 
         self.align_left_button = QPushButton("←", self)
         self.align_left_tooltip = Tooltip(self.align_left_button, "Align Left")
-        self.align_left_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.align_left_button.sizeHint().height()*1.25))
+        self.align_left_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.align_left_tooltip.setShowDelay(500) 
-        self.align_left_button.setFixedSize(self.bold_button.sizeHint().height()*1.5, self.bold_button.sizeHint().height())
+        self.align_left_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.align_left_button.setCheckable(True)
         self.align_left_button.setStyleSheet("font-size: 18pt")
         self.align_left_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignLeft))
@@ -225,9 +262,9 @@ class MainWindow(QMainWindow):
 
         self.align_center_button = QPushButton("•", self)
         self.align_center_tooltip = Tooltip(self.align_center_button, "Align Center")
-        self.align_center_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.align_center_button.sizeHint().height()*1.25))
+        self.align_center_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.align_center_tooltip.setShowDelay(500) 
-        self.align_center_button.setFixedSize(self.bold_button.sizeHint().height()*1.5, self.bold_button.sizeHint().height())
+        self.align_center_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.align_center_button.setCheckable(True)
         self.align_center_button.setStyleSheet("font-size: 18pt")
         self.align_center_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignHCenter))
@@ -235,9 +272,9 @@ class MainWindow(QMainWindow):
 
         self.align_right_button = QPushButton("→", self)
         self.align_right_tooltip = Tooltip(self.align_right_button, "Align Right")
-        self.align_right_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.align_right_button.sizeHint().height()*1.25))
+        self.align_right_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.align_right_tooltip.setShowDelay(500) 
-        self.align_right_button.setFixedSize(self.bold_button.sizeHint().height()*1.5, self.bold_button.sizeHint().height())
+        self.align_right_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.align_right_button.setCheckable(True)
         self.align_right_button.setStyleSheet("font-size: 18pt")
         self.align_right_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignRight))
@@ -254,7 +291,7 @@ class MainWindow(QMainWindow):
     def eventFilter(self, watched, event):
         if event.type() == event.Type.Wheel:
             self.wheelEvent(event)
-            return True  #Blocks the underlying scene elements from swallowing the scroll
+            return True
         return super().eventFilter(watched, event) #If not a scroll return to original event filter
 
 
@@ -336,15 +373,15 @@ class MainWindow(QMainWindow):
     def save_as(self):
         file_path, format_filter = self.file_path, self.format_filter
         self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", "", "Kitab File (*.ktb);;Text File (*.txt)")
-        saving = QProgressDialog("Saving...", None, 0, 0, self)
-        saving.setWindowTitle("Saving...")
-        saving.setWindowModality(Qt.WindowModality.WindowModal)
-        save_timer = QElapsedTimer()
-        save_timer.start()
-        saving.show()
         if not self.file_path:
             self.file_path, self.format_filter = file_path, format_filter
         else:
+            saving = QProgressDialog("Saving...", None, 0, 0, self)
+            saving.setWindowTitle("Saving...")
+            saving.setWindowModality(Qt.WindowModality.WindowModal)
+            save_timer = QElapsedTimer()
+            save_timer.start()
+            saving.show()
             with open(self.file_path, "w", encoding="utf-8") as file:
                 if self.format_filter == "Kitab File (*.ktb)":
                     data = self.editor.toHtml()
@@ -354,13 +391,13 @@ class MainWindow(QMainWindow):
                 self.editor.document().setModified(False)
                 self.file_name = Path(self.file_path).name
                 self.setWindowTitle(f"{self.file_name}  –  Kitab")
-        time_taken = save_timer.elapsed()
-        minimum_time = 500
-        if time_taken >= minimum_time:
-            saving.close()
-        else:
-            remaining_time = minimum_time - time_taken
-            QTimer.singleShot(remaining_time, saving.close)
+            time_taken = save_timer.elapsed()
+            minimum_time = 500
+            if time_taken >= minimum_time:
+                saving.close()
+            else:
+                remaining_time = minimum_time - time_taken
+                QTimer.singleShot(remaining_time, saving.close)
 
     def new(self):
         self.setWindowTitle("Kitab")
@@ -427,14 +464,13 @@ class MainWindow(QMainWindow):
         fullscreen.setShortcut(Qt.Key.Key_F11)
         fullscreen.triggered.connect(toggle_fullscreen)
         self.addAction(fullscreen)
+
+        self.find_action = QAction(self)
+        self.find_action.setText("Find")
+        self.find_action.setShortcut("Ctrl+F")
+        self.find_action.triggered.connect(self.find_replace)
+        self.addAction(self.find_action)
         
-        def printsomethingdef():
-            print(self.editor.document().size())
-            
-        printsomething =  QAction(self)
-        printsomething.setShortcut(Qt.Key.Key_F1)
-        printsomething.triggered.connect(printsomethingdef)
-        self.addAction(printsomething)
 
     def change_font_size(self):
         self.font_size = int(self.font_size_menu.currentText())
@@ -445,29 +481,32 @@ class MainWindow(QMainWindow):
         self.view.viewport().setFocus()
 
 
-
-
     def sync_font(self):
         if not self.editor.textCursor().hasSelection():
-            font_size = self.editor.currentFont().pointSize()
+            font = self.editor.currentFont()
+            font_size = font.pointSize()
             self.font_size_menu.setCurrentText(str(font_size))
             
+            self.font_family_menu.setCurrentFont(font)
+
             self.color_button.setStyleSheet(f"font-weight: bold; background-color: {self.editor.textColor().name()}")
 
-            bold_status = self.editor.currentFont().bold()
+            bold_status = font.bold()
             self.bold_button.setChecked(bold_status)
 
-            strikethrough_status = self.editor.currentFont().strikeOut()
+            strikethrough_status = font.strikeOut()
             self.strikethrough_button.setChecked(strikethrough_status)
 
-            underline_status = self.editor.currentFont().underline()
+            underline_status = font.underline()
             self.underline_button.setChecked(underline_status)
+
+            italic_status = font.italic()
+            self.italic_button.setChecked(italic_status)
 
             cursor = self.editor.textCursor()
             block_format = cursor.blockFormat()
             alignment_status = block_format.alignment()
 
-            print(alignment_status)
             if alignment_status == (Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute) or alignment_status == (Qt.AlignmentFlag.AlignLeft):
                 self.align_left_button.setChecked(True)
             elif alignment_status == (Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignAbsolute) or alignment_status == (Qt.AlignmentFlag.AlignHCenter):
@@ -495,10 +534,11 @@ class MainWindow(QMainWindow):
             if label.text() == "&HTML:":
                 label.setText("&HEX:")
                 label.adjustSize()
-        dialog.exec()
-        color = dialog.selectedColor()
-        self.editor.setTextColor(color)
-        self.color_button.setStyleSheet(f"font-weight: bold; background-color: {color.name()}")
+        
+        if dialog.exec() == QColorDialog.Accepted:
+            color = dialog.selectedColor()
+            self.editor.setTextColor(color)
+            self.color_button.setStyleSheet(f"font-weight: bold; background-color: {color.name()}")
         self.view.viewport().setFocus()
 
     def toggle_bold(self):
@@ -523,6 +563,13 @@ class MainWindow(QMainWindow):
         self.editor.setCurrentFont(font)
         self.view.viewport().setFocus()
 
+    def toggle_italic(self):
+        font = self.editor.currentFont()
+        font.setItalic(not font.italic())
+        self.italic_button.setChecked(font.italic())
+        self.editor.setCurrentFont(font)
+        self.view.viewport().setFocus()
+
     def align(self, alignment):
         match alignment:
                 case Qt.AlignmentFlag.AlignLeft:
@@ -535,9 +582,167 @@ class MainWindow(QMainWindow):
         block_format = cursor.blockFormat()
         self.editor.text_alignment = alignment | Qt.AlignmentFlag.AlignAbsolute
         block_format.setAlignment(self.editor.text_alignment)
-        block_format.setProperty(0x010000, True) 
         cursor.mergeBlockFormat(block_format)
         self.view.viewport().setFocus()
+
+    def print_document(self):
+        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+        printer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
+        dialog = QPrintDialog(printer, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self.editor.document().print_(printer)
+
+    def insert_image(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Choose image", "", "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.svg);;PNG Image (*.png);;JPEG Image (*.jpg *.jpeg);;SVG Image (*.svg);;BMP Image (*.bmp);;GIF Image (*.gif);;All Files (*)")
+
+        if not path:
+            return
+        image_format = QTextImageFormat()
+        image_format.setName(path)
+        image_format.setWidth(self.editor.base_width - 100)
+        cursor = self.editor.textCursor()
+        cursor.insertImage(image_format)
+
+    def insert_table(self):
+        rows, ok = QInputDialog.getInt(self, "Insert table", "Rows:", 2, 1, 100)
+        if not ok:
+            return
+        columns, ok = QInputDialog.getInt(self, "Insert table", "Columns:", 2, 1, 20)
+        if not ok:
+            return
+        width_percentage, ok = QInputDialog.getInt(self, "Insert table", "Width:", 100, 10, 100)
+        if not ok:
+            return
+        table_format = QTextTableFormat()
+        table_format.setCellPadding(4)
+        table_format.setBorder(1)
+        table_format.setBorderStyle(QTextTableFormat.BorderStyle.BorderStyle_Solid)
+        table_format.setWidth(QTextLength(QTextLength.Type.PercentageLength, width_percentage))
+        column_width = 100 / columns
+        constraints = [QTextLength(QTextLength.Type.PercentageLength, column_width)] * columns
+        table_format.setColumnWidthConstraints(constraints)
+        cursor = self.editor.textCursor()
+        table = cursor.insertTable(rows, columns, table_format)
+        self.view.viewport().setFocus()
+
+    def clear_formatting(self):
+        cursor = self.editor.textCursor()
+        if not cursor.hasSelection():
+            cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
+        plain = QTextCharFormat()
+        plain.setFontPointSize(14)
+        cursor.setCharFormat(plain)
+        block_format = cursor.blockFormat()
+        block_format.setIndent(0)
+        block_format.setObjectIndex(-1)
+        cursor.setBlockFormat(block_format)
+        self.editor.setCurrentCharFormat(plain)
+        self.sync_font()
+        font_size = self.editor.currentFont().pointSize()
+        self.font_size_menu.setCurrentText(str(font_size))
+        self.color_button.setStyleSheet(f"font-weight: bold; background-color: {self.editor.textColor().name()}")
+        self.view.viewport().setFocus()
+
+    def font_family(self, font):
+        new_font = self.editor.currentFont()
+        new_font.setFamily(font.family())
+        self.editor.setCurrentFont(new_font)
+
+    def page_size(self):
+        if getattr(self, "find_dialog", None) is None:
+            self.page_size_dialog = QDialog(self)
+
+            self.page_size_dialog.setWindowTitle("Find and replace")
+            self.page_size_dialog.setFixedWidth(self.size_unit*10)
+        self.page_size_dialog.show()
+        self.page_size_dialog.raise_()
+        self.page_size_dialog.activateWindow()
+
+    def find_replace(self):
+        if getattr(self, "find_dialog", None) is None:
+            self.find_dialog = FindReplaceDialog(self.editor, self)
+        self.find_dialog.show()
+        self.find_dialog.raise_()
+        self.find_dialog.activateWindow()
+
+class FindReplaceDialog(QDialog):
+    def __init__(self, editor, parent):
+        super().__init__(parent)
+        self.editor = editor
+        self.setWindowTitle("Find and replace")
+        self.setFixedWidth(parent.size_unit*10)
+
+        self.find_field = QLineEdit()
+        self.replace_field = QLineEdit()
+        self.match_case = QCheckBox("Match case")
+
+        form = QFormLayout()
+        form.addRow("Find:", self.find_field)
+        form.addRow("Replace:", self.replace_field)
+
+        find_next = QPushButton("Find next")
+        replace = QPushButton("Replace")
+        replace_all = QPushButton("Replace all")
+
+        find_next.setAutoDefault(False)
+        replace.setAutoDefault(False)
+        replace_all.setAutoDefault(False)
+
+        find_next.clicked.connect(self.find_next)
+        replace.clicked.connect(self.replace_one)
+        replace_all.clicked.connect(self.replace_all)
+
+        buttons = QHBoxLayout()
+        buttons.addWidget(find_next)
+        buttons.addWidget(replace)
+        buttons.addWidget(replace_all)
+
+        layout = QVBoxLayout(self)
+        layout.addLayout(form)
+        layout.addWidget(self.match_case)
+        layout.addLayout(buttons)
+
+        self.find_field.returnPressed.connect(self.find_next)
+
+    def flags(self):
+        flags = QTextDocument.FindFlag(0)
+        if self.match_case.isChecked():
+            flags |= QTextDocument.FindFlag.FindCaseSensitively
+        return flags
+
+    def find_next(self):
+        text = self.find_field.text()
+        if not text:
+            return False
+        found = self.editor.find(text, self.flags())
+        if not found:
+            #wrap around to the top and try once more
+            cursor = self.editor.textCursor()
+            cursor.movePosition(QTextCursor.MoveOperation.Start)
+            self.editor.setTextCursor(cursor)
+            found = self.editor.find(text, self.flags())
+            
+        return found
+
+    def replace_one(self):
+        cursor = self.editor.textCursor()
+        if cursor.hasSelection() and cursor.selectedText() == self.find_field.text():
+            cursor.insertText(self.replace_field.text())
+        self.find_next()
+
+    def replace_all(self):
+        text = self.find_field.text()
+        if not text:
+            return
+        cursor = self.editor.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.Start)
+        self.editor.setTextCursor(cursor)
+        count = 0
+        while self.editor.find(text, self.flags()):
+            self.editor.textCursor().insertText(self.replace_field.text())
+            count += 1
+        QMessageBox.information(self, "Replace all", f"{count} replacement(s) made.")
+
 
 class Editor(QTextEdit):
     def __init__(self, main_window):
@@ -568,17 +773,14 @@ class Editor(QTextEdit):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
 
         font = self.font()
-        font.setPointSize(16)
+        font.setPointSize(14)
         self.setFont(font)
         self.textChanged.connect(self.check_page_limit)
-        self.textChanged.connect(self.printinfo)
         self.cursorPositionChanged.connect(self.check_current_page)
         self.was_zooming = False 
 
         self.document().setModified(False)
         
-    def printinfo(self):
-        print(f"page count: {self.page_count}")
         
     def set_paper_color(self, color):
         self.setStyleSheet(f"QTextEdit {{ background-color: {color}; }}")
@@ -588,15 +790,16 @@ class Editor(QTextEdit):
         block_rect = self.cursorRect()
         cursor_y = block_rect.top()
         self.current_page = int( cursor_y // self.base_height + 1 )
-        print(f"current page: {self.current_page}")
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             font = self.currentFont()
             self.old_text_color = self.textColor()
             self.old_text_align = self.text_alignment
-            super().keyPressEvent(event)
-            super().keyPressEvent(event)
+            
+            cursor = self.textCursor()
+            cursor.insertBlock()
+            
             color = self.textColor()
             if color == self.paper_color:
                 color = self.old_text_color
@@ -689,8 +892,7 @@ class Editor(QTextEdit):
             
             menu.addSeparator()
 
-            find = menu.addAction("Find")
-            #find.triggered.connect()
+            menu.addAction(self.main_window.find_action)
             
             select_all = menu.addAction("Select All")
             select_all.triggered.connect(self.selectAll)
