@@ -847,13 +847,13 @@ class Editor(QTextEdit):
     #############################
     def paintEvent(self, event):
         painter = QPainter(self.viewport())
-        gap_height = 5  #The thickness of the gap (in pixels)
-        self.page_count = self.document().pageCount()
+        gap_height = 6  #The thickness of the gap (in pixels)
+        self.page_count = self.document().pageCount() #number of pages
         for page_index in range(self.page_count):
-            page_top = page_index * self.base_height
+            page_bottom = (page_index+1) * self.base_height - gap_height//2 #page bottom position
             if page_index < self.page_count - 1: #excludes last page
-                gap_rect = QRect(0, page_top + (self.base_height - gap_height), self.width(), gap_height)
-                painter.fillRect(gap_rect, QColor("#1e1e1e")) #draw gap
+                gap_rect = QRect(0, page_bottom, self.width(), gap_height) #create gap
+                painter.fillRect(gap_rect, QColor("#1e1e1e")) #color gap
         
         painter.end()
         super().paintEvent(event)
