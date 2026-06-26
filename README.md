@@ -21,12 +21,6 @@ pip install -r requirements.txt
 python main.py
 ```
 
-
-**Bugs:**
-1. the visual gap between pages eats 5 pixels off of the bottom of the pages.
-2. optimization of viewing system (instead of making a very long editor i need to take small chunks of the document and scroll through it to not crash).
-3. in a table the bottom of the last cell before a page break is open and the top of first cell after page break is open.
-
 **Features to add:**
 1. add (quran, charts (matplotlib)) to insert menu.
 2. paraghraph borders.
