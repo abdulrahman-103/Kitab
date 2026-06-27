@@ -409,15 +409,15 @@ class MainWindow(QMainWindow):
 
     def open_file(self):
         self.editor.blockSignals(True)
-        self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", "", "Kitab File (*.ktb);;Text File (*.txt)")
+        self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", "", "Kitab Files and Text Tiles (*.ktb *.txt);;Kitab Files (*.ktb);;Text Files (*.txt)")
         if not self.file_path:
             return
         else:
             with open(self.file_path, "r", encoding="utf-8") as file:
                 data = file.read()
-                if self.format_filter == "Kitab File (*.ktb)":
+                if self.file_path[-3:] == "ktb":
                     self.editor.setHtml(data)
-                elif self.format_filter == "Text File (*.txt)":
+                elif self.file_path[-3:] == "txt":
                     self.editor.setPlainText(data)
                 self.editor.document().setModified(False)
                 self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
@@ -631,6 +631,8 @@ class MainWindow(QMainWindow):
             cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
         plain = QTextCharFormat()
         plain.setFontPointSize(14)
+        plain.setForeground(QColor("black")) 
+        plain.setBackground(QColor("white")) 
         cursor.setCharFormat(plain)
         block_format = cursor.blockFormat()
         block_format.setIndent(0)
