@@ -42,6 +42,8 @@ class MainWindow(QMainWindow):
         
         self.setCentralWidget(self.view)
 
+        self.align(Qt.AlignmentFlag.AlignHCenter)
+
         self.editor.cursorPositionChanged.connect(self.sync_font)
         self.editor.textChanged.connect(self.sync_font)
 
@@ -513,19 +515,6 @@ class MainWindow(QMainWindow):
                 self.align_center_button.setChecked(True)
             elif alignment_status == (Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignAbsolute) or alignment_status == (Qt.AlignmentFlag.AlignRight):
                 self.align_right_button.setChecked(True)
-            else:
-                text = cursor.block().text().strip()
-                if text:
-                    first_char = text[0]
-                    is_arabic = '\u0600' <= first_char <= '\u06FF' or '\u0750' <= first_char <= '\u077F'
-                else:
-                    is_arabic = False
-                    
-                if is_arabic:
-                    self.align_right_button.setChecked(True)
-                else:
-                    self.align_left_button.setChecked(True)
-                
     
     def font_color(self):
         dialog = QColorDialog()
@@ -783,7 +772,7 @@ class Editor(QTextEdit):
 
         self.document().setModified(False)
         
-        
+
     def set_paper_color(self, color):
         self.setStyleSheet(f"QTextEdit {{ background-color: {color}; }}")
         self.paper_color = color
@@ -909,4 +898,3 @@ class Editor(QTextEdit):
         if event.button() == Qt.MouseButton.RightButton:
             self.was_zooming = False
         super().mousePressEvent(event)
-    
