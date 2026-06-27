@@ -176,7 +176,7 @@ class MainWindow(QMainWindow):
         self.font_size_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.font_size_tooltip.setShowDelay(500) 
         self.font_size_menu.addItems(["6","7","8","9","10","11","12","13","14","15","16","18","20","21","22","24","26","28","32","36","40","42","44","48","54","60","66","72","80","88","96"])
-        self.font_size_menu.setCurrentText("14")
+        self.font_size_menu.setCurrentText(str(Editor.DEFAULT_FONT_SIZE))
         self.font_size = int(self.font_size_menu.currentText())
         self.font_size_menu.setEditable(True)
         self.font_size_menu.lineEdit().setValidator(QIntValidator(6, 500, self))
@@ -333,10 +333,10 @@ class MainWindow(QMainWindow):
                 save_timer.start()
                 saving.show()
                 with open(self.file_path, "w", encoding="utf-8") as file:
-                    if self.format_filter == "Kitab File (*.ktb)":
-                        data = self.editor.toHtml()
-                    elif self.format_filter == "Text File (*.txt)":
+                    if self.file_path.endswith(".txt"):
                         data = self.editor.toPlainText()
+                    else:
+                        data = self.editor.toHtml()
                     file.write(data)
                     self.editor.document().setModified(False)
                     self.file_name = Path(self.file_path).name
@@ -356,10 +356,10 @@ class MainWindow(QMainWindow):
             save_timer.start()
             saving.show()
             with open(self.file_path, "w", encoding="utf-8") as file:
-                if self.format_filter == "Kitab File (*.ktb)":
-                    data = self.editor.toHtml()
-                elif self.format_filter == "Text File (*.txt)":
+                if self.file_path.endswith(".txt"):
                     data = self.editor.toPlainText()
+                else:
+                    data = self.editor.toHtml()
                 file.write(data)
                 self.editor.document().setModified(False)
             time_taken = save_timer.elapsed()
@@ -385,10 +385,10 @@ class MainWindow(QMainWindow):
             save_timer.start()
             saving.show()
             with open(self.file_path, "w", encoding="utf-8") as file:
-                if self.format_filter == "Kitab File (*.ktb)":
-                    data = self.editor.toHtml()
-                elif self.format_filter == "Text File (*.txt)":
+                if self.file_path.endswith(".txt"):
                     data = self.editor.toPlainText()
+                else:
+                    data = self.editor.toHtml()
                 file.write(data)
                 self.editor.document().setModified(False)
                 self.file_name = Path(self.file_path).name
@@ -443,7 +443,7 @@ class MainWindow(QMainWindow):
             export_timer.start()
             exporting.show()
             pdf_writer = QPdfWriter(self.file_path)
-            pdf_writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
+            pdf_writer.setPageSize(QPageSize(QSize(self.editor.base_width, self.editor.base_height)))
             document = self.editor.document()
             document.print_(pdf_writer)
             time_taken = export_timer.elapsed()
@@ -576,7 +576,7 @@ class MainWindow(QMainWindow):
 
     def print_document(self):
         printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-        printer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
+        printer.setPageSize(QPageSize(QSize(self.editor.base_width, self.editor.base_height)))
         dialog = QPrintDialog(printer, self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             self.editor.document().print_(printer)
@@ -619,7 +619,7 @@ class MainWindow(QMainWindow):
         if not cursor.hasSelection():
             cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
         plain = QTextCharFormat()
-        plain.setFontPointSize(14)
+        plain.setFontPointSize(Editor.DEFAULT_FONT_SIZE)
         plain.setForeground(QColor("black")) 
         plain.setBackground(QColor("white")) 
         cursor.setCharFormat(plain)
@@ -640,14 +640,59 @@ class MainWindow(QMainWindow):
         self.editor.setCurrentFont(new_font)
 
     def page_size(self):
-        if getattr(self, "find_dialog", None) is None:
+        if getattr(self, "page_size_dialog", None) is None:
             self.page_size_dialog = QDialog(self)
+            self.page_size_dialog.setWindowTitle("Page Size")
+            self.page_size_dialog.setFixedWidth(self.size_unit * 10)
 
-            self.page_size_dialog.setWindowTitle("Find and replace")
-            self.page_size_dialog.setFixedWidth(self.size_unit*10)
+            layout = QVBoxLayout()
+
+            self.page_size_combo = QComboBox()
+            size_names = list(Editor.PAGE_SIZES.keys())
+            self.page_size_combo.addItems(size_names)
+
+            current = (self.editor.base_width, self.editor.base_height)
+            for i, name in enumerate(size_names):
+                if Editor.PAGE_SIZES[name] == current:
+                    self.page_size_combo.setCurrentIndex(i)
+                    break
+
+            layout.addWidget(self.page_size_combo)
+
+            button_layout = QHBoxLayout()
+            apply_button = QPushButton("Apply")
+            cancel_button = QPushButton("Cancel")
+            apply_button.setAutoDefault(False)
+            cancel_button.setAutoDefault(False)
+            button_layout.addStretch()
+            button_layout.addWidget(apply_button)
+            button_layout.addWidget(cancel_button)
+
+            layout.addLayout(button_layout)
+            self.page_size_dialog.setLayout(layout)
+
+            apply_button.clicked.connect(self._apply_page_size)
+            cancel_button.clicked.connect(self.page_size_dialog.reject)
+
         self.page_size_dialog.show()
         self.page_size_dialog.raise_()
         self.page_size_dialog.activateWindow()
+
+    def _apply_page_size(self):
+        name = self.page_size_combo.currentText()
+        width, height = Editor.PAGE_SIZES[name]
+        self.editor.base_width = width
+        self.editor.base_height = height
+        self.editor.document().setPageSize(QSize(width, height))
+        self.editor.page_count = self.editor.document().pageCount()
+        # BUG: setMinimumSize must come before setFixedSize. Editor.__init__ sets
+        # minimum to A4 (794x1123). When switching to a smaller size like A5,
+        # setFixedSize would silently be clamped to the old minimum, keeping the
+        # widget at A4 width — causing alignment offsets and wrong page dimensions.
+        self.editor.setMinimumSize(width, height)
+        self.editor.setFixedSize(width, self.editor.page_count * height)
+        self.scene.setSceneRect(QRectF(self.editor.rect()))
+        self.page_size_dialog.close()
 
     def find_replace(self):
         if getattr(self, "find_dialog", None) is None:
@@ -736,6 +781,14 @@ class FindReplaceDialog(QDialog):
 
 
 class Editor(QTextEdit):
+    PAGE_SIZES = {
+        "A4": (794, 1123),
+        "Letter": (816, 1056),
+        "A5": (559, 794),
+        "Legal": (816, 1344),
+    }
+    DEFAULT_FONT_SIZE = 14
+
     def __init__(self, main_window):
         super().__init__()
         self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute
@@ -743,7 +796,7 @@ class Editor(QTextEdit):
         self.last_page_char_index_list = []
         self.pages = []
         self.current_page = None
-        self.base_width, self.base_height= 794, 1123
+        self.base_width, self.base_height = self.PAGE_SIZES["A4"]
         self.main_window = main_window
         self.setMinimumSize(self.base_width, self.base_height)
         self.document().setPageSize(QSize(self.base_width, self.base_height))
@@ -764,7 +817,7 @@ class Editor(QTextEdit):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
 
         font = self.font()
-        font.setPointSize(14)
+        font.setPointSize(self.DEFAULT_FONT_SIZE)
         self.setFont(font)
         self.textChanged.connect(self.check_page_limit)
         self.cursorPositionChanged.connect(self.check_current_page)
