@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QFontComboBox, QInputDialog
+from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QFontComboBox, QInputDialog, QStatusBar
 from PySide6.QtGui import QAction, QIntValidator, QIcon, QPainter, QColor, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextOption, QTextDocument, QTextTableFormat, QTextLength, QTextImageFormat
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 from PySide6.QtCore import QTimer, Qt, QSize, QRect, QElapsedTimer, QRectF, QPoint
@@ -17,7 +17,7 @@ class MainWindow(QMainWindow):
         open_with_commandline = False
         self.app = QApplication.instance()
         resolution = self.app.primaryScreen().availableSize()
-        self.resize(resolution.width()/2, resolution.height())
+        self.resize(resolution.width()/1.5, resolution.height()/1.5)
         self.move((resolution.width()-self.width())/2, 0)
         self.setWindowTitle("Kitab")
         self.file_path = None
@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
         icon = QImage.fromData(base64.b64decode(ICON_BASE64))
         self.setWindowIcon(QIcon(QPixmap.fromImage(icon)))
 
-        self.showNormal()
+        self.showMaximized()
         self.scene = QGraphicsScene()
         self.editor = Editor(self)
         self.add_menubar()
@@ -52,14 +52,16 @@ class MainWindow(QMainWindow):
 
         self.zoom_factor = resolution.height() / self.editor.height()
         self.view.scale(self.zoom_factor, self.zoom_factor)
+        self.scroll_bar = self.view.verticalScrollBar()
         self.view.viewport().installEventFilter(self)
-
         self.shortcuts()
 
         #opening file with commandline
         if len(sys.argv) == 2:
             self.file_path = sys.argv[1]
             self._open_file()
+
+        self.add_statusbar()
 
         
     def closeEvent(self, event):
@@ -144,6 +146,7 @@ class MainWindow(QMainWindow):
 
         page_size_option = page_menu.addAction("Page Size")
         page_size_option.triggered.connect(self.page_size)
+
 
     def add_toolbar(self):
         toolbar = QToolBar()
@@ -279,6 +282,13 @@ class MainWindow(QMainWindow):
         self.addToolBar(toolbar)
 
 
+    def add_statusbar(self):
+        self.statusbar = QStatusBar()
+        self.statusbar.showMessage(f"Page {self.editor.current_page()} of {self.editor.page_count}")
+        self.editor.textChanged.connect(lambda: self.statusbar.showMessage(f"Page {self.editor.current_page()} of {self.editor.page_count}"))
+        self.scroll_bar.valueChanged.connect(lambda: self.statusbar.showMessage(f"Page {self.editor.current_page()} of {self.editor.page_count}"))
+        self.setStatusBar(self.statusbar)
+
     def eventFilter(self, watched, event):
         if event.type() == event.Type.Wheel:
             self.wheelEvent(event)
@@ -295,10 +305,9 @@ class MainWindow(QMainWindow):
             else:
                 self.zoom("out")
         else:
-            scroll_bar = self.view.verticalScrollBar()
-            if scroll_bar:
+            if self.scroll_bar:
                 steps = event.angleDelta().y()
-                scroll_bar.setValue(scroll_bar.value() - steps)
+                self.scroll_bar.setValue(self.scroll_bar.value() - steps)
 
 
     def zoom(self, direction: str):
@@ -771,9 +780,7 @@ class Editor(QTextEdit):
         self.set_paper_color("black")
         self.last_page_char_index_list = []
         self.pages = []
-        self.current_page = None
         
-
         self.base_width, self.base_height = self.PAGE_SIZES["A4"]
         self.page_size = "A4"
 
@@ -797,9 +804,7 @@ class Editor(QTextEdit):
         font.setPointSize(self.DEFAULT_FONT_SIZE)
         self.setFont(font)
         self.textChanged.connect(self.check_page_limit)
-        self.cursorPositionChanged.connect(self.check_current_page)
         self.was_zooming = False 
-
         self.document().setModified(False)
         
 
@@ -808,11 +813,9 @@ class Editor(QTextEdit):
         self.paper_color = color
 
 
-    def check_current_page(self):
-        block_rect = self.cursorRect()
-        cursor_y = block_rect.top()
-        self.current_page = int( cursor_y // self.base_height + 1 )
-
+    def current_page(self):
+        center_y = self.main_window.view.mapToScene(0, int(self.main_window.view.viewport().rect().center().y()))
+        return int(center_y.y() // self.base_height + 1)
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
