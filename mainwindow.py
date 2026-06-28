@@ -300,9 +300,14 @@ class MainWindow(QMainWindow):
 
 
     def zoom(self, direction: str):
-        if direction == "in" and self.zoom_factor < 5.0:
+        resolution = self.app.primaryScreen().size()
+        resolution_factor = resolution.height() / 720 #my resolution is 1080p with 150% scaling. the factor use is to make the max and min limits equal on all resolutions
+        min = 0.05 * resolution_factor
+        max = 5.0 * resolution_factor
+        print(resolution, resolution_factor)
+        if direction == "in" and self.zoom_factor < max:
             self.zoom_factor *= 1.1
-        elif direction == "out" and self.zoom_factor > 0.1:
+        elif direction == "out" and self.zoom_factor > min:
             self.zoom_factor *= 0.9
         
         self.view.resetTransform()  
