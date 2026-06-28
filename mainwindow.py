@@ -306,6 +306,7 @@ class MainWindow(QMainWindow):
             self.zoom_factor *= 0.9
         
         self.view.resetTransform()  
+        self.view.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.view.scale(self.zoom_factor, self.zoom_factor)
         
 
@@ -521,7 +522,10 @@ class MainWindow(QMainWindow):
                     self.align_right_button.setChecked(True)
         cursor = self.editor.textCursor()
         block_format = cursor.blockFormat()
-        self.editor.text_alignment = alignment | Qt.AlignmentFlag.AlignAbsolute
+        if alignment != Qt.AlignmentFlag.AlignHCenter:
+            self.editor.text_alignment = alignment | Qt.AlignmentFlag.AlignAbsolute
+        else:
+            self.editor.text_alignment = alignment
         block_format.setAlignment(self.editor.text_alignment)
         cursor.mergeBlockFormat(block_format)
         self.view.viewport().setFocus()
