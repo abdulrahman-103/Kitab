@@ -2,8 +2,6 @@
 
 | # | Bug | Location | Root Cause | Fix | Severity |
 |---|---|---|---|---|---|
-| 1 | Page Size dialog has wrong title and no controls | `mainwindow.py:651-659` | Stub copied from FindReplaceDialog — title says "Find and replace", dialog is empty | Add real page-size selection (A4/Letter/Legal) or remove the stub entirely | Medium |
-| 2 | Save logic duplicated | `mainwindow.py:321-400` | `save()` and `save_as()` share identical write-to-file code | Extract shared logic into a `_write_file(path, format_filter)` helper | Low |
 | 3 | `last_page_char_index_list` accumulated but never used | `mainwindow.py:822-838` | Dead code left during development | Remove the list and its `append` call, or implement intended use (e.g., per-page navigation) | Low |
 | 4 | `clear_formatting` hardcodes 14pt | `mainwindow.py:628-644` | Default font size is hardcoded instead of using a named constant | Define `DEFAULT_FONT_SIZE = 14` and reference that | Low |
 | 5 | PDF export always uses A4 regardless of document page size | `mainwindow.py:432-453` | `QPageSize(QPageSize.PageSizeId.A4)` hardcoded | Use `self.editor.document().pageSize()` to get current page size | Medium |
