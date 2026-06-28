@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 from pyqttooltip import Tooltip, TooltipPlacement
 import zipfile
+import io
+import json
 
 
 class MainWindow(QMainWindow):
@@ -57,7 +59,7 @@ class MainWindow(QMainWindow):
         #opening file with commandline
         if len(sys.argv) == 2:
             self.file_path = sys.argv[1]
-            self.open_file()
+            self._open_file()
 
         
     def closeEvent(self, event):
@@ -304,7 +306,6 @@ class MainWindow(QMainWindow):
         resolution_factor = resolution.height() / 720 #my resolution is 1080p with 150% scaling. the factor use is to make the max and min limits equal on all resolutions
         min = 0.05 * resolution_factor
         max = 5.0 * resolution_factor
-        print(resolution, resolution_factor)
         if direction == "in" and self.zoom_factor < max:
             self.zoom_factor *= 1.1
         elif direction == "out" and self.zoom_factor > min:
@@ -315,21 +316,28 @@ class MainWindow(QMainWindow):
         self.view.scale(self.zoom_factor, self.zoom_factor)
         
 
-    def save_file(self): # base used by both save() and save_as()
+    def _save_file(self): # base used by both save() and save_as()
         saving = QProgressDialog("Saving...", None, 0, 0, self)
         saving.setWindowTitle("Saving...")
         saving.setWindowModality(Qt.WindowModality.WindowModal)
         save_timer = QElapsedTimer()
         save_timer.start()
         saving.show()
-        with open(self.file_path, "w", encoding="utf-8") as file:
-            if self.file_path.endswith(".txt"):
-                data = self.editor.toPlainText()
-            else:
-                data = self.editor.toHtml()
-            file.write(data)
-            self.editor.document().setModified(False)
-            self.file_name = Path(self.file_path).name
+
+        if self.file_path.endswith(".txt"):
+            txt_data = self.editor.toPlainText()
+            with open(self.file_path, "w", encoding="utf-8") as file:
+                file.write(txt_data)
+        else:
+            html_data = self.editor.toHtml()
+            json_data = {"page size": self.editor.page_size}
+            with zipfile.ZipFile(self.file_path, mode="w", compression=zipfile.ZIP_DEFLATED) as zip:
+                zip.writestr("document.html", html_data)
+                zip.writestr("info.json", json.dumps(json_data))
+
+
+        self.editor.document().setModified(False)
+        self.file_name = Path(self.file_path).name
         self.setWindowTitle(f"{self.file_name}  –  Kitab")
         time_taken = save_timer.elapsed()
         minimum_time = 500
@@ -346,9 +354,9 @@ class MainWindow(QMainWindow):
             if not self.file_path:
                 return
             else:
-                self.save_file()
+                self._save_file()
         else:
-            self.save_file()
+            self._save_file()
 
 
     def save_as(self, show_dialog=True):
@@ -357,7 +365,7 @@ class MainWindow(QMainWindow):
         if not self.file_path:
             self.file_path, self.format_filter = file_path, format_filter
         else:
-            self.save_file()
+            self._save_file()
 
     def new(self):
         self.setWindowTitle("Kitab")
@@ -367,26 +375,30 @@ class MainWindow(QMainWindow):
         self.editor.clear()
         self.editor.document().setModified(False)
 
-    def open_file(self):
-        with open(self.file_path, "r", encoding="utf-8") as file:
-            data = file.read()
-            if self.file_path.endswith(".ktb"):
-                self.editor.setHtml(data)
-            elif self.file_path.endswith(".txt"):
+    def _open_file(self):
+        if self.file_path.endswith(".ktb"):
+            with zipfile.ZipFile(self.file_path, "r") as zip:
+                html_data = zip.read("document.html").decode("utf-8")
+                json_data = json.loads(zip.read("info.json").decode("utf-8"))
+            self.editor.setHtml(html_data)
+            self._apply_page_size(json_data["page size"], dialog=False)
+        elif self.file_path.endswith(".txt"):
+            with open(self.file_path, "r", encoding="utf-8") as file:
+                data = file.read()
                 self.editor.setPlainText(data)
-            self.editor.document().setModified(False)
-            self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
-            total_pages = self.editor.document().pageCount()
-            self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
-            self.file_name = Path(self.file_path).name
-            self.setWindowTitle(f"{self.file_name}  –  Kitab")
+        self.editor.document().setModified(False)
+        self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
+        total_pages = self.editor.document().pageCount()
+        self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
+        self.file_name = Path(self.file_path).name
+        self.setWindowTitle(f"{self.file_name}  –  Kitab")
 
     def open(self):
         self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", "", "Kitab Files and Text Tiles (*.ktb *.txt);;Kitab Files (*.ktb);;Text Files (*.txt)")
         if not self.file_path:
             return
         else:
-            self.open_file()
+            self._open_file()
 
 
     def export_file(self):
@@ -601,47 +613,47 @@ class MainWindow(QMainWindow):
         self.editor.setCurrentFont(new_font)
 
     def page_size(self):
-        if getattr(self, "page_size_dialog", None) is None:
-            self.page_size_dialog = QDialog(self)
-            self.page_size_dialog.setWindowTitle("Page Size")
-            self.page_size_dialog.setFixedWidth(self.size_unit * 10)
+        self.page_size_dialog = QDialog(self)
+        self.page_size_dialog.setWindowTitle("Page Size")
+        self.page_size_dialog.setFixedWidth(self.size_unit * 10)
 
-            layout = QVBoxLayout()
+        layout = QVBoxLayout()
 
-            self.page_size_combo = QComboBox()
-            size_names = list(Editor.PAGE_SIZES.keys())
-            self.page_size_combo.addItems(size_names)
+        self.page_size_combo = QComboBox()
+        size_names = list(Editor.PAGE_SIZES.keys())
+        self.page_size_combo.addItems(size_names)
 
-            current = (self.editor.base_width, self.editor.base_height)
-            for i, name in enumerate(size_names):
-                if Editor.PAGE_SIZES[name] == current:
-                    self.page_size_combo.setCurrentIndex(i)
-                    break
+        current = (self.editor.base_width, self.editor.base_height)
+        for i, name in enumerate(size_names):
+            if Editor.PAGE_SIZES[name] == current:
+                self.page_size_combo.setCurrentIndex(i)
+                break
 
-            layout.addWidget(self.page_size_combo)
+        layout.addWidget(self.page_size_combo)
 
-            button_layout = QHBoxLayout()
-            apply_button = QPushButton("Apply")
-            cancel_button = QPushButton("Cancel")
-            apply_button.setAutoDefault(False)
-            cancel_button.setAutoDefault(False)
-            button_layout.addStretch()
-            button_layout.addWidget(apply_button)
-            button_layout.addWidget(cancel_button)
+        button_layout = QHBoxLayout()
+        apply_button = QPushButton("Apply")
+        cancel_button = QPushButton("Cancel")
+        apply_button.setAutoDefault(False)
+        cancel_button.setAutoDefault(False)
+        button_layout.addStretch()
+        button_layout.addWidget(apply_button)
+        button_layout.addWidget(cancel_button)
 
-            layout.addLayout(button_layout)
-            self.page_size_dialog.setLayout(layout)
+        layout.addLayout(button_layout)
+        self.page_size_dialog.setLayout(layout)
+        
+        apply_button.clicked.connect(lambda: (self.editor.document().setModified(True), self._apply_page_size(self.page_size_combo.currentText())))
+        cancel_button.clicked.connect(self.page_size_dialog.reject)
 
-            apply_button.clicked.connect(self._apply_page_size)
-            cancel_button.clicked.connect(self.page_size_dialog.reject)
-
-        self.page_size_dialog.show()
+        self.page_size_dialog.exec_()
         self.page_size_dialog.raise_()
         self.page_size_dialog.activateWindow()
 
-    def _apply_page_size(self):
-        name = self.page_size_combo.currentText()
+    def _apply_page_size(self, size, dialog=True):
+        name = size
         width, height = Editor.PAGE_SIZES[name]
+        self.editor.page_size = name
         self.editor.base_width = width
         self.editor.base_height = height
         self.editor.document().setPageSize(QSize(width, height))
@@ -655,7 +667,8 @@ class MainWindow(QMainWindow):
         self.scene.setSceneRect(QRectF(self.editor.rect()))
         self.editor.document().setPageSize(QSize(width, height))
         self.editor.page_count = self.editor.document().pageCount()
-        self.page_size_dialog.close()
+        if dialog:
+            self.page_size_dialog.close()
 
     def find_replace(self):
         if getattr(self, "find_dialog", None) is None:
@@ -759,19 +772,20 @@ class Editor(QTextEdit):
         self.last_page_char_index_list = []
         self.pages = []
         self.current_page = None
+        
+
         self.base_width, self.base_height = self.PAGE_SIZES["A4"]
+        self.page_size = "A4"
+
         self.main_window = main_window
         self.setMinimumSize(self.base_width, self.base_height)
         self.document().setPageSize(QSize(self.base_width, self.base_height))
         self.document().setDocumentMargin(20*(96/25.4)) #mm to pt (inch is 72 pt and is 25.4mm)
         self.page_count = self.document().pageCount()
         
-
         text_option = self.document().defaultTextOption()
         text_option.setFlags(text_option.flags() | QTextOption.Flag.IncludeTrailingSpaces)
         self.document().setDefaultTextOption(text_option)
-
-
 
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setStyleSheet("QTextEdit {background-color: white; color: black; border: none;}")
@@ -793,10 +807,12 @@ class Editor(QTextEdit):
         self.setStyleSheet(f"QTextEdit {{ background-color: {color}; }}")
         self.paper_color = color
 
+
     def check_current_page(self):
         block_rect = self.cursorRect()
         cursor_y = block_rect.top()
         self.current_page = int( cursor_y // self.base_height + 1 )
+
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
@@ -816,6 +832,7 @@ class Editor(QTextEdit):
         else:
             super().keyPressEvent(event)
     
+
     def update_enter(self, font, color):
         self.setCurrentFont(font)
         self.main_window.align(self.old_text_align)
@@ -825,6 +842,7 @@ class Editor(QTextEdit):
         self.main_window.strikethrough_button.setChecked(font.strikeOut())
         self.main_window.underline_button.setChecked(font.underline()) 
         self.main_window.font_size_menu.setCurrentText(str(font.pointSize()))
+
 
     def check_page_limit(self):
         self.page_count = self.document().pageCount()
@@ -841,7 +859,7 @@ class Editor(QTextEdit):
         block_format.setLineHeight(float(value), QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
         cursor.setBlockFormat(block_format)
 
-    #############################
+
     def paintEvent(self, event):
         painter = QPainter(self.viewport())
         gap_height = 6  #The thickness of the gap (in pixels)
@@ -855,8 +873,6 @@ class Editor(QTextEdit):
         painter.end()
         super().paintEvent(event)
 
-        
-    #############################
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MouseButton.RightButton:
