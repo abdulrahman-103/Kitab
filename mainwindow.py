@@ -6,6 +6,7 @@ import base64
 import sys
 from pathlib import Path
 from pyqttooltip import Tooltip, TooltipPlacement
+import zipfile
 
 
 class MainWindow(QMainWindow):
@@ -311,6 +312,7 @@ class MainWindow(QMainWindow):
                 steps = event.angleDelta().y()
                 scroll_bar.setValue(scroll_bar.value() - steps)
 
+
     def zoom(self, direction: str):
         if direction == "in" and self.zoom_factor < 5.0:
             self.zoom_factor += 0.075
@@ -320,86 +322,50 @@ class MainWindow(QMainWindow):
         self.view.resetTransform()  
         self.view.scale(self.zoom_factor, self.zoom_factor)
         
+
+    def save_file(self): # base used by both save() and save_as()
+        saving = QProgressDialog("Saving...", None, 0, 0, self)
+        saving.setWindowTitle("Saving...")
+        saving.setWindowModality(Qt.WindowModality.WindowModal)
+        save_timer = QElapsedTimer()
+        save_timer.start()
+        saving.show()
+        with open(self.file_path, "w", encoding="utf-8") as file:
+            if self.file_path.endswith(".txt"):
+                data = self.editor.toPlainText()
+            else:
+                data = self.editor.toHtml()
+            file.write(data)
+            self.editor.document().setModified(False)
+            self.file_name = Path(self.file_path).name
+        self.setWindowTitle(f"{self.file_name}  –  Kitab")
+        time_taken = save_timer.elapsed()
+        minimum_time = 500
+        if time_taken >= minimum_time:
+            saving.close()
+        else:
+            remaining_time = minimum_time - time_taken
+            QTimer.singleShot(remaining_time, saving.close)
+
+
     def save(self):
         if not self.file_path:
             self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", "", "Kitab File (*.ktb);;Text File (*.txt)")
             if not self.file_path:
                 return
             else:
-                saving = QProgressDialog("Saving...", None, 0, 0, self)
-                saving.setWindowTitle("Saving...")
-                saving.setWindowModality(Qt.WindowModality.WindowModal)
-                save_timer = QElapsedTimer()
-                save_timer.start()
-                saving.show()
-                with open(self.file_path, "w", encoding="utf-8") as file:
-                    if self.file_path.endswith(".txt"):
-                        data = self.editor.toPlainText()
-                    else:
-                        data = self.editor.toHtml()
-                    file.write(data)
-                    self.editor.document().setModified(False)
-                    self.file_name = Path(self.file_path).name
-                    self.setWindowTitle(f"{self.file_name}  –  Kitab")
-                time_taken = save_timer.elapsed()
-                minimum_time = 500
-                if time_taken >= minimum_time:
-                    saving.close()
-                else:
-                    remaining_time = minimum_time - time_taken
-                    QTimer.singleShot(remaining_time, saving.close)
+                self.save_file()
         else:
-            saving = QProgressDialog("Saving...", None, 0, 0, self)
-            saving.setWindowTitle("Saving...")
-            saving.setWindowModality(Qt.WindowModality.WindowModal)
-            save_timer = QElapsedTimer()
-            save_timer.start()
-            saving.show()
-            with open(self.file_path, "w", encoding="utf-8") as file:
-                if self.file_path.endswith(".txt"):
-                    data = self.editor.toPlainText()
-                else:
-                    data = self.editor.toHtml()
-                file.write(data)
-                self.editor.document().setModified(False)
-            time_taken = save_timer.elapsed()
-            minimum_time = 500
-            if time_taken >= minimum_time:
-                saving.close()
-            else:
-                remaining_time = minimum_time - time_taken
-                QTimer.singleShot(remaining_time, saving.close)
+            self.save_file()
 
 
-
-    def save_as(self):
+    def save_as(self, show_dialog=True):
         file_path, format_filter = self.file_path, self.format_filter
         self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", "", "Kitab File (*.ktb);;Text File (*.txt)")
         if not self.file_path:
             self.file_path, self.format_filter = file_path, format_filter
         else:
-            saving = QProgressDialog("Saving...", None, 0, 0, self)
-            saving.setWindowTitle("Saving...")
-            saving.setWindowModality(Qt.WindowModality.WindowModal)
-            save_timer = QElapsedTimer()
-            save_timer.start()
-            saving.show()
-            with open(self.file_path, "w", encoding="utf-8") as file:
-                if self.file_path.endswith(".txt"):
-                    data = self.editor.toPlainText()
-                else:
-                    data = self.editor.toHtml()
-                file.write(data)
-                self.editor.document().setModified(False)
-                self.file_name = Path(self.file_path).name
-                self.setWindowTitle(f"{self.file_name}  –  Kitab")
-            time_taken = save_timer.elapsed()
-            minimum_time = 500
-            if time_taken >= minimum_time:
-                saving.close()
-            else:
-                remaining_time = minimum_time - time_taken
-                QTimer.singleShot(remaining_time, saving.close)
+            self.save_file()
 
     def new(self):
         self.setWindowTitle("Kitab")
