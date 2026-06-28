@@ -185,7 +185,7 @@ class MainWindow(QMainWindow):
         self.color_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.color_tooltip.setShowDelay(500) 
         self.color_button.setFixedSize(self.size_unit*1.5, self.size_unit)
-        self.color_button.setStyleSheet("background-color: black")
+        self.color_button.setStyleSheet(f"background-color: {self.editor.DEFAULT_FONT_COLOR}")
         self.color_button.clicked.connect(self.font_color)
         toolbar.addWidget(self.color_button)
         toolbar.addSeparator()
@@ -602,10 +602,10 @@ class MainWindow(QMainWindow):
             cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
         plain = QTextCharFormat()
         plain.setFontPointSize(Editor.DEFAULT_FONT_SIZE)
-        plain.setForeground(QColor("black")) 
-        plain.setBackground(QColor("white")) 
+        plain.setForeground(QColor(self.editor.DEFAULT_FONT_COLOR)) 
         cursor.setCharFormat(plain)
         block_format = cursor.blockFormat()
+        block_format.clearBackground()
         block_format.setIndent(0)
         block_format.setObjectIndex(-1)
         cursor.setBlockFormat(block_format)
@@ -773,11 +773,14 @@ class Editor(QTextEdit):
         "Legal": (816, 1344),
     }
     DEFAULT_FONT_SIZE = 14
+    DEFAULT_PAPER_COLOR = "white"
+    DEFAULT_FONT_COLOR = "black"
 
     def __init__(self, main_window):
         super().__init__()
         self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute
-        self.set_paper_color("black")
+        self.set_paper_color(self.DEFAULT_PAPER_COLOR)
+        self.setTextColor(self.DEFAULT_FONT_COLOR)
         self.last_page_char_index_list = []
         self.pages = []
         
@@ -795,7 +798,6 @@ class Editor(QTextEdit):
         self.document().setDefaultTextOption(text_option)
 
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.setStyleSheet("QTextEdit {background-color: white; color: black; border: none;}")
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
