@@ -13,8 +13,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         open_with_commandline = False
-        app = QApplication.instance()
-        resolution = app.primaryScreen().availableSize()
+        self.app = QApplication.instance()
+        resolution = self.app.primaryScreen().availableSize()
         self.resize(resolution.width()/2, resolution.height())
         self.move((resolution.width()-self.width())/2, 0)
         self.setWindowTitle("Kitab")
@@ -142,6 +142,10 @@ class MainWindow(QMainWindow):
         print_option.triggered.connect(self.print_document)
         print_option.setShortcut("Ctrl+P")
 
+        exit_option = file_menu.addAction("Exit")
+        exit_option.triggered.connect(self.app.quit)
+        exit_option.setShortcut("Ctrl+F4")
+
         insert_menu = menubar.addMenu("Insert")
 
         table_option = insert_menu.addAction("Table")
@@ -156,7 +160,7 @@ class MainWindow(QMainWindow):
 
         page_size_option = page_menu.addAction("Page Size")
         page_size_option.triggered.connect(self.page_size)
-    
+
     def add_toolbar(self):
         toolbar = QToolBar()
         toolbar.setMovable(False)
