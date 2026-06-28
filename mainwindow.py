@@ -56,25 +56,9 @@ class MainWindow(QMainWindow):
 
         #opening file with commandline
         if len(sys.argv) == 2:
-            open_with_commandline = True
             self.file_path = sys.argv[1]
-            with open(self.file_path, "r", encoding="utf-8") as file:
-                data = file.read()
-                if self.file_path[-3:] == "ktb":
-                    self.format_filter = "Kitab File (*.ktb)"
-                    self.editor.setHtml(data)
-                elif self.file_path[-3:] == "txt":
-                    self.format_filter = "Text File (*.txt)"
-                    self.editor.setPlainText(data)
-                self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
-                total_pages = self.editor.document().pageCount()
-                self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
-                self.file_name = Path(self.file_path).name
-                self.setWindowTitle(f"{self.file_name}  –  Kitab")
-        self.view.viewport().setFocus()
-        if not open_with_commandline:
-            self.editor.setFocus()
-            self.sync_font()
+            self.open_file()
+
         
     def closeEvent(self, event):
         def close_tooltips():
@@ -121,7 +105,7 @@ class MainWindow(QMainWindow):
         new_option.setShortcut("Ctrl+N")
 
         open_option = file_menu.addAction("Open")
-        open_option.triggered.connect(self.open_file)
+        open_option.triggered.connect(self.open)
         open_option.setShortcut("Ctrl+O")
 
         save_option = file_menu.addAction("Save")
@@ -378,23 +362,25 @@ class MainWindow(QMainWindow):
         self.editor.document().setModified(False)
 
     def open_file(self):
+        with open(self.file_path, "r", encoding="utf-8") as file:
+            data = file.read()
+            if self.file_path.endswith(".ktb"):
+                self.editor.setHtml(data)
+            elif self.file_path.endswith(".txt"):
+                self.editor.setPlainText(data)
+            self.editor.document().setModified(False)
+            self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
+            total_pages = self.editor.document().pageCount()
+            self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
+            self.file_name = Path(self.file_path).name
+            self.setWindowTitle(f"{self.file_name}  –  Kitab")
+
+    def open(self):
         self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", "", "Kitab Files and Text Tiles (*.ktb *.txt);;Kitab Files (*.ktb);;Text Files (*.txt)")
         if not self.file_path:
             return
         else:
-            with open(self.file_path, "r", encoding="utf-8") as file:
-                data = file.read()
-                if self.file_path[-3:] == "ktb":
-                    self.editor.setHtml(data)
-                elif self.file_path[-3:] == "txt":
-                    self.editor.setPlainText(data)
-                self.editor.document().setModified(False)
-                self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
-                total_pages = self.editor.document().pageCount()
-                self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
-                self.file_name = Path(self.file_path).name
-                self.setWindowTitle(f"{self.file_name}  –  Kitab")
-                
+            self.open_file()
 
 
     def export_file(self):
