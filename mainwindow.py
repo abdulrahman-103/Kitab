@@ -7,7 +7,6 @@ import sys
 from pathlib import Path
 from pyqttooltip import Tooltip, TooltipPlacement
 import zipfile
-import io
 import json
 
 
@@ -23,7 +22,7 @@ class MainWindow(QMainWindow):
         self.file_path = None
         self.file_name = None
         self.format_filter = None
-        self.last_directory = ""
+        self.last_directory = None
         
         from images import ICON_BASE64
         icon = QImage.fromData(base64.b64decode(ICON_BASE64))
@@ -186,7 +185,7 @@ class MainWindow(QMainWindow):
         self.color_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.color_tooltip.setShowDelay(500) 
         self.color_button.setFixedSize(self.size_unit*1.5, self.size_unit)
-        self.color_button.setStyleSheet(f"background-color: {self.editor.DEFAULT_FONT_COLOR}")
+        self.color_button.setStyleSheet(f"background-color: {self.editor.DEFAULT_FONT_COLOR};")
         self.color_button.clicked.connect(self.font_color)
         toolbar.addWidget(self.color_button)
         toolbar.addSeparator()
@@ -197,7 +196,7 @@ class MainWindow(QMainWindow):
         self.highlight_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.highlight_tooltip.setShowDelay(500)
         self.highlight_button.setFixedSize(self.size_unit*1.5, self.size_unit)
-        self.highlight_button.setStyleSheet("background-color: yellow")
+        self.highlight_button.setStyleSheet("background-color: yellow;")
         self.highlight_button.clicked.connect(self.highlight_text)
         toolbar.addWidget(self.highlight_button)
         toolbar.addSeparator()
@@ -208,7 +207,7 @@ class MainWindow(QMainWindow):
         self.bold_tooltip.setShowDelay(500) 
         self.bold_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.bold_button.setCheckable(True)
-        self.bold_button.setStyleSheet("font-weight: bold")
+        self.bold_button.setStyleSheet("font-weight: bold;")
         self.bold_button.clicked.connect(self.toggle_bold)
         toolbar.addWidget(self.bold_button)
         toolbar.addSeparator()
@@ -219,7 +218,7 @@ class MainWindow(QMainWindow):
         self.strikethrough_tooltip.setShowDelay(500) 
         self.strikethrough_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.strikethrough_button.setCheckable(True)
-        self.strikethrough_button.setStyleSheet("font-weight: bold")
+        self.strikethrough_button.setStyleSheet("font-weight: bold;")
         self.strikethrough_button.clicked.connect(self.toggle_strikethrough)
         toolbar.addWidget(self.strikethrough_button)
         toolbar.addSeparator()
@@ -241,7 +240,7 @@ class MainWindow(QMainWindow):
         self.italic_tooltip.setShowDelay(500) 
         self.italic_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.italic_button.setCheckable(True)
-        self.italic_button.setStyleSheet("font-weight: bold; text-align: bottom; font-size:12pt;")
+        self.italic_button.setStyleSheet("font-weight: bold; font-size:12pt;")
         self.italic_button.clicked.connect(self.toggle_italic)
         toolbar.addWidget(self.italic_button)
         toolbar.addSeparator()
@@ -251,7 +250,7 @@ class MainWindow(QMainWindow):
         self.clear_formatting_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.clear_formatting_tooltip.setShowDelay(500) 
         self.clear_formatting_button.setFixedSize(self.size_unit*1.5, self.size_unit)
-        self.clear_formatting_button.setStyleSheet("font-weight: bold")
+        self.clear_formatting_button.setStyleSheet("font-weight: bold;")
         self.clear_formatting_button.clicked.connect(self.clear_formatting)
         toolbar.addWidget(self.clear_formatting_button)
         toolbar.addSeparator()
@@ -263,7 +262,7 @@ class MainWindow(QMainWindow):
         self.align_left_tooltip.setShowDelay(500) 
         self.align_left_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.align_left_button.setCheckable(True)
-        self.align_left_button.setStyleSheet("font-size: 18pt")
+        self.align_left_button.setStyleSheet("font-size: 18pt;")
         self.align_left_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignLeft))
         toolbar.addWidget(self.align_left_button)
 
@@ -274,7 +273,7 @@ class MainWindow(QMainWindow):
         self.align_center_tooltip.setShowDelay(500) 
         self.align_center_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.align_center_button.setCheckable(True)
-        self.align_center_button.setStyleSheet("font-size: 18pt")
+        self.align_center_button.setStyleSheet("font-size: 18pt;")
         self.align_center_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignHCenter))
         toolbar.addWidget(self.align_center_button)
 
@@ -285,7 +284,7 @@ class MainWindow(QMainWindow):
         self.align_right_tooltip.setShowDelay(500) 
         self.align_right_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.align_right_button.setCheckable(True)
-        self.align_right_button.setStyleSheet("font-size: 18pt")
+        self.align_right_button.setStyleSheet("font-size: 18pt;")
         self.align_right_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignRight))
         toolbar.addWidget(self.align_right_button)
         self.alignment_group = QButtonGroup(self)
@@ -486,7 +485,7 @@ class MainWindow(QMainWindow):
             
             self.font_family_menu.setCurrentFont(font)
 
-            self.color_button.setStyleSheet(f"font-weight: bold; background-color: {self.editor.textColor().name()}")
+            self.color_button.setStyleSheet(f"font-weight: bold; background-color: {self.editor.textColor().name()};")
 
             bold_status = font.bold()
             self.bold_button.setChecked(bold_status)
@@ -503,9 +502,9 @@ class MainWindow(QMainWindow):
             char_format = self.editor.textCursor().charFormat()
             bg_color = char_format.background()
             if bg_color.style() != Qt.BrushStyle.NoBrush:
-                self.highlight_button.setStyleSheet(f"background-color: {bg_color.color().name()}")
+                self.highlight_button.setStyleSheet(f"background-color: {bg_color.color().name()};")
             else:
-                self.highlight_button.setStyleSheet("background-color: yellow")
+                self.highlight_button.setStyleSheet("background-color: yellow;")
 
             cursor = self.editor.textCursor()
             block_format = cursor.blockFormat()
@@ -529,7 +528,7 @@ class MainWindow(QMainWindow):
         if dialog.exec() == QColorDialog.Accepted:
             color = dialog.selectedColor()
             self.editor.setTextColor(color)
-            self.color_button.setStyleSheet(f"font-weight: bold; background-color: {color.name()}")
+            self.color_button.setStyleSheet(f"font-weight: bold; background-color: {color.name()};")
         self.view.viewport().setFocus()
 
     def highlight_text(self):
@@ -548,7 +547,7 @@ class MainWindow(QMainWindow):
             char_format = QTextCharFormat()
             char_format.setBackground(self.highlight_color)
             cursor.mergeCharFormat(char_format)
-            self.highlight_button.setStyleSheet(f"background-color: {self.highlight_color.name()}")
+            self.highlight_button.setStyleSheet(f"background-color: {self.highlight_color.name()};")
         self.view.viewport().setFocus()
 
     def toggle_bold(self):
@@ -656,7 +655,7 @@ class MainWindow(QMainWindow):
         self.sync_font()
         font_size = self.editor.currentFont().pointSize()
         self.font_size_menu.setCurrentText(str(font_size))
-        self.color_button.setStyleSheet(f"font-weight: bold; background-color: {self.editor.textColor().name()}")
+        self.color_button.setStyleSheet(f"font-weight: bold; background-color: {self.editor.textColor().name()};")
         self.view.viewport().setFocus()
 
     def font_family(self, font):
@@ -822,11 +821,8 @@ class Editor(QTextEdit):
     def __init__(self, main_window):
         super().__init__()
         self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute
-        self.set_paper_color(self.DEFAULT_PAPER_COLOR)
-        self.setTextColor(self.DEFAULT_FONT_COLOR)
-        self.last_page_char_index_list = []
-        self.pages = []
-        
+        self.set_paper_and_font_color(self.DEFAULT_PAPER_COLOR, self.DEFAULT_FONT_COLOR)
+
         self.base_width, self.base_height = self.PAGE_SIZES["A4"]
         self.page_size = "A4"
 
@@ -853,9 +849,11 @@ class Editor(QTextEdit):
         self.document().setModified(False)
         
 
-    def set_paper_color(self, color):
-        self.setStyleSheet(f"QTextEdit {{ background-color: {color}; }}")
-        self.paper_color = color
+    def set_paper_and_font_color(self, paper_color, font_color):
+        self.setStyleSheet(f"QTextEdit {{ background-color: {paper_color}; color: {font_color} }};")
+        self.paper_color = paper_color
+
+    
 
 
     def current_page(self):
@@ -885,7 +883,7 @@ class Editor(QTextEdit):
         self.setCurrentFont(font)
         self.main_window.align(self.old_text_align)
         self.setTextColor(color)
-        self.main_window.color_button.setStyleSheet(f"font-weight: bold; background-color: {color.name()}")
+        self.main_window.color_button.setStyleSheet(f"font-weight: bold; background-color: {color.name()};")
         self.main_window.bold_button.setChecked(font.bold())
         self.main_window.strikethrough_button.setChecked(font.strikeOut())
         self.main_window.underline_button.setChecked(font.underline()) 
