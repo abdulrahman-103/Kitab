@@ -196,7 +196,7 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.bold_button)
         toolbar.addSeparator()
 
-        self.strikethrough_button = QPushButton("—", self)
+        self.strikethrough_button = QPushButton("S", self)
         self.strikethrough_tooltip = Tooltip(self.strikethrough_button, "Strikethrough")
         self.strikethrough_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.strikethrough_tooltip.setShowDelay(500) 
@@ -207,13 +207,13 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.strikethrough_button)
         toolbar.addSeparator()
 
-        self.underline_button = QPushButton("—", self)
+        self.underline_button = QPushButton("U", self)
         self.underline_tooltip = Tooltip(self.underline_button, "Underline")
         self.underline_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.underline_tooltip.setShowDelay(500) 
         self.underline_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.underline_button.setCheckable(True)
-        self.underline_button.setStyleSheet("font-weight: bold; text-align: bottom;")
+        self.underline_button.setStyleSheet("font-weight: bold;")
         self.underline_button.clicked.connect(self.toggle_underline)
         toolbar.addWidget(self.underline_button)
         toolbar.addSeparator()
@@ -301,9 +301,9 @@ class MainWindow(QMainWindow):
 
     def zoom(self, direction: str):
         if direction == "in" and self.zoom_factor < 5.0:
-            self.zoom_factor += 0.075
+            self.zoom_factor *= 1.1
         elif direction == "out" and self.zoom_factor > 0.1:
-            self.zoom_factor -= 0.075
+            self.zoom_factor *= 0.9
         
         self.view.resetTransform()  
         self.view.scale(self.zoom_factor, self.zoom_factor)
