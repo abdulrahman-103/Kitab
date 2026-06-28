@@ -122,7 +122,7 @@ class MainWindow(QMainWindow):
 
         export = file_menu.addAction("Export")
         export.triggered.connect(self.export_file)
-        export.setShortcut("Ctrl+E")
+        export.setShortcut("Ctrl+Shift+E")
 
         print_option = file_menu.addAction("Print")
         print_option.triggered.connect(self.print_document)
@@ -245,6 +245,7 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
 
         self.align_left_button = QPushButton("←", self)
+        self.align_left_button.setShortcut("Ctrl+L")
         self.align_left_tooltip = Tooltip(self.align_left_button, "Align Left")
         self.align_left_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.align_left_tooltip.setShowDelay(500) 
@@ -255,6 +256,7 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.align_left_button)
 
         self.align_center_button = QPushButton("•", self)
+        self.align_center_button.setShortcut("Ctrl+E")
         self.align_center_tooltip = Tooltip(self.align_center_button, "Align Center")
         self.align_center_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.align_center_tooltip.setShowDelay(500) 
@@ -265,6 +267,7 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.align_center_button)
 
         self.align_right_button = QPushButton("→", self)
+        self.align_right_button.setShortcut("Ctrl+R")
         self.align_right_tooltip = Tooltip(self.align_right_button, "Align Right")
         self.align_right_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
         self.align_right_tooltip.setShowDelay(500) 
