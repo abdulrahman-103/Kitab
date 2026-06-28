@@ -432,8 +432,8 @@ class MainWindow(QMainWindow):
 
 
     def export_file(self):
-        self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Export file", "", "PDF File (*.pdf)")
-        if not self.file_path:
+        file_path, format_filter = QFileDialog.getSaveFileName(self, "Export file", "", "PDF File (*.pdf)")
+        if not file_path:
             return
         else:
             exporting = QProgressDialog("Exporting...", None, 0, 0, self)
@@ -442,7 +442,7 @@ class MainWindow(QMainWindow):
             export_timer = QElapsedTimer()
             export_timer.start()
             exporting.show()
-            pdf_writer = QPdfWriter(self.file_path)
+            pdf_writer = QPdfWriter(file_path)
             pdf_writer.setPageSize(QPageSize(QSize(self.editor.base_width, self.editor.base_height)))
             document = self.editor.document()
             document.print_(pdf_writer)
@@ -692,6 +692,8 @@ class MainWindow(QMainWindow):
         self.editor.setMinimumSize(width, height)
         self.editor.setFixedSize(width, self.editor.page_count * height)
         self.scene.setSceneRect(QRectF(self.editor.rect()))
+        self.editor.document().setPageSize(QSize(width, height))
+        self.editor.page_count = self.editor.document().pageCount()
         self.page_size_dialog.close()
 
     def find_replace(self):
@@ -864,22 +866,12 @@ class Editor(QTextEdit):
         self.main_window.font_size_menu.setCurrentText(str(font.pointSize()))
 
     def check_page_limit(self):
-        old_page_count = self.page_count
-        cursor = self.textCursor()
-        cursor.movePosition(QTextCursor.MoveOperation.Left, QTextCursor.MoveMode.KeepAnchor, 1)
-        last_char_index = cursor.position()
-
         self.page_count = self.document().pageCount()
         self.setFixedSize(self.width(), self.page_count * self.base_height)
         self.main_window.scene.setSceneRect(QRectF(self.rect()))
         self.document().setPageSize(QSize(self.base_width, self.base_height))
         self.page_count = self.document().pageCount()
 
-        ##########################
-        if old_page_count != self.page_count:
-            self.last_page_char_index_list.append(last_char_index)
-            print(f"last page char list: {self.last_page_char_index_list}")
-        ##########################
 
     def set_line_height(self, value):
         cursor = self.textCursor()
