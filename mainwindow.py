@@ -866,7 +866,6 @@ class Editor(QTextEdit):
     def paintEvent(self, event):
         painter = QPainter(self.viewport())
         gap_height = 6  #The thickness of the gap (in pixels)
-        self.page_count = self.document().pageCount() #number of pages
         for page_index in range(self.page_count):
             page_bottom = (page_index+1) * self.base_height - gap_height//2 #page bottom position
             if page_index < self.page_count - 1: #excludes last page
