@@ -58,7 +58,6 @@ class MainWindow(QMainWindow):
         if len(sys.argv) == 2:
             open_with_commandline = True
             self.file_path = sys.argv[1]
-            self.editor.blockSignals(True)
             with open(self.file_path, "r", encoding="utf-8") as file:
                 data = file.read()
                 if self.file_path[-3:] == "ktb":
@@ -72,7 +71,6 @@ class MainWindow(QMainWindow):
                 self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
                 self.file_name = Path(self.file_path).name
                 self.setWindowTitle(f"{self.file_name}  –  Kitab")
-            self.editor.blockSignals(False)
         self.view.viewport().setFocus()
         if not open_with_commandline:
             self.editor.setFocus()
@@ -380,7 +378,6 @@ class MainWindow(QMainWindow):
         self.editor.document().setModified(False)
 
     def open_file(self):
-        self.editor.blockSignals(True)
         self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", "", "Kitab Files and Text Tiles (*.ktb *.txt);;Kitab Files (*.ktb);;Text Files (*.txt)")
         if not self.file_path:
             return
@@ -397,7 +394,6 @@ class MainWindow(QMainWindow):
                 self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
                 self.file_name = Path(self.file_path).name
                 self.setWindowTitle(f"{self.file_name}  –  Kitab")
-        self.editor.blockSignals(False)
                 
 
 
