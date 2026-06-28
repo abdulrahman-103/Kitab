@@ -23,6 +23,7 @@ class MainWindow(QMainWindow):
         self.file_path = None
         self.file_name = None
         self.format_filter = None
+        self.last_directory = ""
         
         from images import ICON_BASE64
         icon = QImage.fromData(base64.b64decode(ICON_BASE64))
@@ -66,7 +67,7 @@ class MainWindow(QMainWindow):
         
     def closeEvent(self, event):
         def close_tooltips():
-            tooltips = [self.color_tooltip, self.bold_tooltip, self.strikethrough_tooltip, self.underline_tooltip, self.clear_formatting_tooltip, self.align_left_tooltip, self.align_right_tooltip, self.align_center_tooltip, self.italic_tooltip, self.font_family_tooltip, self.font_size_tooltip]
+            tooltips = [self.color_tooltip, self.highlight_tooltip, self.bold_tooltip, self.strikethrough_tooltip, self.underline_tooltip, self.clear_formatting_tooltip, self.align_left_tooltip, self.align_right_tooltip, self.align_center_tooltip, self.italic_tooltip, self.font_family_tooltip, self.font_size_tooltip]
             for tooltip in tooltips:
                 try:
                     tooltip.deleteLater()
@@ -188,6 +189,17 @@ class MainWindow(QMainWindow):
         self.color_button.setStyleSheet(f"background-color: {self.editor.DEFAULT_FONT_COLOR}")
         self.color_button.clicked.connect(self.font_color)
         toolbar.addWidget(self.color_button)
+        toolbar.addSeparator()
+
+        self.highlight_color = QColor("yellow")
+        self.highlight_button = QPushButton("🖍", self)
+        self.highlight_tooltip = Tooltip(self.highlight_button, "Highlight")
+        self.highlight_tooltip.setOffsetByPlacement(TooltipPlacement.BOTTOM, QPoint(0, self.size_unit*1.25))
+        self.highlight_tooltip.setShowDelay(500)
+        self.highlight_button.setFixedSize(self.size_unit*1.5, self.size_unit)
+        self.highlight_button.setStyleSheet("background-color: yellow")
+        self.highlight_button.clicked.connect(self.highlight_text)
+        toolbar.addWidget(self.highlight_button)
         toolbar.addSeparator()
 
         self.bold_button = QPushButton("B", self)
@@ -362,21 +374,22 @@ class MainWindow(QMainWindow):
 
     def save(self):
         if not self.file_path:
-            self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", "", "Kitab File (*.ktb);;Text File (*.txt)")
+            self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab File (*.ktb);;Text File (*.txt)")
             if not self.file_path:
                 return
-            else:
-                self._save_file()
+            self.last_directory = str(Path(self.file_path).parent)
+            self._save_file()
         else:
             self._save_file()
 
 
     def save_as(self, show_dialog=True):
         file_path, format_filter = self.file_path, self.format_filter
-        self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", "", "Kitab File (*.ktb);;Text File (*.txt)")
+        self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab File (*.ktb);;Text File (*.txt)")
         if not self.file_path:
             self.file_path, self.format_filter = file_path, format_filter
         else:
+            self.last_directory = str(Path(self.file_path).parent)
             self._save_file()
 
     def new(self):
@@ -406,35 +419,35 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{self.file_name}  –  Kitab")
 
     def open(self):
-        self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", "", "Kitab Files and Text Tiles (*.ktb *.txt);;Kitab Files (*.ktb);;Text Files (*.txt)")
+        self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", self.last_directory, "Kitab Files and Text Tiles (*.ktb *.txt);;Kitab Files (*.ktb);;Text Files (*.txt)")
         if not self.file_path:
             return
-        else:
-            self._open_file()
+        self.last_directory = str(Path(self.file_path).parent)
+        self._open_file()
 
 
     def export_file(self):
-        file_path, format_filter = QFileDialog.getSaveFileName(self, "Export file", "", "PDF File (*.pdf)")
+        file_path, format_filter = QFileDialog.getSaveFileName(self, "Export file", self.last_directory, "PDF File (*.pdf)")
         if not file_path:
             return
+        self.last_directory = str(Path(file_path).parent)
+        exporting = QProgressDialog("Exporting...", None, 0, 0, self)
+        exporting.setWindowTitle("Exporting...")
+        exporting.setWindowModality(Qt.WindowModality.WindowModal)
+        export_timer = QElapsedTimer()
+        export_timer.start()
+        exporting.show()
+        pdf_writer = QPdfWriter(file_path)
+        pdf_writer.setPageSize(QPageSize(QSize(self.editor.base_width, self.editor.base_height)))
+        document = self.editor.document()
+        document.print_(pdf_writer)
+        time_taken = export_timer.elapsed()
+        minimum_time = 500
+        if time_taken >= minimum_time:
+            exporting.close()
         else:
-            exporting = QProgressDialog("Exporting...", None, 0, 0, self)
-            exporting.setWindowTitle("Exporting...")
-            exporting.setWindowModality(Qt.WindowModality.WindowModal)
-            export_timer = QElapsedTimer()
-            export_timer.start()
-            exporting.show()
-            pdf_writer = QPdfWriter(file_path)
-            pdf_writer.setPageSize(QPageSize(QSize(self.editor.base_width, self.editor.base_height)))
-            document = self.editor.document()
-            document.print_(pdf_writer)
-            time_taken = export_timer.elapsed()
-            minimum_time = 500
-            if time_taken >= minimum_time:
-                exporting.close()
-            else:
-                remaining_time = minimum_time - time_taken
-                QTimer.singleShot(remaining_time, exporting.close)
+            remaining_time = minimum_time - time_taken
+            QTimer.singleShot(remaining_time, exporting.close)
 
     def shortcuts(self):
         #fullscreen
@@ -487,6 +500,13 @@ class MainWindow(QMainWindow):
             italic_status = font.italic()
             self.italic_button.setChecked(italic_status)
 
+            char_format = self.editor.textCursor().charFormat()
+            bg_color = char_format.background()
+            if bg_color.style() != Qt.BrushStyle.NoBrush:
+                self.highlight_button.setStyleSheet(f"background-color: {bg_color.color().name()}")
+            else:
+                self.highlight_button.setStyleSheet("background-color: yellow")
+
             cursor = self.editor.textCursor()
             block_format = cursor.blockFormat()
             alignment_status = block_format.alignment()
@@ -510,6 +530,25 @@ class MainWindow(QMainWindow):
             color = dialog.selectedColor()
             self.editor.setTextColor(color)
             self.color_button.setStyleSheet(f"font-weight: bold; background-color: {color.name()}")
+        self.view.viewport().setFocus()
+
+    def highlight_text(self):
+        dialog = QColorDialog(self.highlight_color)
+        labels = dialog.findChildren(QLabel)
+        for label in labels:
+            if label.text() == "&HTML:":
+                label.setText("&HEX:")
+                label.adjustSize()
+
+        if dialog.exec() == QColorDialog.Accepted:
+            self.highlight_color = dialog.selectedColor()
+            cursor = self.editor.textCursor()
+            if not cursor.hasSelection():
+                cursor.select(QTextCursor.SelectionType.WordUnderCursor)
+            char_format = QTextCharFormat()
+            char_format.setBackground(self.highlight_color)
+            cursor.mergeCharFormat(char_format)
+            self.highlight_button.setStyleSheet(f"background-color: {self.highlight_color.name()}")
         self.view.viewport().setFocus()
 
     def toggle_bold(self):
@@ -567,10 +606,11 @@ class MainWindow(QMainWindow):
             self.editor.document().print_(printer)
 
     def insert_image(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Choose image", "", "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.svg);;PNG Image (*.png);;JPEG Image (*.jpg *.jpeg);;SVG Image (*.svg);;BMP Image (*.bmp);;GIF Image (*.gif);;All Files (*)")
+        path, _ = QFileDialog.getOpenFileName(self, "Choose image", self.last_directory, "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.svg);;PNG Image (*.png);;JPEG Image (*.jpg *.jpeg);;SVG Image (*.svg);;BMP Image (*.bmp);;GIF Image (*.gif);;All Files (*)")
 
         if not path:
             return
+        self.last_directory = str(Path(path).parent)
         image_format = QTextImageFormat()
         image_format.setName(path)
         image_format.setWidth(self.editor.base_width - 100)
