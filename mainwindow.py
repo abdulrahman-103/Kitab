@@ -50,10 +50,6 @@ class MainWindow(QMainWindow):
         self.editor.cursorPositionChanged.connect(self.sync_font)
         self.editor.textChanged.connect(self.sync_font)
 
-        self.zoom_factor = resolution.height() / self.editor.height()
-        self.view.scale(self.zoom_factor, self.zoom_factor)
-        self.scroll_bar = self.view.verticalScrollBar()
-        self.view.viewport().installEventFilter(self)
         self.shortcuts()
 
         #opening file with commandline
@@ -61,8 +57,13 @@ class MainWindow(QMainWindow):
             self.file_path = sys.argv[1]
             self._open_file()
 
+        self.scroll_bar = self.view.verticalScrollBar()
         self.add_statusbar()
-
+        self.default_zoom_factor = resolution.height() / self.editor.base_height
+        self.zoom_factor = self.default_zoom_factor
+        self.view.scale(self.zoom_factor, self.zoom_factor)
+        self.view.viewport().installEventFilter(self)
+        self.scroll_bar.setValue(0)
         
     def closeEvent(self, event):
         def close_tooltips():
@@ -100,9 +101,9 @@ class MainWindow(QMainWindow):
         close_tooltips()
 
     def add_menubar(self):
-        menubar = self.menuBar()
+        self.menubar = self.menuBar()
 
-        file_menu = menubar.addMenu("File")
+        file_menu = self.menubar.addMenu("File")
 
         new_option = file_menu.addAction("New")
         new_option.triggered.connect(self.new)
@@ -132,7 +133,7 @@ class MainWindow(QMainWindow):
         exit_option.triggered.connect(self.app.quit)
         exit_option.setShortcut("Ctrl+F4")
 
-        insert_menu = menubar.addMenu("Insert")
+        insert_menu = self.menubar.addMenu("Insert")
 
         table_option = insert_menu.addAction("Table")
         table_option.triggered.connect(self.insert_table)
@@ -142,15 +143,15 @@ class MainWindow(QMainWindow):
         image_option.triggered.connect(self.insert_image)
         image_option.setShortcut("Ctrl+I")
 
-        page_menu = menubar.addMenu("Page")
+        page_menu = self.menubar.addMenu("Page")
 
         page_size_option = page_menu.addAction("Page Size")
         page_size_option.triggered.connect(self.page_size)
 
 
     def add_toolbar(self):
-        toolbar = QToolBar()
-        toolbar.setMovable(False)
+        self.toolbar = QToolBar()
+        self.toolbar.setMovable(False)
         self.font_family_menu = QFontComboBox()
         self.size_unit = self.font_family_menu.sizeHint().height()
         self.font_family_tooltip = Tooltip(self.font_family_menu, "Font Family")
@@ -160,8 +161,8 @@ class MainWindow(QMainWindow):
         self.font_family_menu.setFixedWidth(self.size_unit*6)
         self.font_family_menu.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.font_family_menu.currentFontChanged.connect(self.font_family)
-        toolbar.addWidget(self.font_family_menu)
-        toolbar.addSeparator()
+        self.toolbar.addWidget(self.font_family_menu)
+        self.toolbar.addSeparator()
 
         self.font_size_menu = QComboBox()
         self.font_size_tooltip = Tooltip(self.font_size_menu, "Font Size")
@@ -177,8 +178,8 @@ class MainWindow(QMainWindow):
         self.font_size_menu.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.font_size_menu.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.font_size_menu.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
-        toolbar.addWidget(self.font_size_menu)
-        toolbar.addSeparator()
+        self.toolbar.addWidget(self.font_size_menu)
+        self.toolbar.addSeparator()
 
         self.color_button = QPushButton("", self)
         self.color_tooltip = Tooltip(self.color_button, "Font Color")
@@ -187,8 +188,8 @@ class MainWindow(QMainWindow):
         self.color_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.color_button.setStyleSheet(f"background-color: {self.editor.DEFAULT_FONT_COLOR};")
         self.color_button.clicked.connect(self.font_color)
-        toolbar.addWidget(self.color_button)
-        toolbar.addSeparator()
+        self.toolbar.addWidget(self.color_button)
+        self.toolbar.addSeparator()
 
         self.highlight_color = QColor("yellow")
         self.highlight_button = QPushButton("🖍", self)
@@ -198,8 +199,8 @@ class MainWindow(QMainWindow):
         self.highlight_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.highlight_button.setStyleSheet("background-color: yellow;")
         self.highlight_button.clicked.connect(self.highlight_text)
-        toolbar.addWidget(self.highlight_button)
-        toolbar.addSeparator()
+        self.toolbar.addWidget(self.highlight_button)
+        self.toolbar.addSeparator()
 
         self.bold_button = QPushButton("B", self)
         self.bold_tooltip = Tooltip(self.bold_button, "Bold")
@@ -209,8 +210,8 @@ class MainWindow(QMainWindow):
         self.bold_button.setCheckable(True)
         self.bold_button.setStyleSheet("font-weight: bold;")
         self.bold_button.clicked.connect(self.toggle_bold)
-        toolbar.addWidget(self.bold_button)
-        toolbar.addSeparator()
+        self.toolbar.addWidget(self.bold_button)
+        self.toolbar.addSeparator()
 
         self.strikethrough_button = QPushButton("S", self)
         self.strikethrough_tooltip = Tooltip(self.strikethrough_button, "Strikethrough")
@@ -220,8 +221,8 @@ class MainWindow(QMainWindow):
         self.strikethrough_button.setCheckable(True)
         self.strikethrough_button.setStyleSheet("font-weight: bold;")
         self.strikethrough_button.clicked.connect(self.toggle_strikethrough)
-        toolbar.addWidget(self.strikethrough_button)
-        toolbar.addSeparator()
+        self.toolbar.addWidget(self.strikethrough_button)
+        self.toolbar.addSeparator()
 
         self.underline_button = QPushButton("U", self)
         self.underline_tooltip = Tooltip(self.underline_button, "Underline")
@@ -231,8 +232,8 @@ class MainWindow(QMainWindow):
         self.underline_button.setCheckable(True)
         self.underline_button.setStyleSheet("font-weight: bold;")
         self.underline_button.clicked.connect(self.toggle_underline)
-        toolbar.addWidget(self.underline_button)
-        toolbar.addSeparator()
+        self.toolbar.addWidget(self.underline_button)
+        self.toolbar.addSeparator()
 
         self.italic_button = QPushButton("𝐼", self)
         self.italic_tooltip = Tooltip(self.italic_button, "Italic")
@@ -242,8 +243,8 @@ class MainWindow(QMainWindow):
         self.italic_button.setCheckable(True)
         self.italic_button.setStyleSheet("font-weight: bold; font-size:12pt;")
         self.italic_button.clicked.connect(self.toggle_italic)
-        toolbar.addWidget(self.italic_button)
-        toolbar.addSeparator()
+        self.toolbar.addWidget(self.italic_button)
+        self.toolbar.addSeparator()
 
         self.clear_formatting_button = QPushButton("X", self)
         self.clear_formatting_tooltip = Tooltip(self.clear_formatting_button, "Clear Formatting")
@@ -252,8 +253,8 @@ class MainWindow(QMainWindow):
         self.clear_formatting_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.clear_formatting_button.setStyleSheet("font-weight: bold;")
         self.clear_formatting_button.clicked.connect(self.clear_formatting)
-        toolbar.addWidget(self.clear_formatting_button)
-        toolbar.addSeparator()
+        self.toolbar.addWidget(self.clear_formatting_button)
+        self.toolbar.addSeparator()
 
         self.align_left_button = QPushButton("←", self)
         self.align_left_button.setShortcut("Ctrl+L")
@@ -264,7 +265,7 @@ class MainWindow(QMainWindow):
         self.align_left_button.setCheckable(True)
         self.align_left_button.setStyleSheet("font-size: 18pt;")
         self.align_left_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignLeft))
-        toolbar.addWidget(self.align_left_button)
+        self.toolbar.addWidget(self.align_left_button)
 
         self.align_center_button = QPushButton("•", self)
         self.align_center_button.setShortcut("Ctrl+E")
@@ -275,7 +276,7 @@ class MainWindow(QMainWindow):
         self.align_center_button.setCheckable(True)
         self.align_center_button.setStyleSheet("font-size: 18pt;")
         self.align_center_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignHCenter))
-        toolbar.addWidget(self.align_center_button)
+        self.toolbar.addWidget(self.align_center_button)
 
         self.align_right_button = QPushButton("→", self)
         self.align_right_button.setShortcut("Ctrl+R")
@@ -286,14 +287,14 @@ class MainWindow(QMainWindow):
         self.align_right_button.setCheckable(True)
         self.align_right_button.setStyleSheet("font-size: 18pt;")
         self.align_right_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignRight))
-        toolbar.addWidget(self.align_right_button)
+        self.toolbar.addWidget(self.align_right_button)
         self.alignment_group = QButtonGroup(self)
         self.alignment_group.setExclusive(True)
         self.alignment_group.addButton(self.align_left_button)
         self.alignment_group.addButton(self.align_center_button)
         self.alignment_group.addButton(self.align_right_button)
 
-        self.addToolBar(toolbar)
+        self.addToolBar(self.toolbar)
 
 
     def add_statusbar(self):
@@ -310,13 +311,22 @@ class MainWindow(QMainWindow):
         return super().eventFilter(watched, event) #If not a scroll return to original event filter
 
 
+    def keyPressEvent(self, event):
+        if event.modifiers() == Qt.KeyboardModifier.ControlModifier:
+            if event.key() in (Qt.Key.Key_Plus, Qt.Key.Key_Equal):
+                self.zoom("in")
+            elif event.key() == Qt.Key.Key_Minus:
+                self.zoom("out")
+            elif event.key() == Qt.Key.Key_0:
+                self.zoom("reset")
+                
+
     def wheelEvent(self, event):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier or event.buttons() == Qt.MouseButton.RightButton:
-            self.editor.was_zooming = True
             direction = event.angleDelta().y()
             if direction > 0:
                 self.zoom("in")
-            else:
+            elif direction <0:
                 self.zoom("out")
         else:
             if self.scroll_bar:
@@ -325,6 +335,7 @@ class MainWindow(QMainWindow):
 
 
     def zoom(self, direction: str):
+        self.editor.was_zooming = True
         resolution = self.app.primaryScreen().size()
         resolution_factor = resolution.height() / 720 #my resolution is 1080p with 150% scaling. the factor use is to make the max and min limits equal on all resolutions
         min = 0.05 * resolution_factor
@@ -333,6 +344,8 @@ class MainWindow(QMainWindow):
             self.zoom_factor *= 1.1
         elif direction == "out" and self.zoom_factor > min:
             self.zoom_factor *= 0.9
+        elif direction == "reset":
+            self.zoom_factor = self.default_zoom_factor
         
         self.view.resetTransform()  
         self.view.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
