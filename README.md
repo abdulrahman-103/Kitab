@@ -112,7 +112,7 @@ Kitab/
 
 ### التنصيب
 
-#### Arch Linux
+#### ‏Arch Linux
 
 ```bash
 sudo pacman -S pyside6 python-qtpy
