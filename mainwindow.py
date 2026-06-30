@@ -653,8 +653,6 @@ class MainWindow(QMainWindow):
 
     def clear_formatting(self):
         cursor = self.editor.textCursor()
-        if not cursor.hasSelection():
-            cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
         plain = QTextCharFormat()
         plain.setFontPointSize(Editor.DEFAULT_FONT_SIZE)
         plain.setForeground(QColor(self.editor.DEFAULT_FONT_COLOR)) 
