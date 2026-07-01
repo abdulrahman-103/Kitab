@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kitab"
+version = "0.1.0"
+description = "A simple and lightweight word processor written in qt. معالج نصوص بسيط وخفيف مكتوب بمكتبة qt."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "GPL-3.0-or-later"
+license-files = ["LICEN[CS]E*"]
+dependencies = [
+    "PySide6-Essentials==6.11.1",
+    "pyqttooltip==1.0.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/abdulrahman-103/Kitab"
+Issues = "https://github.com/abdulrahman-103/Kitab/issues"
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "/*.py"
+]
