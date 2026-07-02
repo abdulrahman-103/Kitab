@@ -69,8 +69,8 @@ python main.py
 ### Other platforms
 
 ```bash
-pip install -r requirements.txt
-python main.py
+pip install kitab-writer
+kitab
 ```
 
 ---
@@ -134,6 +134,6 @@ python main.py
 #### المنصات الأخرى
 
 ```bash
-pip install -r requirements.txt
-python main.py
+pip install kitab-writer
+kitab
 ```
