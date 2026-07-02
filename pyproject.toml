@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kitab-writer"
-version = "0.1.0"
+version = "0.1.1"s
 description = "A simple and lightweight word processor written in qt. معالج نصوص بسيط وخفيف مكتوب بمكتبة qt."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -24,9 +24,7 @@ Homepage = "https://github.com/abdulrahman-103/Kitab"
 Issues = "https://github.com/abdulrahman-103/Kitab/issues"
 
 [project.gui-scripts]
-kitab = "main:main"
+kitab = "kitab.main:main"
 
 [tool.hatch.build.targets.wheel]
-include = [
-    "/src/*.py"
-]
+packages = ["src/kitab"]
