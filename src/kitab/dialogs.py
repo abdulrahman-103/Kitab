@@ -1,13 +1,6 @@
-from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QFontComboBox, QInputDialog, QStatusBar
-from PySide6.QtGui import QAction, QIntValidator, QIcon, QPainter, QColor, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextOption, QTextDocument, QTextTableFormat, QTextLength, QTextImageFormat
-from PySide6.QtPrintSupport import QPrinter, QPrintDialog
-from PySide6.QtCore import QTimer, Qt, QSize, QRect, QElapsedTimer, QRectF, QPoint
-import base64
-import sys
-from pathlib import Path
-from pyqttooltip import Tooltip, TooltipPlacement
-import zipfile
-import json
+from PySide6.QtWidgets import QPushButton, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout
+from PySide6.QtGui import QTextCursor, QTextDocument
+
 
 class FindReplaceDialog(QDialog):
     def __init__(self, editor, parent):
