@@ -14,7 +14,7 @@ from pyqttooltip import Tooltip, TooltipPlacement
 import zipfile
 import json
 from dialogs import FindReplaceDialog
-
+BACKGROUND_COLOR = QColor("#1e1e1e")
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
         self.scene.addWidget(self.editor)
         self.view = QGraphicsView(self.scene)
         self.view.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.view.setStyleSheet("background-color: #1e1e1e;")
+        self.view.setStyleSheet(f"background-color: {BACKGROUND_COLOR.name()};")
         self.view.centerOn(self.editor.width() / 2, 0)
         
         self.setCentralWidget(self.view)
@@ -53,7 +53,6 @@ class MainWindow(QMainWindow):
         self.align(Qt.AlignmentFlag.AlignHCenter)
 
         self.editor.cursorPositionChanged.connect(self.sync_font)
-        self.editor.textChanged.connect(self.sync_font)
 
         self.shortcuts()
 
@@ -796,7 +795,7 @@ class Editor(QTextEdit):
         self.was_zooming = False 
         self.document().setModified(False)
     
-    def dropEvent(self, event):
+    def dropEvent(self, event): #drag and drop a file
         if event.mimeData().hasUrls():
             path_list = event.mimeData().urls()
             if len(path_list) == 1:
@@ -809,7 +808,7 @@ class Editor(QTextEdit):
             super().dropEvent(event)
 
     def set_paper_and_font_color(self, paper_color, font_color):
-        self.setStyleSheet(f"QTextEdit {{ background-color: {paper_color}; color: {font_color} }};")
+        self.setStyleSheet(f"QTextEdit {{ background-color: {paper_color}; color: {font_color}; border: none; }};")
         self.paper_color = paper_color
 
     
@@ -872,8 +871,7 @@ class Editor(QTextEdit):
             page_bottom = (page_index+1) * self.base_height - gap_height//2 #page bottom position
             if page_index < self.page_count - 1: #excludes last page
                 gap_rect = QRect(0, page_bottom, self.width(), gap_height) #create gap
-                painter.fillRect(gap_rect, QColor("#1e1e1e")) #color gap
-        
+                painter.fillRect(gap_rect, BACKGROUND_COLOR) #color gap
         painter.end()
         super().paintEvent(event)
 

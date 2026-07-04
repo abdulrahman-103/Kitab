@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QPushButton, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout
 from PySide6.QtGui import QTextCursor, QTextDocument
 
-
 class FindReplaceDialog(QDialog):
     def __init__(self, editor, parent):
         super().__init__(parent)
