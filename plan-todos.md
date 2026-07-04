@@ -9,7 +9,6 @@
 - [ ] **Auto-save** — periodic save to temp file
 - [ ] **Word / character count** — status bar
 - [ ] **Simple Vim mode** — toggle in settings
-- [ ] **Markdown export** — `.md` output
 - [ ] **Clickable links** — open in browser
 - [ ] **Command palette** — Ctrl+Shift+P, fuzzy command search
 - [ ] **Multi-document tabs** — `QTabWidget`
