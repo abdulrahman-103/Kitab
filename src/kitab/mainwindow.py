@@ -14,7 +14,9 @@ from pyqttooltip import Tooltip, TooltipPlacement
 import zipfile
 import json
 from dialogs import FindReplaceDialog
+
 BACKGROUND_COLOR = QColor("#1e1e1e")
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -734,10 +736,6 @@ class MainWindow(QMainWindow):
         self.editor.base_height = height
         self.editor.document().setPageSize(QSize(width, height))
         self.editor.page_count = self.editor.document().pageCount()
-        # BUG: setMinimumSize must come before setFixedSize. Editor.__init__ sets
-        # minimum to A4 (794x1123). When switching to a smaller size like A5,
-        # setFixedSize would silently be clamped to the old minimum, keeping the
-        # widget at A4 width — causing alignment offsets and wrong page dimensions.
         self.editor.setMinimumSize(width, height)
         self.editor.setFixedSize(width, self.editor.page_count * height)
         self.scene.setSceneRect(QRectF(self.editor.rect()))
@@ -764,14 +762,13 @@ class Editor(QTextEdit):
     DEFAULT_FONT_SIZE = 14
     DEFAULT_PAPER_COLOR = "white"
     DEFAULT_FONT_COLOR = "black"
-
+    DEFAULT_PAPER_SIZE = "A4"
     def __init__(self, main_window):
         super().__init__()
         self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute
         self.set_paper_and_font_color(self.DEFAULT_PAPER_COLOR, self.DEFAULT_FONT_COLOR)
-
-        self.base_width, self.base_height = self.PAGE_SIZES["A4"]
-        self.page_size = "A4"
+        self.base_width, self.base_height = self.PAGE_SIZES[self.DEFAULT_PAPER_SIZE]
+        
 
         self.main_window = main_window
         self.setMinimumSize(self.base_width, self.base_height)
