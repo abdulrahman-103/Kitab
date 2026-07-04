@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
         self.view.viewport().installEventFilter(self)
         self.scroll_bar.setValue(0)
         self.editor.document().setModified(False)
-        
+
         
     def closeEvent(self, event):
         def close_tooltips():
@@ -368,10 +368,14 @@ class MainWindow(QMainWindow):
         saving.show()
 
         if self.file_path.endswith(".txt"):
-            txt_data = self.editor.toPlainText()
+            data = self.editor.toPlainText()
             with open(self.file_path, "w", encoding="utf-8") as file:
-                file.write(txt_data)
-        else:
+                file.write(data)
+        elif self.file_path.endswith(".md"):
+            data = self.editor.toMarkdown()
+            with open(self.file_path, "w", encoding="utf-8") as file:
+                file.write(data)
+        elif self.file_path.endswith(".ktb"):
             html_data = self.editor.toHtml()
             json_data = {"page size": self.editor.page_size}
             with zipfile.ZipFile(self.file_path, mode="w", compression=zipfile.ZIP_DEFLATED) as zip:
@@ -393,7 +397,7 @@ class MainWindow(QMainWindow):
 
     def save(self):
         if not self.file_path:
-            self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab File (*.ktb);;Text File (*.txt)")
+            self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab File (*.ktb);;Text File (*.txt);;Markdown File  (*.md)")
             if not self.file_path:
                 return
             self.last_directory = str(Path(self.file_path).parent)
@@ -404,7 +408,7 @@ class MainWindow(QMainWindow):
 
     def save_as(self, show_dialog=True):
         file_path, format_filter = self.file_path, self.format_filter
-        self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab File (*.ktb);;Text File (*.txt)")
+        self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab File (*.ktb);;Text File (*.txt);;Markdown File  (*.md)")
         if not self.file_path:
             self.file_path, self.format_filter = file_path, format_filter
         else:
@@ -430,6 +434,10 @@ class MainWindow(QMainWindow):
             with open(self.file_path, "r", encoding="utf-8") as file:
                 data = file.read()
                 self.editor.setPlainText(data)
+        elif self.file_path.endswith(".md"):
+            with open(self.file_path, "r", encoding="utf-8") as file:
+                data = file.read()
+                self.editor.setMarkdown(data)
         self.editor.document().setModified(False)
         self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
         total_pages = self.editor.document().pageCount()
@@ -438,7 +446,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{self.file_name}  –  Kitab")
 
     def open(self):
-        self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", self.last_directory, "Kitab Files and Text Tiles (*.ktb *.txt);;Kitab Files (*.ktb);;Text Files (*.txt)")
+        self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", self.last_directory, "Kitab, Text and Markdown Files (*.ktb *.txt *.md);;Kitab Files (*.ktb);;Text Files (*.txt);;Markdown Files (*.md)")
         if not self.file_path:
             return
         self.last_directory = str(Path(self.file_path).parent)
