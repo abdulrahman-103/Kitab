@@ -795,7 +795,18 @@ class Editor(QTextEdit):
         self.textChanged.connect(self.check_page_limit)
         self.was_zooming = False 
         self.document().setModified(False)
-        
+    
+    def dropEvent(self, event):
+        if event.mimeData().hasUrls():
+            path_list = event.mimeData().urls()
+            if len(path_list) == 1:
+                path = path_list[0].toLocalFile()
+                if path.endswith(".txt") or path.endswith("ktb") or path.endswith("md"):
+                    self.main_window.file_path = path
+                    self.main_window._open_file()
+            event.acceptProposedAction()
+        else:
+            super().dropEvent(event)
 
     def set_paper_and_font_color(self, paper_color, font_color):
         self.setStyleSheet(f"QTextEdit {{ background-color: {paper_color}; color: {font_color} }};")

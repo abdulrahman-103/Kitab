@@ -15,6 +15,4 @@
 - [ ] **Line numbers** — gutter
 - [ ] **Refactoring & code segmentation** — split `mainwindow.py` into separate modules:
   - `editor.py` — Editor class
-  - `dialogs.py` — FindReplaceDialog and future dialogs
   - `toolbar.py` — toolbar creation logic
-  - `mainwindow.py` — slimmed down, imports from those modules
