@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
         self.format_filter = None
         self.last_directory = None
         
-        from kitab.images import ICON_BASE64
+        from images import ICON_BASE64
         icon = QImage.fromData(base64.b64decode(ICON_BASE64))
         self.setWindowIcon(QIcon(QPixmap.fromImage(icon)))
 
@@ -69,6 +69,8 @@ class MainWindow(QMainWindow):
         self.view.scale(self.zoom_factor, self.zoom_factor)
         self.view.viewport().installEventFilter(self)
         self.scroll_bar.setValue(0)
+        self.editor.document().setModified(False)
+        
         
     def closeEvent(self, event):
         def close_tooltips():
