@@ -41,12 +41,6 @@ Kitab/
 
 ## Installation
 
-### Windows
-
-Install the `.exe` from the releases section. 
-
-WINDOWS DEFENDER WILL BE TRIGGERED BECAUSE THE APP USES PYTHON WHICH IS A LANGUAGE INFAMOUS FOR THE PRODUCTION OF VIRUSES. THE APPLICATION IS TOTALLY SAFE AND OPEN SOURCE.
-
 ### Debian/Ubuntu Linux
 
 ```bash
@@ -121,12 +115,6 @@ Kitab/
 ```
 
 ### التنصيب
-
-#### ‏Windows
-
-نزل ملف ال.exe من خانة releases.
-
-ستظهر نافذة windows defender لان التطبيق مبني بلغة بايثون سيئة السمعة بصناعة الفيروسات. التطبيق امن تماما ومفتوح المصدر وليس بفيروس تجاهل النافذة.
 
 
 ### Debian/Ubuntu Linux
