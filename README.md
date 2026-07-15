@@ -77,8 +77,10 @@ python main.py
 ### Other platforms (no theming)
 
 ```bash
-pip install kitab-writer
-kitab
+pip install pyside6-essentials
+git clone https://github.com/abdulrahman-103/Kitab
+cd Kitab
+python main.py
 ```
 
 ---
@@ -157,6 +159,8 @@ python main.py
 #### المنصات الأخرى
 
 ```bash
-pip install kitab-writer
-kitab
+pip install pyside6-essentials
+git clone https://github.com/abdulrahman-103/Kitab
+cd Kitab
+python main.py
 ```
