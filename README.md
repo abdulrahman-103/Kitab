@@ -53,26 +53,37 @@ Install the `.exe` from the releases section.
 
 WINDOWS DEFENDER WILL BE TRIGGERED BECAUSE THE APP USES PYTHON WHICH IS A LANGUAGE INFAMOUS FOR THE PRODUCTION OF VIRUSES. THE APPLICATION IS TOTALLY SAFE AND OPEN SOURCE.
 
-### Arch Linux
+### Debian/Ubuntu Linux
 
 ```bash
-sudo pacman -S pyside6 python-qtpy
-
-# pip is currently broken on Arch (expat/Python mismatch).
-# Install pyqttooltip manually until it's fixed:
-python3 -c "
-import urllib.request
-url = 'https://files.pythonhosted.org/packages/51/45/627fbd7a6dddf3a55010607e7fb354755b9ae792991a8e66a588f6dfa2a0/pyqttooltip-1.0.0-py3-none-any.whl'
-urllib.request.urlretrieve(url, '/tmp/pyqttooltip-1.0.0-py3-none-any.whl')
-"
-mkdir -p ~/.local/lib/python3.14/site-packages/
-unzip -o /tmp/pyqttooltip-1.0.0-py3-none-any.whl -d ~/.local/lib/python3.14/site-packages/
-
-# Run
+sudo apt install python3-pyside6 git python3-pip
+pip install -y pyqttooltip
+git clone https://github.com/abdulrahman-103/Kitab
+cd Kitab
 python main.py
 ```
 
-### Other platforms
+### Arch Linux
+
+```bash
+sudo pacman -Syu git pyside6 python-pip
+pip install -y pyqttooltip
+git clone https://github.com/abdulrahman-103/Kitab
+cd Kitab
+python main.py
+```
+
+###  Fedora Linux
+
+```bash
+sudo dnf install -y git python3-pyside6 python3-pip
+pip install -y pyqttooltip
+git clone https://github.com/abdulrahman-103/Kitab
+cd Kitab
+python main.py
+```
+
+### Other platforms (no theming)
 
 ```bash
 pip install kitab-writer
@@ -124,24 +135,37 @@ Kitab/
 
 ستظهر نافذة windows defender لان التطبيق مبني بلغة بايثون سيئة السمعة بصناعة الفيروسات. التطبيق امن تماما ومفتوح المصدر وليس بفيروس تجاهل النافذة.
 
-#### ‏Arch Linux
+
+### Debian/Ubuntu Linux
 
 ```bash
-sudo pacman -S pyside6 python-qtpy
-
-# pip معطل حالياً على أرش بسبب عدم تطابق expat/Python.
-# ثبت pyqttooltip يدوياً إلى أن تُحل المشكلة:
-python3 -c "
-import urllib.request
-url = 'https://files.pythonhosted.org/packages/51/45/627fbd7a6dddf3a55010607e7fb354755b9ae792991a8e66a588f6dfa2a0/pyqttooltip-1.0.0-py3-none-any.whl'
-urllib.request.urlretrieve(url, '/tmp/pyqttooltip-1.0.0-py3-none-any.whl')
-"
-mkdir -p ~/.local/lib/python3.14/site-packages/
-unzip -o /tmp/pyqttooltip-1.0.0-py3-none-any.whl -d ~/.local/lib/python3.14/site-packages/
-
-# تشغيل التطبيق
+sudo apt install python3-pyside6 git python3-pip
+pip install -y pyqttooltip
+git clone https://github.com/abdulrahman-103/Kitab
+cd Kitab
 python main.py
 ```
+
+### Arch Linux
+
+```bash
+sudo pacman -Syu git pyside6 python-pip
+pip install -y pyqttooltip
+git clone https://github.com/abdulrahman-103/Kitab
+cd Kitab
+python main.py
+```
+
+###  Fedora Linux
+
+```bash
+sudo dnf install -y git python3-pyside6 python3-pip
+pip install -y pyqttooltip
+git clone https://github.com/abdulrahman-103/Kitab
+cd Kitab
+python main.py
+```
+
 
 #### المنصات الأخرى
 
