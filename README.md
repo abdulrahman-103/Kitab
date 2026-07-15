@@ -26,13 +26,6 @@ Saves documents in `.ktb` format and exports to PDF.
 | Page system | whenever a page fills up a new page gets created |
 | Right-click menu | Undo, redo, cut, copy, paste, find, select all |
 
-## Tech Stack
-
-- **Python 3.14**
-- **PySide6** (Qt6 bindings)
-- **pyqttooltip** — tooltip library
-- **qtpy** — Qt abstraction layer (used by pyqttooltip)
-
 ## Project Structure
 
 ```
@@ -57,8 +50,7 @@ WINDOWS DEFENDER WILL BE TRIGGERED BECAUSE THE APP USES PYTHON WHICH IS A LANGUA
 ### Debian/Ubuntu Linux
 
 ```bash
-sudo apt install python3-pyside6 git python3-pip
-pip install -y pyqttooltip
+sudo apt install python3-pyside6 git
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -67,8 +59,7 @@ python main.py
 ### Arch Linux
 
 ```bash
-sudo pacman -Syu git pyside6 python-pip
-pip install -y pyqttooltip
+sudo pacman -Syu git pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -77,8 +68,7 @@ python main.py
 ###  Fedora Linux
 
 ```bash
-sudo dnf install -y git python3-pyside6 python3-pip
-pip install -y pyqttooltip
+sudo dnf install -y git python3-pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -140,8 +130,7 @@ Kitab/
 ### Debian/Ubuntu Linux
 
 ```bash
-sudo apt install python3-pyside6 git python3-pip
-pip install -y pyqttooltip
+sudo apt install python3-pyside6 git
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -150,8 +139,7 @@ python main.py
 ### Arch Linux
 
 ```bash
-sudo pacman -Syu git pyside6 python-pip
-pip install -y pyqttooltip
+sudo pacman -Syu git pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -160,13 +148,11 @@ python main.py
 ###  Fedora Linux
 
 ```bash
-sudo dnf install -y git python3-pyside6 python3-pip
-pip install -y pyqttooltip
+sudo dnf install -y git python3-pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
 ```
-
 
 #### المنصات الأخرى
 
