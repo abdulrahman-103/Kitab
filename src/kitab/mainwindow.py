@@ -286,9 +286,9 @@ class MainWindow(QMainWindow):
         min = 0.05 * resolution_factor
         max = 5.0 * resolution_factor
         if direction == "in" and self.zoom_factor < max:
-            self.zoom_factor *= 1.1
+            self.zoom_factor *= 1.15
         elif direction == "out" and self.zoom_factor > min:
-            self.zoom_factor *= 0.9
+            self.zoom_factor *= 0.85
         elif direction == "reset":
             self.zoom_factor = self.default_zoom_factor
         
