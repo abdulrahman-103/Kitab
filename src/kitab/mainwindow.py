@@ -13,7 +13,7 @@ from pathlib import Path
 from pyqttooltip import Tooltip, TooltipPlacement
 import zipfile
 import json
-from dialogs import FindReplaceDialog
+from kitab.dialogs import FindReplaceDialog
 
 BACKGROUND_COLOR = QColor("#1e1e1e")
 
@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
         self.format_filter = None
         self.last_directory = None
         
-        from images import ICON_BASE64
+        from kitab.images import ICON_BASE64
         icon = QImage.fromData(base64.b64decode(ICON_BASE64))
         self.setWindowIcon(QIcon(QPixmap.fromImage(icon)))
 
