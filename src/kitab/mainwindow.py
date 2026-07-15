@@ -131,6 +131,7 @@ class MainWindow(QMainWindow):
         self.font_family_menu.setFixedWidth(self.size_unit*6)
         self.font_family_menu.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.font_family_menu.currentFontChanged.connect(self.font_family)
+        self.font_family_menu.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.toolbar.addWidget(self.font_family_menu)
         self.toolbar.addSeparator()
 
@@ -815,33 +816,55 @@ class Editor(QTextEdit):
                 event.accept()
                 return
             menu = QMenu()
-            
+
+            undo_icon = QIcon.fromTheme("edit-undo")
+            redo_icon = QIcon.fromTheme("edit-redo")
+            cut_icon = QIcon.fromTheme("edit-cut")
+            copy_icon = QIcon.fromTheme("edit-copy")
+            paste_icon = QIcon.fromTheme("edit-paste")
+            find_icon = QIcon.fromTheme("edit-find")
+            select_all_icon = QIcon.fromTheme("edit-select-all")
+
             undo = menu.addAction("Undo")
+            undo.setShortcut("Ctrl+Z")
+            undo.setIcon(undo_icon)
             undo.setEnabled(self.document().isUndoAvailable())
             undo.triggered.connect(self.undo)
             
             redo = menu.addAction("Redo")
+            redo.setShortcut("Ctrl+Shift+Z")
+            redo.setIcon(redo_icon)
             redo.setEnabled(self.document().isRedoAvailable())
             redo.triggered.connect(self.redo)
             
             menu.addSeparator()
             
             cut = menu.addAction("Cut")
+            cut.setShortcut("Ctrl+X")
+            cut.setIcon(cut_icon)
             cut.setEnabled(self.textCursor().hasSelection())
             cut.triggered.connect(self.cut)
             
             copy = menu.addAction("Copy")
+            copy.setShortcut("Ctrl+C")
+            copy.setIcon(copy_icon)
             copy.setEnabled(self.textCursor().hasSelection())
             copy.triggered.connect(self.copy)
             
             paste = menu.addAction("Paste")
+            paste.setShortcut("Ctrl+V")
+            paste.setIcon(paste_icon)
             paste.triggered.connect(self.paste)
             
             menu.addSeparator()
 
             menu.addAction(self.main_window.find_action)
+            self.main_window.find_action.setIcon(find_icon)
+            
             
             select_all = menu.addAction("Select All")
+            select_all.setShortcut("Ctrl+A")
+            select_all.setIcon(select_all_icon)
             select_all.triggered.connect(self.selectAll)
 
             menu.exec(QCursor.pos())
