@@ -1,2 +1,1 @@
 PySide6-Essentials==6.11.1
-pyqttooltip==1.0.0

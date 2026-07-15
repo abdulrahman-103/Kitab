@@ -16,7 +16,6 @@ license = "GPL-3.0-or-later"
 license-files = ["LICEN[CS]E*"]
 dependencies = [
     "pyside6-essentials==6.11.1",
-    "pyqttooltip==1.0.0",
 ]
 
 [project.urls]
