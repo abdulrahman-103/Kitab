@@ -219,7 +219,6 @@ class MainWindow(QMainWindow):
         self.bold_button.setStyleSheet("font-weight: bold;")
         self.bold_button.clicked.connect(self.toggle_bold)
         self.toolbar.addWidget(self.bold_button)
-        self.toolbar.addSeparator()
 
         self.strikethrough_button = QPushButton("S", self)
         self.strikethrough_tooltip = Tooltip(self.strikethrough_button, "Strikethrough")
@@ -230,7 +229,6 @@ class MainWindow(QMainWindow):
         self.strikethrough_button.setStyleSheet("font-weight: bold;")
         self.strikethrough_button.clicked.connect(self.toggle_strikethrough)
         self.toolbar.addWidget(self.strikethrough_button)
-        self.toolbar.addSeparator()
 
         self.underline_button = QPushButton("U", self)
         self.underline_tooltip = Tooltip(self.underline_button, "Underline")
@@ -241,7 +239,6 @@ class MainWindow(QMainWindow):
         self.underline_button.setStyleSheet("font-weight: bold;")
         self.underline_button.clicked.connect(self.toggle_underline)
         self.toolbar.addWidget(self.underline_button)
-        self.toolbar.addSeparator()
 
         self.italic_button = QPushButton("𝐼", self)
         self.italic_tooltip = Tooltip(self.italic_button, "Italic")
@@ -252,7 +249,6 @@ class MainWindow(QMainWindow):
         self.italic_button.setStyleSheet("font-weight: bold; font-size:12pt;")
         self.italic_button.clicked.connect(self.toggle_italic)
         self.toolbar.addWidget(self.italic_button)
-        self.toolbar.addSeparator()
 
         self.clear_formatting_button = QPushButton("X", self)
         self.clear_formatting_tooltip = Tooltip(self.clear_formatting_button, "Clear Formatting")
