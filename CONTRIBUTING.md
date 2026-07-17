@@ -53,7 +53,7 @@ Use `print()` for now (a logging system is planned).
 | `feat` | New feature | `feat(toolbar): add heading dropdown` |
 | `fix` | Bug fix | `fix(dialog): page size dialog shows empty` |
 | `docs` | Documentation | `docs(readme): fix Arch install instructions` |
-| `refactor` | Code changes that aren't a fix or feature — includes renaming variables for clarity, extracting functions, fixing indentation, removing dead code, reformatting, splitting a large file into modules, changing comment style, adding `# baka` markers. **Anything that changes how the code reads, not what it does.** | `refactor(save): extract duplicated write logic into helper` |
+| `refactor` | Code changes that aren't a fix or feature — includes renaming variables for clarity, extracting functions, fixing indentation, removing dead code, reformatting, splitting a large file into modules, changing comment style, adding `# what?` markers. **Anything that changes how the code reads, not what it does.** | `refactor(save): extract duplicated write logic into helper` |
 | `chore` | Maintenance | `chore(deps): update PySide6 version` |
 
 ## Pull Request Process
@@ -106,9 +106,9 @@ Be respectful and constructive. Kitab is a learning project — everyone is welc
 ### أسلوب الكتابة
 
 - اتبع أسلوب الكود الموجود (PEP 8 تقريباً، بدون فرض تلميحات الأنواع).
-- أضف تعليقات للكود الغامض باستخدام `# baka`:
+- أضف تعليقات للكود الغامض باستخدام `# what?`:
   ```python
-  # baka — لماذا نقسم على 25.4؟
+  # what? — لماذا نقسم على 25.4؟
   ```
 - اجعل الدوال محدودة وتحت 50 سطراً قدر الإمكان.
 - استخدم أسماء متغيرات وصفية.
@@ -140,7 +140,7 @@ Be respectful and constructive. Kitab is a learning project — everyone is welc
 | `feat` | ميزة جديدة | `feat(toolbar): add heading dropdown` |
 | `fix` | إصلاح خطأ | `fix(dialog): page size dialog shows empty` |
 | `docs` | توثيق | `docs(readme): fix Arch install instructions` |
-| `refactor` | تغييرات كود ليست إصلاحاً ولا ميزة — يشمل إعادة تسمية متغيرات للوضوح، استخراج دوال، إصلاح المسافات البادئة، إزالة كود ميت، إعادة تنسيق، تقسيم ملف كبير إلى وحدات، تغيير أسلوب التعليقات، إضافة `# baka`. **أي شيء يغير كيف يُقرأ الكود، لا ماذا يفعل.** | `refactor(save): extract duplicated write logic into helper` |
+| `refactor` | تغييرات كود ليست إصلاحاً ولا ميزة — يشمل إعادة تسمية متغيرات للوضوح، استخراج دوال، إصلاح المسافات البادئة، إزالة كود ميت، إعادة تنسيق، تقسيم ملف كبير إلى وحدات، تغيير أسلوب التعليقات، إضافة `# what?`. **أي شيء يغير كيف يُقرأ الكود، لا ماذا يفعل.** | `refactor(save): extract duplicated write logic into helper` |
 | `chore` | صيانة | `chore(deps): update PySide6 version` |
 
 ### عملية طلب السحب (Pull Request)
