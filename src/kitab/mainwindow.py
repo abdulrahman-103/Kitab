@@ -440,6 +440,7 @@ class MainWindow(QMainWindow):
             from page_shortcuts import setup_page_shortcuts
             setup_page_shortcuts(self)
         except ImportError:
+            print(5)
             pass
 
     def change_font_size(self):
