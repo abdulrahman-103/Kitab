@@ -436,6 +436,12 @@ class MainWindow(QMainWindow):
         self.find_action.triggered.connect(self.find_replace)
         self.addAction(self.find_action)
         
+        # Carrega atalhos de paginação dinamicamente
+        try:
+            from get_input_page import setup_page_shortcuts
+            setup_page_shortcuts(self)
+        except ImportError:
+            pass
 
     def change_font_size(self):
         self.font_size = int(self.font_size_menu.currentText())
