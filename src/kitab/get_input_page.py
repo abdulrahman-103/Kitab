@@ -4,7 +4,7 @@
 from PySide6.QtGui import QShortcut, QKeySequence
 
 def setup_page_shortcuts(main_window):
-    # baka — binds Ctrl+1 through Ctrl+9 to quickly jump to specific pages
+    # binds Ctrl+1 through Ctrl+9 to quickly jump to specific pages
     for i in range(1, 10):
         shortcut = QShortcut(QKeySequence(f"Ctrl+{i}"), main_window)
         shortcut.activated.connect(lambda page=i: _go_to_page(main_window, page))
