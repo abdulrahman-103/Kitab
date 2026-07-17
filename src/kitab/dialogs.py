@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QPushButton, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox
+from PySide6.QtWidgets import QPushButton, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox
 from PySide6.QtGui import QTextCursor, QTextDocument
 from PySide6.QtCore import QSize, QRectF
 
@@ -13,9 +13,9 @@ class FindReplaceDialog(QDialog):
         self.replace_field = QLineEdit()
         self.match_case = QCheckBox("Match case")
 
-        form = QFormLayout()
-        form.addRow("Find:", self.find_field)
-        form.addRow("Replace:", self.replace_field)
+        fields = QFormLayout()
+        fields.addRow("Find:", self.find_field)
+        fields.addRow("Replace:", self.replace_field)
 
         find_next = QPushButton("Find next")
         replace = QPushButton("Replace")
@@ -35,7 +35,7 @@ class FindReplaceDialog(QDialog):
         buttons.addWidget(replace_all)
 
         layout = QVBoxLayout(self)
-        layout.addLayout(form)
+        layout.addLayout(fields)
         layout.addWidget(self.match_case)
         layout.addLayout(buttons)
 
@@ -90,17 +90,24 @@ class PageSizeDialog(QDialog):
 
         layout = QVBoxLayout()
 
-        self.page_size_combo = QComboBox()
+        page_size_combo = QComboBox()
         size_names = list(editor.PAGE_SIZES.keys())
-        self.page_size_combo.addItems(size_names)
+        page_size_combo.addItems(size_names)
 
         current = (editor.base_width, editor.base_height)
         for i, name in enumerate(size_names):
             if editor.PAGE_SIZES[name] == current:
-                self.page_size_combo.setCurrentIndex(i)
+                page_size_combo.setCurrentIndex(i)
                 break
 
-        layout.addWidget(self.page_size_combo)
+        layout.addWidget(page_size_combo)
+
+        width_field = QDoubleSpinBox()
+        height_field = QDoubleSpinBox()
+        fields = QFormLayout()
+        fields.addRow("Width:", width_field)
+        fields.addRow("Height:", height_field)
+        layout.addLayout(fields)
 
         button_layout = QHBoxLayout()
         apply_button = QPushButton("Apply")
@@ -114,7 +121,7 @@ class PageSizeDialog(QDialog):
         layout.addLayout(button_layout)
         self.setLayout(layout)
         
-        apply_button.clicked.connect(lambda: (editor.document().setModified(True), self.apply_page_size(self.page_size_combo.currentText(), editor, main_window)))
+        apply_button.clicked.connect(lambda: (editor.document().setModified(True), self.apply_page_size(page_size_combo.currentText(), editor, main_window)))
         cancel_button.clicked.connect(self.reject)
 
     def apply_page_size(self, size, editor, main_window):
