@@ -327,6 +327,13 @@ class MainWindow(QMainWindow):
         self.editor.document().setModified(False)
         self.file_name = Path(self.file_path).name
         self.setWindowTitle(f"{self.file_name}  –  Kitab")
+
+        try:
+            from recent_files import register_recent_file
+            register_recent_file(self.file_path)
+        except ImportError:
+            pass
+
         time_taken = save_timer.elapsed()
         minimum_time = 500
         if time_taken >= minimum_time:
@@ -386,6 +393,12 @@ class MainWindow(QMainWindow):
         self.file_name = Path(self.file_path).name
         self.setWindowTitle(f"{self.file_name}  –  Kitab")
 
+        try:
+            from recent_files import register_recent_file
+            register_recent_file(self.file_path)
+        except ImportError:
+            pass
+
     def open(self):
         self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", self.last_directory, "Kitab, Text and Markdown Files (*.ktb *.txt *.md);;Kitab Files (*.ktb);;Text Files (*.txt);;Markdown Files (*.md)")
         if not self.file_path:
@@ -439,6 +452,12 @@ class MainWindow(QMainWindow):
         try:
             from page_shortcuts import setup_page_shortcuts
             setup_page_shortcuts(self)
+        except ImportError:
+            pass
+
+        try:
+            from recent_files import setup_recent_shortcuts
+            setup_recent_shortcuts(self)
         except ImportError:
             pass
 
