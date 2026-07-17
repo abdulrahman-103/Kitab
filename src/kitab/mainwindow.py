@@ -6,13 +6,13 @@
 from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog, QMessageBox, QDialog, QVBoxLayout, QFontComboBox, QInputDialog, QStatusBar
 from PySide6.QtGui import QAction, QIntValidator, QIcon, QPainter, QColor, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextOption, QTextTableFormat, QTextLength, QTextImageFormat
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
-from PySide6.QtCore import QTimer, Qt, QSize, QRect, QElapsedTimer, QRectF, QPoint
+from PySide6.QtCore import QTimer, Qt, QSize, QElapsedTimer, QRectF, QPoint
 import base64
 import sys
 from pathlib import Path
 import zipfile
 import json
-from dialogs import FindReplaceDialog
+from dialogs import FindReplaceDialog, PageSizeDialog
 
 BACKGROUND_COLOR = QColor("#1e1e1e")
 
@@ -119,6 +119,9 @@ class MainWindow(QMainWindow):
 
         page_size_option = page_menu.addAction("Page Size")
         page_size_option.triggered.connect(self.page_size)
+
+        page_margins_option = page_menu.addAction("Page Margins")
+        #page_margins_option.triggered.connect(self.page_margins)
 
 
     def add_toolbar(self):
@@ -367,7 +370,7 @@ class MainWindow(QMainWindow):
                 html_data = zip.read("document.html").decode("utf-8")
                 json_data = json.loads(zip.read("info.json").decode("utf-8"))
             self.editor.setHtml(html_data)
-            self._apply_page_size(json_data["page size"], dialog=False)
+            self.apply_page_size(json_data["page size"])
         elif self.file_path.endswith(".txt"):
             with open(self.file_path, "r", encoding="utf-8") as file:
                 data = file.read()
@@ -627,45 +630,27 @@ class MainWindow(QMainWindow):
         new_font.setFamily(font.family())
         self.editor.setCurrentFont(new_font)
 
+    def find_replace(self):
+        if getattr(self, "find_dialog", None) is None:
+            self.find_dialog = FindReplaceDialog(self.editor, self)
+        self.find_dialog.show()
+        self.find_dialog.raise_()
+        self.find_dialog.activateWindow()
+
     def page_size(self):
-        self.page_size_dialog = QDialog(self)
-        self.page_size_dialog.setWindowTitle("Page Size")
-        self.page_size_dialog.setFixedWidth(self.size_unit * 10)
+        if getattr(self, "page_size_dialog", None) is None:
+            self.page_size_dialog = PageSizeDialog(self.editor, self, self.size_unit, self)
+        try:
+            self.page_size_dialog.show()
+            self.page_size_dialog.raise_()
+            self.page_size_dialog.activateWindow()
+        except RuntimeError:
+            self.page_size_dialog = PageSizeDialog(self.editor, self, self.size_unit, self)
+            self.page_size_dialog.show()
+            self.page_size_dialog.raise_()
+            self.page_size_dialog.activateWindow()
 
-        layout = QVBoxLayout()
-
-        self.page_size_combo = QComboBox()
-        size_names = list(Editor.PAGE_SIZES.keys())
-        self.page_size_combo.addItems(size_names)
-
-        current = (self.editor.base_width, self.editor.base_height)
-        for i, name in enumerate(size_names):
-            if Editor.PAGE_SIZES[name] == current:
-                self.page_size_combo.setCurrentIndex(i)
-                break
-
-        layout.addWidget(self.page_size_combo)
-
-        button_layout = QHBoxLayout()
-        apply_button = QPushButton("Apply")
-        cancel_button = QPushButton("Cancel")
-        apply_button.setAutoDefault(False)
-        cancel_button.setAutoDefault(False)
-        button_layout.addStretch()
-        button_layout.addWidget(apply_button)
-        button_layout.addWidget(cancel_button)
-
-        layout.addLayout(button_layout)
-        self.page_size_dialog.setLayout(layout)
-        
-        apply_button.clicked.connect(lambda: (self.editor.document().setModified(True), self._apply_page_size(self.page_size_combo.currentText())))
-        cancel_button.clicked.connect(self.page_size_dialog.reject)
-
-        self.page_size_dialog.exec_()
-        self.page_size_dialog.raise_()
-        self.page_size_dialog.activateWindow()
-
-    def _apply_page_size(self, size, dialog=True):
+    def apply_page_size(self, size):
         name = size
         width, height = Editor.PAGE_SIZES[name]
         self.editor.page_size = name
@@ -678,15 +663,6 @@ class MainWindow(QMainWindow):
         self.scene.setSceneRect(QRectF(self.editor.rect()))
         self.editor.document().setPageSize(QSize(width, height))
         self.editor.page_count = self.editor.document().pageCount()
-        if dialog:
-            self.page_size_dialog.close()
-
-    def find_replace(self):
-        if getattr(self, "find_dialog", None) is None:
-            self.find_dialog = FindReplaceDialog(self.editor, self)
-        self.find_dialog.show()
-        self.find_dialog.raise_()
-        self.find_dialog.activateWindow()
 
 
 class Editor(QTextEdit):
@@ -699,13 +675,13 @@ class Editor(QTextEdit):
     DEFAULT_FONT_SIZE = 14
     DEFAULT_PAPER_COLOR = "white"
     DEFAULT_FONT_COLOR = "black"
-    DEFAULT_PAPER_SIZE = "A4"
+    DEFAULT_PAGE_SIZE = "A4"
     def __init__(self, main_window):
         super().__init__()
         self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute
         self.set_paper_and_font_color(self.DEFAULT_PAPER_COLOR, self.DEFAULT_FONT_COLOR)
-        self.base_width, self.base_height = self.PAGE_SIZES[self.DEFAULT_PAPER_SIZE]
-
+        self.base_width, self.base_height = self.PAGE_SIZES[self.DEFAULT_PAGE_SIZE]
+        self.page_size = self.DEFAULT_PAGE_SIZE
         self.main_window = main_window
         self.setMinimumSize(self.base_width, self.base_height)
         self.document().setPageSize(QSize(self.base_width, self.base_height))
@@ -801,9 +777,9 @@ class Editor(QTextEdit):
         painter = QPainter(self.viewport())
         gap_height = 6  #The thickness of the gap (in pixels)
         for page_index in range(self.page_count):
-            page_bottom = (page_index+1) * self.base_height - gap_height//2 #page bottom position
+            page_bottom = (page_index+1) * self.base_height - gap_height/2 #page bottom position
             if page_index < self.page_count - 1: #excludes last page
-                gap_rect = QRect(0, page_bottom, self.width(), gap_height) #create gap
+                gap_rect = QRectF(0, page_bottom, self.width(), gap_height) #create gap
                 painter.fillRect(gap_rect, BACKGROUND_COLOR) #color gap
         painter.end()
         super().paintEvent(event)
