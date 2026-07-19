@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 import zipfile
 import json
+import os
 from dialogs import FindReplaceDialog, PageSizeDialog
 
 BACKGROUND_COLOR = QColor("#1e1e1e")
@@ -19,6 +20,12 @@ BACKGROUND_COLOR = QColor("#1e1e1e")
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        
+        qss_path = "src/ui/qss/style.qss"
+        if os.path.exists(qss_path):
+            with open(qss_path, "r") as f:
+                self.setStyleSheet(f.read())
+
         open_with_commandline = False
         self.app = QApplication.instance()
         resolution = self.app.primaryScreen().availableSize()
@@ -40,24 +47,19 @@ class MainWindow(QMainWindow):
         self.add_menubar()
         self.add_toolbar()
         
-
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         
         self.scene.addWidget(self.editor)
         self.view = QGraphicsView(self.scene)
         self.view.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.view.setStyleSheet(f"background-color: {BACKGROUND_COLOR.name()};")
+        self.view.setFrameShape(QGraphicsView.Shape.NoFrame) 
         self.view.centerOn(self.editor.width() / 2, 0)
         
         self.setCentralWidget(self.view)
-
         self.align(Qt.AlignmentFlag.AlignHCenter)
-
         self.editor.cursorPositionChanged.connect(self.sync_font)
-
         self.shortcuts()
 
-        #opening file with commandline
         if len(sys.argv) == 2:
             self.file_path = sys.argv[1]
             self._open_file()
@@ -74,59 +76,46 @@ class MainWindow(QMainWindow):
 
     def add_menubar(self):
         self.menubar = self.menuBar()
-
         file_menu = self.menubar.addMenu("File")
-
         new_option = file_menu.addAction("New")
         new_option.triggered.connect(self.new)
         new_option.setShortcut("Ctrl+N")
-
         open_option = file_menu.addAction("Open")
         open_option.triggered.connect(self.open)
         open_option.setShortcut("Ctrl+O")
-
         save_option = file_menu.addAction("Save")
         save_option.triggered.connect(self.save)
         save_option.setShortcut("Ctrl+S")
-
         save_as_option = file_menu.addAction("Save As")
         save_as_option.triggered.connect(self.save_as)
         save_as_option.setShortcut("Ctrl+Shift+S")
-
         export = file_menu.addAction("Export")
         export.triggered.connect(self.export_file)
         export.setShortcut("Ctrl+Shift+E")
-
         print_option = file_menu.addAction("Print")
         print_option.triggered.connect(self.print_document)
         print_option.setShortcut("Ctrl+P")
-
         exit_option = file_menu.addAction("Exit")
         exit_option.triggered.connect(self.app.quit)
         exit_option.setShortcut("Ctrl+F4")
-
         insert_menu = self.menubar.addMenu("Insert")
-
         table_option = insert_menu.addAction("Table")
         table_option.triggered.connect(self.insert_table)
         table_option.setShortcut("Ctrl+T")
-
         image_option = insert_menu.addAction("Image")
         image_option.triggered.connect(self.insert_image)
         image_option.setShortcut("Ctrl+I")
-
         page_menu = self.menubar.addMenu("Page")
-
         page_size_option = page_menu.addAction("Page Size")
         page_size_option.triggered.connect(self.page_size)
-
-        page_margins_option = page_menu.addAction("Page Margins")
-        #page_margins_option.triggered.connect(self.page_margins)
 
 
     def add_toolbar(self):
         self.toolbar = QToolBar()
         self.toolbar.setMovable(False)
+        self.toolbar.setContentsMargins(5, 5, 5, 5)
+        self.toolbar.layout().setSpacing(8)
+
         self.font_family_menu = QFontComboBox()
         self.size_unit = self.font_family_menu.sizeHint().height()
         self.font_family_menu.setToolTip("Font Family")
@@ -156,16 +145,15 @@ class MainWindow(QMainWindow):
         self.color_button = QPushButton("", self)
         self.color_button.setToolTip("Font Color")
         self.color_button.setFixedSize(self.size_unit*1.5, self.size_unit)
-        self.color_button.setStyleSheet(f"QPushButton {{background-color: {self.editor.DEFAULT_FONT_COLOR};}}")
+        self.color_button.setStyleSheet(f"background-color: {self.editor.DEFAULT_FONT_COLOR};")
         self.color_button.clicked.connect(self.font_color)
         self.toolbar.addWidget(self.color_button)
-        self.toolbar.addSeparator()
-
+        
         self.highlight_color = QColor("yellow")
         self.highlight_button = QPushButton("🖍", self)
-        self.highlight_button.setToolTip("Hightlight")
+        self.highlight_button.setToolTip("Highlight")
         self.highlight_button.setFixedSize(self.size_unit*1.5, self.size_unit)
-        self.highlight_button.setStyleSheet("QPushButton {background-color: yellow;}")
+        self.highlight_button.setStyleSheet("background-color: yellow; color: black;")
         self.highlight_button.clicked.connect(self.highlight_text)
         self.toolbar.addWidget(self.highlight_button)
         self.toolbar.addSeparator()
@@ -174,7 +162,7 @@ class MainWindow(QMainWindow):
         self.bold_button.setToolTip("Bold")
         self.bold_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.bold_button.setCheckable(True)
-        self.bold_button.setStyleSheet("QPushButton { font-weight: bold; }")
+        self.bold_button.setStyleSheet("font-weight: bold;")
         self.bold_button.clicked.connect(self.toggle_bold)
         self.toolbar.addWidget(self.bold_button)
 
@@ -182,7 +170,7 @@ class MainWindow(QMainWindow):
         self.strikethrough_button.setToolTip("Strikethrough")
         self.strikethrough_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.strikethrough_button.setCheckable(True)
-        self.strikethrough_button.setStyleSheet("QPushButton { font-weight: bold; }")
+        self.strikethrough_button.setStyleSheet("text-decoration: line-through;")
         self.strikethrough_button.clicked.connect(self.toggle_strikethrough)
         self.toolbar.addWidget(self.strikethrough_button)
 
@@ -190,22 +178,21 @@ class MainWindow(QMainWindow):
         self.underline_button.setToolTip("Underline")
         self.underline_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.underline_button.setCheckable(True)
-        self.underline_button.setStyleSheet("QPushButton { font-weight: bold; }")
+        self.underline_button.setStyleSheet("text-decoration: underline;")
         self.underline_button.clicked.connect(self.toggle_underline)
         self.toolbar.addWidget(self.underline_button)
 
-        self.italic_button = QPushButton("𝐼", self)
+        self.italic_button = QPushButton("I", self)
         self.italic_button.setToolTip("Italic")
         self.italic_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.italic_button.setCheckable(True)
-        self.italic_button.setStyleSheet("QPushButton { font-weight: bold; font-size:12pt;}")
+        self.italic_button.setStyleSheet("font-style: italic; font-size:12pt;")
         self.italic_button.clicked.connect(self.toggle_italic)
         self.toolbar.addWidget(self.italic_button)
 
         self.clear_formatting_button = QPushButton("X", self)
         self.clear_formatting_button.setToolTip("Clear Formatting")
         self.clear_formatting_button.setFixedSize(self.size_unit*1.5, self.size_unit)
-        self.clear_formatting_button.setStyleSheet("QPushButton { font-weight: bold; }")
         self.clear_formatting_button.clicked.connect(self.clear_formatting)
         self.toolbar.addWidget(self.clear_formatting_button)
         self.toolbar.addSeparator()
@@ -215,7 +202,7 @@ class MainWindow(QMainWindow):
         self.align_left_button.setToolTip("Align Left")
         self.align_left_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.align_left_button.setCheckable(True)
-        self.align_left_button.setStyleSheet("QPushButton {font-size: 18pt;}")
+        self.align_left_button.setStyleSheet("font-size: 14pt;")
         self.align_left_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignLeft))
         self.toolbar.addWidget(self.align_left_button)
 
@@ -224,7 +211,7 @@ class MainWindow(QMainWindow):
         self.align_center_button.setToolTip("Align Center")
         self.align_center_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.align_center_button.setCheckable(True)
-        self.align_center_button.setStyleSheet("QPushButton {font-size: 18pt;}")
+        self.align_center_button.setStyleSheet("font-size: 14pt;")
         self.align_center_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignHCenter))
         self.toolbar.addWidget(self.align_center_button)
 
@@ -233,9 +220,10 @@ class MainWindow(QMainWindow):
         self.align_right_button.setToolTip("Align Right")
         self.align_right_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.align_right_button.setCheckable(True)
-        self.align_right_button.setStyleSheet("QPushButton {font-size: 18pt;}")
+        self.align_right_button.setStyleSheet("font-size: 14pt;")
         self.align_right_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignRight))
         self.toolbar.addWidget(self.align_right_button)
+        
         self.alignment_group = QButtonGroup(self)
         self.alignment_group.setExclusive(True)
         self.alignment_group.addButton(self.align_left_button)
@@ -252,11 +240,12 @@ class MainWindow(QMainWindow):
         self.scroll_bar.valueChanged.connect(lambda: self.statusbar.showMessage(f"Page {self.editor.current_page()} of {self.editor.page_count}"))
         self.setStatusBar(self.statusbar)
 
+
     def eventFilter(self, watched, event):
         if event.type() == event.Type.Wheel:
             self.wheelEvent(event)
             return True
-        return super().eventFilter(watched, event) #If not a scroll return to original event filter
+        return super().eventFilter(watched, event)
 
 
     def keyPressEvent(self, event):
@@ -285,7 +274,7 @@ class MainWindow(QMainWindow):
     def zoom(self, direction: str):
         self.editor.was_zooming = True
         resolution = self.app.primaryScreen().size()
-        resolution_factor = resolution.height() / 720 #my resolution is 1080p with 150% scaling. the factor use is to make the max and min limits equal on all resolutions
+        resolution_factor = resolution.height() / 720
         min = 0.05 * resolution_factor
         max = 5.0 * resolution_factor
         if direction == "in" and self.zoom_factor < max:
@@ -300,7 +289,7 @@ class MainWindow(QMainWindow):
         self.view.scale(self.zoom_factor, self.zoom_factor)
         
 
-    def _save_file(self): # base used by both save() and save_as()
+    def _save_file(self):
         saving = QProgressDialog("Saving...", None, 0, 0, self)
         saving.setWindowTitle("Saving...")
         saving.setWindowModality(Qt.WindowModality.WindowModal)
@@ -322,7 +311,6 @@ class MainWindow(QMainWindow):
             with zipfile.ZipFile(self.file_path, mode="w", compression=zipfile.ZIP_DEFLATED) as zip:
                 zip.writestr("document.html", html_data)
                 zip.writestr("info.json", json.dumps(json_data))
-
 
         self.editor.document().setModified(False)
         self.file_name = Path(self.file_path).name
@@ -370,6 +358,7 @@ class MainWindow(QMainWindow):
         self.file_name = None
         self.editor.clear()
         self.editor.document().setModified(False)
+
 
     def _open_file(self):
         if self.file_path.endswith(".ktb"):
@@ -430,12 +419,11 @@ class MainWindow(QMainWindow):
             remaining_time = minimum_time - time_taken
             QTimer.singleShot(remaining_time, exporting.close)
 
+
     def shortcuts(self):
-        #fullscreen
         def toggle_fullscreen():
             if self.isFullScreen():
                 self.showMaximized()
-                
             else:
                 self.showFullScreen()
         fullscreen = QAction(self)
@@ -461,12 +449,12 @@ class MainWindow(QMainWindow):
         except ImportError:
             pass
 
+
     def change_font_size(self):
         self.font_size = int(self.font_size_menu.currentText())
         font = self.editor.currentFont()
         font.setPointSize(self.font_size)
         self.editor.setCurrentFont(font)
-
         self.view.viewport().setFocus()
 
 
@@ -475,10 +463,9 @@ class MainWindow(QMainWindow):
             font = self.editor.currentFont()
             font_size = font.pointSize()
             self.font_size_menu.setCurrentText(str(font_size))
-            
             self.font_family_menu.setCurrentFont(font)
 
-            self.color_button.setStyleSheet(f"font-weight: bold; background-color: {self.editor.textColor().name()};")
+            self.color_button.setStyleSheet(f"background-color: {self.editor.textColor().name()}; border: 1px solid #444;")
 
             bold_status = font.bold()
             self.bold_button.setChecked(bold_status)
@@ -495,9 +482,9 @@ class MainWindow(QMainWindow):
             char_format = self.editor.textCursor().charFormat()
             bg_color = char_format.background()
             if bg_color.style() != Qt.BrushStyle.NoBrush:
-                self.highlight_button.setStyleSheet(f"background-color: {bg_color.color().name()};")
+                self.highlight_button.setStyleSheet(f"background-color: {bg_color.color().name()}; color: black;")
             else:
-                self.highlight_button.setStyleSheet("background-color: yellow;")
+                self.highlight_button.setStyleSheet("background-color: yellow; color: black;")
 
             cursor = self.editor.textCursor()
             block_format = cursor.blockFormat()
@@ -510,6 +497,7 @@ class MainWindow(QMainWindow):
             elif alignment_status == (Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignAbsolute) or alignment_status == (Qt.AlignmentFlag.AlignRight):
                 self.align_right_button.setChecked(True)
     
+
     def font_color(self):
         dialog = QColorDialog()
         labels = dialog.findChildren(QLabel)
@@ -521,8 +509,9 @@ class MainWindow(QMainWindow):
         if dialog.exec() == QColorDialog.Accepted:
             color = dialog.selectedColor()
             self.editor.setTextColor(color)
-            self.color_button.setStyleSheet(f"font-weight: bold; background-color: {color.name()};")
+            self.color_button.setStyleSheet(f"background-color: {color.name()}; border: 1px solid #444;")
         self.view.viewport().setFocus()
+
 
     def highlight_text(self):
         dialog = QColorDialog(self.highlight_color)
@@ -540,16 +529,17 @@ class MainWindow(QMainWindow):
             char_format = QTextCharFormat()
             char_format.setBackground(self.highlight_color)
             cursor.mergeCharFormat(char_format)
-            self.highlight_button.setStyleSheet(f"background-color: {self.highlight_color.name()};")
+            self.highlight_button.setStyleSheet(f"background-color: {self.highlight_color.name()}; color: black;")
         self.view.viewport().setFocus()
 
-    def toggle_bold(self):
 
+    def toggle_bold(self):
         font = self.editor.currentFont()
         font.setBold(not font.bold())
         self.bold_button.setChecked(font.bold())
         self.editor.setCurrentFont(font)
         self.view.viewport().setFocus()
+
 
     def toggle_strikethrough(self):
         font = self.editor.currentFont()
@@ -558,6 +548,7 @@ class MainWindow(QMainWindow):
         self.editor.setCurrentFont(font)
         self.view.viewport().setFocus()
 
+
     def toggle_underline(self):
         font = self.editor.currentFont()
         font.setUnderline(not font.underline())
@@ -565,12 +556,14 @@ class MainWindow(QMainWindow):
         self.editor.setCurrentFont(font)
         self.view.viewport().setFocus()
 
+
     def toggle_italic(self):
         font = self.editor.currentFont()
         font.setItalic(not font.italic())
         self.italic_button.setChecked(font.italic())
         self.editor.setCurrentFont(font)
         self.view.viewport().setFocus()
+
 
     def align(self, alignment):
         match alignment:
@@ -590,12 +583,14 @@ class MainWindow(QMainWindow):
         cursor.mergeBlockFormat(block_format)
         self.view.viewport().setFocus()
 
+
     def print_document(self):
         printer = QPrinter(QPrinter.PrinterMode.HighResolution)
         printer.setPageSize(QPageSize(QSize(self.editor.base_width, self.editor.base_height)))
         dialog = QPrintDialog(printer, self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             self.editor.document().print_(printer)
+
 
     def insert_image(self):
         path, _ = QFileDialog.getOpenFileName(self, "Choose image", self.last_directory, "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.svg);;PNG Image (*.png);;JPEG Image (*.jpg *.jpeg);;SVG Image (*.svg);;BMP Image (*.bmp);;GIF Image (*.gif);;All Files (*)")
@@ -608,6 +603,7 @@ class MainWindow(QMainWindow):
         image_format.setWidth(self.editor.base_width - 100)
         cursor = self.editor.textCursor()
         cursor.insertImage(image_format)
+
 
     def insert_table(self):
         rows, ok = QInputDialog.getInt(self, "Insert table", "Rows:", 2, 1, 100)
@@ -631,6 +627,7 @@ class MainWindow(QMainWindow):
         table = cursor.insertTable(rows, columns, table_format)
         self.view.viewport().setFocus()
 
+
     def clear_formatting(self):
         cursor = self.editor.textCursor()
         plain = QTextCharFormat()
@@ -646,13 +643,15 @@ class MainWindow(QMainWindow):
         self.sync_font()
         font_size = self.editor.currentFont().pointSize()
         self.font_size_menu.setCurrentText(str(font_size))
-        self.color_button.setStyleSheet(f"font-weight: bold; background-color: {self.editor.textColor().name()};")
+        self.color_button.setStyleSheet(f"background-color: {self.editor.textColor().name()}; border: 1px solid #444;")
         self.view.viewport().setFocus()
+
 
     def font_family(self, font):
         new_font = self.editor.currentFont()
         new_font.setFamily(font.family())
         self.editor.setCurrentFont(new_font)
+
 
     def find_replace(self):
         if getattr(self, "find_dialog", None) is None:
@@ -660,6 +659,7 @@ class MainWindow(QMainWindow):
         self.find_dialog.show()
         self.find_dialog.raise_()
         self.find_dialog.activateWindow()
+
 
     def page_size(self):
         if getattr(self, "page_size_dialog", None) is None:
@@ -673,6 +673,7 @@ class MainWindow(QMainWindow):
             self.page_size_dialog.show()
             self.page_size_dialog.raise_()
             self.page_size_dialog.activateWindow()
+
 
     def apply_page_size(self, size):
         name = size
@@ -700,6 +701,7 @@ class Editor(QTextEdit):
     DEFAULT_PAPER_COLOR = "white"
     DEFAULT_FONT_COLOR = "black"
     DEFAULT_PAGE_SIZE = "A4"
+    
     def __init__(self, main_window):
         super().__init__()
         self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute
@@ -709,7 +711,7 @@ class Editor(QTextEdit):
         self.main_window = main_window
         self.setMinimumSize(self.base_width, self.base_height)
         self.document().setPageSize(QSize(self.base_width, self.base_height))
-        self.document().setDocumentMargin(20*(96/25.4)) #mm to pt (inch is 72 pt and is 25.4mm)
+        self.document().setDocumentMargin(20*(96/25.4))
         self.page_count = self.document().pageCount()
         
         text_option = self.document().defaultTextOption()
@@ -728,7 +730,8 @@ class Editor(QTextEdit):
         self.was_zooming = False 
         self.document().setModified(False)
     
-    def dropEvent(self, event): #drag and drop a file
+
+    def dropEvent(self, event):
         if event.mimeData().hasUrls():
             path_list = event.mimeData().urls()
             if len(path_list) == 1:
@@ -740,16 +743,16 @@ class Editor(QTextEdit):
         else:
             super().dropEvent(event)
 
+
     def set_paper_and_font_color(self, paper_color, font_color):
         self.setStyleSheet(f"QTextEdit {{ background-color: {paper_color}; color: {font_color}; border: none; }};")
         self.paper_color = paper_color
 
     
-
-
     def current_page(self):
         center_y = self.main_window.view.mapToScene(0, int(self.main_window.view.viewport().rect().center().y()))
         return int(center_y.y() // self.base_height + 1)
+
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
@@ -774,7 +777,7 @@ class Editor(QTextEdit):
         self.setCurrentFont(font)
         self.main_window.align(self.old_text_align)
         self.setTextColor(color)
-        self.main_window.color_button.setStyleSheet(f"font-weight: bold; background-color: {color.name()};")
+        self.main_window.color_button.setStyleSheet(f"background-color: {color.name()}; border: 1px solid #444;")
         self.main_window.bold_button.setChecked(font.bold())
         self.main_window.strikethrough_button.setChecked(font.strikeOut())
         self.main_window.underline_button.setChecked(font.underline()) 
@@ -799,12 +802,12 @@ class Editor(QTextEdit):
 
     def paintEvent(self, event):
         painter = QPainter(self.viewport())
-        gap_height = 6  #The thickness of the gap (in pixels)
+        gap_height = 6 
         for page_index in range(self.page_count):
-            page_bottom = (page_index+1) * self.base_height - gap_height/2 #page bottom position
-            if page_index < self.page_count - 1: #excludes last page
-                gap_rect = QRectF(0, page_bottom, self.width(), gap_height) #create gap
-                painter.fillRect(gap_rect, BACKGROUND_COLOR) #color gap
+            page_bottom = (page_index+1) * self.base_height - gap_height/2
+            if page_index < self.page_count - 1:
+                gap_rect = QRectF(0, page_bottom, self.width(), gap_height)
+                painter.fillRect(gap_rect, BACKGROUND_COLOR)
         painter.end()
         super().paintEvent(event)
 
@@ -860,7 +863,6 @@ class Editor(QTextEdit):
 
             menu.addAction(self.main_window.find_action)
             self.main_window.find_action.setIcon(find_icon)
-            
             
             select_all = menu.addAction("Select All")
             select_all.setShortcut("Ctrl+A")

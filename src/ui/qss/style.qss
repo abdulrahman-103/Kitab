@@ -1,0 +1,179 @@
+/*
+Copyright (C) <2026> <Abdulrahman>
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+*/
+
+QMainWindow, QDialog, QMessageBox {
+    background-color: #0f0f11;
+    color: #e4e4e7;
+}
+
+QMenuBar {
+    background-color: #0f0f11;
+    color: #e4e4e7;
+    border-bottom: 1px solid #27272a;
+}
+
+QMenuBar::item {
+    background-color: transparent;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+QMenuBar::item:selected {
+    background-color: #27272a;
+}
+
+QMenu {
+    background-color: #18181b;
+    color: #e4e4e7;
+    border: 1px solid #3f3f46;
+    border-radius: 6px;
+    padding: 4px;
+}
+
+QMenu::item {
+    padding: 6px 24px 6px 8px;
+    border-radius: 4px;
+}
+
+QMenu::item:selected {
+    background-color: #27272a;
+}
+
+QToolBar {
+    background-color: #18181b;
+    border: none;
+    border-bottom: 1px solid #27272a;
+    padding: 6px;
+    spacing: 4px;
+}
+
+QPushButton {
+    background-color: transparent;
+    color: #e4e4e7;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 6px;
+    min-width: 20px;
+}
+
+QPushButton:hover {
+    background-color: #27272a;
+    border: 1px solid #3f3f46;
+}
+
+QPushButton:pressed {
+    background-color: #3f3f46;
+}
+
+QPushButton:checked {
+    background-color: #0c4a6e;
+    border: 1px solid #0284c7;
+    color: #ffffff;
+}
+
+QComboBox, QFontComboBox {
+    background-color: #18181b;
+    color: #e4e4e7;
+    border: 1px solid #3f3f46;
+    border-radius: 6px;
+    padding: 4px 8px;
+    min-height: 24px;
+}
+
+QComboBox:hover, QFontComboBox:hover {
+    border: 1px solid #52525b;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 26px;
+    border-left: 1px solid #3f3f46;
+    background-color: #27272a;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+QComboBox::drop-down:hover {
+    background-color: #3f3f46;
+}
+
+QComboBox::down-arrow {
+    image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2338bdf8'><path d='M4 6h8l-4 5z'/></svg>");
+    width: 12px;
+    height: 12px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #18181b;
+    color: #e4e4e7;
+    border: 1px solid #3f3f46;
+    border-radius: 6px;
+    selection-background-color: #27272a;
+    outline: none;
+}
+
+QGraphicsView {
+    background-color: #0f0f11;
+    border: none;
+}
+
+QScrollBar:vertical {
+    background: #0f0f11;
+    width: 12px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #3f3f46;
+    min-height: 30px;
+    border-radius: 6px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #52525b;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar:horizontal {
+    background: #0f0f11;
+    height: 12px;
+    margin: 0px;
+}
+
+QScrollBar::handle:horizontal {
+    background: #3f3f46;
+    min-width: 30px;
+    border-radius: 6px;
+    margin: 2px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: #52525b;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0px;
+}
+
+QToolTip {
+    background-color: #18181b;
+    color: #e4e4e7;
+    border: 1px solid #3f3f46;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+QStatusBar {
+    background-color: #0f0f11;
+    color: #a1a1aa;
+    border-top: 1px solid #27272a;
+}
