@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog, QMessageBox, QDialog, QVBoxLayout, QFontComboBox, QInputDialog, QStatusBar
-from PySide6.QtGui import QAction, QIntValidator, QIcon, QPainter, QColor, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextOption, QTextTableFormat, QTextLength, QTextImageFormat
+from PySide6.QtGui import QAction, QIntValidator, QIcon, QPainter, QColor, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextOption, QTextTableFormat, QTextLength, QTextImageFormat, QShortcut
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 from PySide6.QtCore import QTimer, Qt, QSize, QElapsedTimer, QRectF, QPoint
 import base64
@@ -436,11 +436,16 @@ class MainWindow(QMainWindow):
         self.find_action.triggered.connect(self.find_replace)
         self.addAction(self.find_action)
         
-        try:
-            from page_shortcuts import setup_page_shortcuts
-            setup_page_shortcuts(self)
-        except ImportError:
-            pass
+        # binds Ctrl+1 through Ctrl+9 to quickly jump to specific pages
+        for i in range(1, 10):
+            shortcut = QShortcut(f"Ctrl+{i}", self)
+            shortcut.activated.connect(lambda page=i: _go_to_page(page))
+
+        def _go_to_page(page):
+            if page > self.editor.page_count:
+                return
+            target_y = (page - 1) * self.editor.base_height + (self.editor.base_height / 2)
+            self.view.centerOn(self.view.sceneRect().center().x(), target_y)
 
     def change_font_size(self):
         self.font_size = int(self.font_size_menu.currentText())
