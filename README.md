@@ -47,6 +47,12 @@ git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
 ```
+---
+
+### Hidden shortcuts
+
+**ctrl+1 to ctrl+9:** go to pages 1 to 9.
+
 
 ---
 
