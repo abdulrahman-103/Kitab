@@ -46,9 +46,8 @@ class MainWindow(QMainWindow):
         self.scene.addWidget(self.editor)
         self.view = QGraphicsView(self.scene)
         self.view.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.view.setStyleSheet(f"background-color: {BACKGROUND_COLOR.name()};")
+        self.view.setStyleSheet(f"QGraphicsView {{background-color: {BACKGROUND_COLOR.name()}}};")
         self.view.centerOn(self.editor.width() / 2, 0)
-        
         self.setCentralWidget(self.view)
 
         self.align(Qt.AlignmentFlag.AlignHCenter)
