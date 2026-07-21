@@ -3,7 +3,7 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QPushButton, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox
+from PySide6.QtWidgets import QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox
 from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength
 from PySide6.QtCore import QSize, QRectF
 
@@ -97,9 +97,9 @@ class InsertTableDialog(QDialog):
 
         page_size_combo = QComboBox()
 
-        columns_field = QDoubleSpinBox()
-        rows_field = QDoubleSpinBox()
-        width_field = QDoubleSpinBox()
+        columns_field = QSpinBox()
+        rows_field = QSpinBox()
+        width_field = QSpinBox()
         fields = QFormLayout()
         fields.addRow("Columns:", columns_field)
         fields.addRow("Rows:", rows_field)
@@ -118,7 +118,7 @@ class InsertTableDialog(QDialog):
         layout.addLayout(button_layout)
         self.setLayout(layout)
         
-        apply_button.clicked.connect(lambda: self.insert_table(main_window, editor, int(columns_field.value()), int(rows_field.value()), width_field.value()))
+        apply_button.clicked.connect(lambda: self.insert_table(main_window, editor, columns_field.value(), rows_field.value(), width_field.value()))
         cancel_button.clicked.connect(self.reject)
 
     def insert_table(self, main_window, editor, columns, rows, width_percentage):
