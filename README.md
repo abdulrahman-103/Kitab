@@ -57,6 +57,10 @@ python main.py
 
 ---
 
+---
+## [discord server](https://discord.gg/vQ87JRxZW8)
+---
+
 ## كتاب — معالج نصوص عربي
 
 معالج نصوص خفيف مبني على **PySide6 (Qt6)**.  
@@ -102,3 +106,7 @@ git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
 ```
+
+---
+## [سيرفر ديسكورد](https://discord.gg/vQ87JRxZW8)
+---
