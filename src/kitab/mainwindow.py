@@ -205,7 +205,6 @@ class MainWindow(QMainWindow):
         self.highlight_button.setIcon(hightlight_icon)
         self.highlight_button.setToolTip("Hightlight")
         self.highlight_button.setFixedSize(self.size_unit*1.5, self.size_unit)
-        self.highlight_button.setStyleSheet("QPushButton {background-color: yellow;}")
         self.highlight_button.clicked.connect(self.highlight_text)
         self.toolbar.addWidget(self.highlight_button)
         self.toolbar.addSeparator()
@@ -514,7 +513,7 @@ class MainWindow(QMainWindow):
             
             self.font_family_menu.setCurrentFont(font)
 
-            self.color_button.setStyleSheet(f"font-weight: bold; background-color: {self.editor.textColor().name()};")
+            self.color_button.setStyleSheet(f"QPushButton {{ background-color: {self.editor.textColor().name()}; }}")
 
             bold_status = font.bold()
             self.bold_button.setChecked(bold_status)
@@ -531,9 +530,9 @@ class MainWindow(QMainWindow):
             char_format = self.editor.textCursor().charFormat()
             bg_color = char_format.background()
             if bg_color.style() != Qt.BrushStyle.NoBrush:
-                self.highlight_button.setStyleSheet(f"background-color: {bg_color.color().name()};")
+                self.highlight_button.setStyleSheet(f"QPushButton {{ background-color: {bg_color.color().name()}; }}")
             else:
-                self.highlight_button.setStyleSheet("background-color: yellow;")
+                self.highlight_button.setStyleSheet("")
 
             cursor = self.editor.textCursor()
             block_format = cursor.blockFormat()
@@ -553,11 +552,10 @@ class MainWindow(QMainWindow):
             if label.text() == "&HTML:":
                 label.setText("&HEX:")
                 label.adjustSize()
-        
         if dialog.exec() == QColorDialog.Accepted:
             color = dialog.selectedColor()
             self.editor.setTextColor(color)
-            self.color_button.setStyleSheet(f"font-weight: bold; background-color: {color.name()};")
+            self.color_button.setStyleSheet(f"QPushButton {{ background-color: {color.name()}; }}")
         self.view.viewport().setFocus()
 
     def highlight_text(self):
@@ -567,20 +565,16 @@ class MainWindow(QMainWindow):
             if label.text() == "&HTML:":
                 label.setText("&HEX:")
                 label.adjustSize()
-
         if dialog.exec() == QColorDialog.Accepted:
             self.highlight_color = dialog.selectedColor()
             cursor = self.editor.textCursor()
-            if not cursor.hasSelection():
-                cursor.select(QTextCursor.SelectionType.WordUnderCursor)
-            char_format = QTextCharFormat()
+            char_format = self.editor.currentCharFormat()
             char_format.setBackground(self.highlight_color)
-            cursor.mergeCharFormat(char_format)
-            self.highlight_button.setStyleSheet(f"background-color: {self.highlight_color.name()};")
+            self.editor.setCurrentCharFormat(char_format)
+            self.highlight_button.setStyleSheet(f"QPushButton {{background-color: {self.highlight_color.name()}; }}")
         self.view.viewport().setFocus()
 
     def toggle_bold(self):
-
         font = self.editor.currentFont()
         font.setBold(not font.bold())
         self.bold_button.setChecked(font.bold())
@@ -682,7 +676,7 @@ class MainWindow(QMainWindow):
         self.sync_font()
         font_size = self.editor.currentFont().pointSize()
         self.font_size_menu.setCurrentText(str(font_size))
-        self.color_button.setStyleSheet(f"font-weight: bold; background-color: {self.editor.textColor().name()};")
+        self.color_button.setStyleSheet(f"QPushButton {{ background-color: {self.editor.textColor().name()}; }}")
         self.view.viewport().setFocus()
 
     def font_family(self, font):
@@ -810,7 +804,7 @@ class Editor(QTextEdit):
         self.setCurrentFont(font)
         self.main_window.align(self.old_text_align)
         self.setTextColor(color)
-        self.main_window.color_button.setStyleSheet(f"font-weight: bold; background-color: {color.name()};")
+        self.main_window.color_button.setStyleSheet(f"QPushButton {{ background-color: {color.name()}; }}")
         self.main_window.bold_button.setChecked(font.bold())
         self.main_window.strikethrough_button.setChecked(font.strikeOut())
         self.main_window.underline_button.setChecked(font.underline()) 
