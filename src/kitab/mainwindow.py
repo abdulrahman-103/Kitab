@@ -685,34 +685,25 @@ class MainWindow(QMainWindow):
         if getattr(self, "find_dialog", None) is None:
             self.find_dialog = FindReplaceDialog(self.editor, self)
         self.find_dialog.show()
-        self.find_dialog.raise_()
         self.find_dialog.activateWindow()
 
     def insert_table(self):
             if getattr(self, "insert_table_dialog", None) is None:
                 self.insert_table_dialog = InsertTableDialog(self.editor, self)
             try:
-                self.insert_table_dialog.show()
-                self.insert_table_dialog.raise_()
-                self.insert_table_dialog.activateWindow()
+                self.insert_table_dialog.exec()
             except RuntimeError:
                 self.insert_table_dialog = InsertTableDialog(self.editor, self)
-                self.insert_table_dialog.show()
-                self.insert_table_dialog.raise_()
-                self.insert_table_dialog.activateWindow()
+                self.insert_table_dialog.exec()
 
     def page_size(self):
         if getattr(self, "page_size_dialog", None) is None:
             self.page_size_dialog = PageSizeDialog(self.editor, self)
         try:
-            self.page_size_dialog.show()
-            self.page_size_dialog.raise_()
-            self.page_size_dialog.activateWindow()
+            self.page_size_dialog.exec()
         except RuntimeError:
             self.page_size_dialog = PageSizeDialog(self.editor, self)
-            self.page_size_dialog.show()
-            self.page_size_dialog.raise_()
-            self.page_size_dialog.activateWindow()
+            self.page_size_dialog.exec()
 
     def apply_page_size(self, size):
         name = size
