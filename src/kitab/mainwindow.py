@@ -14,13 +14,15 @@ import zipfile
 import json
 from dialogs import FindReplaceDialog, PageSizeDialog
 
-BACKGROUND_COLOR = QColor("#141618")
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         open_with_commandline = False
         self.app = QApplication.instance()
+        BACKGROUND_COLOR = QColor("#141618")
+        if self.app.styleHints().colorScheme() == Qt.ColorScheme.Light:
+            BACKGROUND_COLOR = QColor("#c4c8cc")
+        self.app.styleHints().colorSchemeChanged.connect(self.change_background_color)
         resolution = self.app.primaryScreen().availableSize()
         self.resize(resolution.width()/1.5, resolution.height()/1.5)
         self.move((resolution.width()-self.width())/2, 0)
@@ -46,7 +48,7 @@ class MainWindow(QMainWindow):
         self.scene.addWidget(self.editor)
         self.view = QGraphicsView(self.scene)
         self.view.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.view.setStyleSheet(f"QGraphicsView {{background-color: {BACKGROUND_COLOR.name()};}};")
+        self.view.setStyleSheet(f"QGraphicsView {{background-color: {BACKGROUND_COLOR.name()};}}")
         self.view.centerOn(self.editor.width() / 2, 0)
         self.setCentralWidget(self.view)
 
@@ -71,6 +73,13 @@ class MainWindow(QMainWindow):
         self.editor.document().setModified(False)
         QTimer.singleShot(0, lambda: (self.view.viewport().setFocus(), self.editor.setFocus()))
 
+    def change_background_color(self):
+        if self.app.styleHints().colorScheme() == Qt.ColorScheme.Light:
+            BACKGROUND_COLOR = QColor("#c4c8cc")
+            self.view.setStyleSheet(f"QGraphicsView {{background-color: {BACKGROUND_COLOR.name()};}}")
+        if self.app.styleHints().colorScheme() == Qt.ColorScheme.Dark:
+            BACKGROUND_COLOR = QColor("#141618")
+            self.view.setStyleSheet(f"QGraphicsView {{background-color: {BACKGROUND_COLOR.name()};}}")
 
     def add_menubar(self):
         self.menubar = self.menuBar()
@@ -144,7 +153,8 @@ class MainWindow(QMainWindow):
 
     def add_toolbar(self):
         self.toolbar = QToolBar()
-        self.toolbar.setStyleSheet("QToolBar { padding: 10px; spacing: 4px;}")
+        self.toolbar.layout().setSpacing(5)
+        self.toolbar.setContentsMargins(3, 3, 3, 3)
         self.toolbar.setMovable(False)
         self.font_family_menu = QFontComboBox()
         self.size_unit = self.font_family_menu.sizeHint().height()
