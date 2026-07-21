@@ -71,7 +71,7 @@ class RecentFilesDialog(QDialog):
         super().__init__(main_window)
         self.main_window = main_window
         self.selected_file = None
-        self.setWindowTitle("Recent Files")
+        self.setWindowTitle("Recent Documents")
         self.setWindowFlags(Qt.WindowType.Dialog)
         self.setFixedSize(self.main_window.size_unit * 15, self.main_window.size_unit * 10)
         
@@ -111,6 +111,7 @@ class RecentFilesDialog(QDialog):
         self.list_widget.setCurrentRow(0)
         layout.addWidget(self.list_widget)
         self.list_widget.itemActivated.connect(self._accept_selection)
+        self.list_widget.itemClicked.connect(self._accept_selection)
     
     def update_stylesheet(self):
         self.palette = self.main_window.app.palette()
