@@ -13,7 +13,7 @@ from pathlib import Path
 import zipfile
 import json
 from dialogs import *
-from recent_files import _show_recent_dialog, register_recent_file
+from recent_documents import _show_recent_dialog, register_recent_file
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
