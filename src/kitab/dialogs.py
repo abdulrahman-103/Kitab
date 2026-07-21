@@ -8,11 +8,11 @@ from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLen
 from PySide6.QtCore import QSize, QRectF
 
 class FindReplaceDialog(QDialog):
-    def __init__(self, editor, parent):
-        super().__init__(parent)
+    def __init__(self, editor, main_window):
+        super().__init__(main_window)
         self.editor = editor
         self.setWindowTitle("Find and replace")
-        self.setFixedWidth(parent.size_unit*10)
+        self.setFixedSize(main_window.size_unit*10, main_window.size_unit*5)
 
         self.find_field = QLineEdit()
         self.replace_field = QLineEdit()
@@ -87,11 +87,11 @@ class FindReplaceDialog(QDialog):
 
 
 class InsertTableDialog(QDialog):
-    def __init__(self, editor, main_window, size_unit):
+    def __init__(self, editor, main_window):
         super().__init__(main_window)
         self.dialog = True
         self.setWindowTitle("Insert Table")
-        self.setFixedWidth(size_unit * 6)
+        self.setFixedSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
 
         layout = QVBoxLayout()
         page_size_combo = QComboBox()
@@ -137,11 +137,11 @@ class InsertTableDialog(QDialog):
                 self.deleteLater()
 
 class PageSizeDialog(QDialog):
-    def __init__(self, editor, main_window, size_unit):
+    def __init__(self, editor, main_window):
         super().__init__(main_window)
         self.dialog = True
         self.setWindowTitle("Page Size")
-        self.setFixedWidth(size_unit * 6)
+        self.setFixedSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
 
         layout = QVBoxLayout()
 
