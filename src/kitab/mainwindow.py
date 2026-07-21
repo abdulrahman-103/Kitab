@@ -687,7 +687,7 @@ class MainWindow(QMainWindow):
                 self.insert_table_dialog.raise_()
                 self.insert_table_dialog.activateWindow()
             except RuntimeError:
-                self.insert_table_dialog = PageSizeDialog(self.editor, self, self.size_unit, self)
+                self.insert_table_dialog = InsertTableDialog(self.editor, self, self.size_unit)
                 self.insert_table_dialog.show()
                 self.insert_table_dialog.raise_()
                 self.insert_table_dialog.activateWindow()
