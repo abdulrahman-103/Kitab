@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog, QMessageBox, QDialog, QVBoxLayout, QFontComboBox, QInputDialog, QStatusBar, QLabel
-from PySide6.QtGui import QAction, QIntValidator, QIcon, QPainter, QColor, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextOption, QTextTableFormat, QTextLength, QTextImageFormat, QShortcut
+from PySide6.QtGui import QAction, QIntValidator, QIcon, QPainter, QColor, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextOption, QTextTableFormat, QTextLength, QTextImageFormat, QShortcut, QPalette
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 from PySide6.QtCore import QTimer, Qt, QSize, QElapsedTimer, QRectF, QPoint
 import base64
@@ -13,16 +13,13 @@ from pathlib import Path
 import zipfile
 import json
 from dialogs import *
+from recent_files import _show_recent_dialog, register_recent_file
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        open_with_commandline = False
         self.app = QApplication.instance()
-        global BACKGROUND_COLOR
-        BACKGROUND_COLOR = QColor("#141618")
-        if self.app.styleHints().colorScheme() == Qt.ColorScheme.Light:
-            BACKGROUND_COLOR = QColor("#c4c8cc")
-        self.app.styleHints().colorSchemeChanged.connect(self.change_background_color)
+        self.background_color = self.app.palette().color(QPalette.ColorRole.Dark)
+        self.app.styleHints().colorSchemeChanged.connect(self.update_background_color)
         resolution = self.app.primaryScreen().availableSize()
         self.resize(resolution.width()/1.5, resolution.height()/1.5)
         self.move((resolution.width()-self.width())/2, 0)
@@ -39,16 +36,16 @@ class MainWindow(QMainWindow):
         self.showMaximized()
         self.scene = QGraphicsScene()
         self.editor = Editor(self)
-        self.add_menubar()
+
         self.add_toolbar()
-        
+        self.add_menubar()
 
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         
         self.scene.addWidget(self.editor)
         self.view = QGraphicsView(self.scene)
         self.view.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.view.setStyleSheet(f"QGraphicsView {{background-color: {BACKGROUND_COLOR.name()};}}")
+        self.view.setStyleSheet(f"QGraphicsView {{background-color: {self.background_color.name()};}}")
         self.view.centerOn(self.editor.width() / 2, 0)
         self.setCentralWidget(self.view)
 
@@ -73,14 +70,9 @@ class MainWindow(QMainWindow):
         self.editor.document().setModified(False)
         QTimer.singleShot(0, lambda: (self.view.viewport().setFocus(), self.editor.setFocus()))
 
-    def change_background_color(self):
-        global BACKGROUND_COLOR
-        if self.app.styleHints().colorScheme() == Qt.ColorScheme.Light:
-            BACKGROUND_COLOR = QColor("#c4c8cc")
-            self.view.setStyleSheet(f"QGraphicsView {{background-color: {BACKGROUND_COLOR.name()};}}")
-        if self.app.styleHints().colorScheme() == Qt.ColorScheme.Dark:
-            BACKGROUND_COLOR = QColor("#141618")
-            self.view.setStyleSheet(f"QGraphicsView {{background-color: {BACKGROUND_COLOR.name()};}}")
+    def update_background_color(self): #updates background color on system theme change
+        self.background_color = self.app.palette().color(QPalette.ColorRole.Dark)
+        self.view.setStyleSheet(f"QGraphicsView {{background-color: {self.background_color.name()};}}")
 
     def add_menubar(self):
         self.menubar = self.menuBar()
@@ -98,6 +90,12 @@ class MainWindow(QMainWindow):
         open_option.setIcon(open_icon)
         open_option.triggered.connect(self.open)
         open_option.setShortcut("Ctrl+O")
+
+        recent_option = file_menu.addAction("Recent Documents")
+        recent_icon = QIcon.fromTheme("document-open-recent-symbolic")
+        recent_option.setIcon(recent_icon)
+        recent_option.triggered.connect(lambda: _show_recent_dialog(self))
+        recent_option.setShortcut("Ctrl+H")
 
         save_option = file_menu.addAction("Save")
         save_icon = QIcon.fromTheme("document-save-symbolic")
@@ -384,6 +382,12 @@ class MainWindow(QMainWindow):
         self.editor.document().setModified(False)
         self.file_name = Path(self.file_path).name
         self.setWindowTitle(f"{self.file_name}  –  Kitab")
+
+        try:
+            register_recent_file(self.file_path)
+        except ImportError:
+            pass
+
         time_taken = save_timer.elapsed()
         minimum_time = 500
         if time_taken >= minimum_time:
@@ -445,6 +449,11 @@ class MainWindow(QMainWindow):
         self.file_name = Path(self.file_path).name
         self.setWindowTitle(f"{self.file_name}  –  Kitab")
 
+        try:
+            register_recent_file(self.file_path)
+        except ImportError:
+            pass
+
     def open(self):
         self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", self.last_directory, "Kitab, Text and Markdown Files (*.ktb *.txt *.md);;Kitab Files (*.ktb);;Text Files (*.txt);;Markdown Files (*.md)")
         if not self.file_path:
@@ -494,7 +503,7 @@ class MainWindow(QMainWindow):
         self.find_action.setShortcut("Ctrl+F")
         self.find_action.triggered.connect(self.find_replace)
         self.addAction(self.find_action)
-        
+
         # binds Ctrl+1 through Ctrl+9 to quickly jump to specific pages
         for i in range(1, 10):
             shortcut = QShortcut(f"Ctrl+{i}", self)
@@ -829,14 +838,13 @@ class Editor(QTextEdit):
 
 
     def paintEvent(self, event):
-        global BACKGROUND_COLOR
         painter = QPainter(self.viewport())
         gap_height = 6  #The thickness of the gap (in pixels)
         for page_index in range(self.page_count):
             page_bottom = (page_index+1) * self.base_height - gap_height/2 #page bottom position
             if page_index < self.page_count - 1: #excludes last page
                 gap_rect = QRectF(0, page_bottom, self.width(), gap_height) #create gap
-                painter.fillRect(gap_rect, BACKGROUND_COLOR) #color gap
+                painter.fillRect(gap_rect, self.main_window.background_color) #color gap
         painter.end()
         super().paintEvent(event)
 
