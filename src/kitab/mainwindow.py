@@ -3,7 +3,7 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog, QMessageBox, QDialog, QVBoxLayout, QFontComboBox, QInputDialog, QStatusBar
+from PySide6.QtWidgets import QMainWindow, QTextEdit, QColorDialog, QToolBar, QFileDialog, QLabel, QMenu, QPushButton, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QSizePolicy, QButtonGroup, QProgressDialog, QMessageBox, QDialog, QVBoxLayout, QFontComboBox, QInputDialog, QStatusBar, QLabel
 from PySide6.QtGui import QAction, QIntValidator, QIcon, QPainter, QColor, QPageSize, QCursor, QImage, QPixmap, QPdfWriter, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextOption, QTextTableFormat, QTextLength, QTextImageFormat, QShortcut
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 from PySide6.QtCore import QTimer, Qt, QSize, QElapsedTimer, QRectF, QPoint
@@ -14,7 +14,7 @@ import zipfile
 import json
 from dialogs import FindReplaceDialog, PageSizeDialog
 
-BACKGROUND_COLOR = QColor("#1e1e1e")
+BACKGROUND_COLOR = QColor("#141618")
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -46,7 +46,7 @@ class MainWindow(QMainWindow):
         self.scene.addWidget(self.editor)
         self.view = QGraphicsView(self.scene)
         self.view.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.view.setStyleSheet(f"QGraphicsView {{background-color: {BACKGROUND_COLOR.name()}}};")
+        self.view.setStyleSheet(f"QGraphicsView {{background-color: {BACKGROUND_COLOR.name()};}};")
         self.view.centerOn(self.editor.width() / 2, 0)
         self.setCentralWidget(self.view)
 
@@ -69,6 +69,7 @@ class MainWindow(QMainWindow):
         self.view.viewport().installEventFilter(self)
         self.scroll_bar.setValue(0)
         self.editor.document().setModified(False)
+        QTimer.singleShot(0, lambda: (self.view.viewport().setFocus(), self.editor.setFocus()))
 
 
     def add_menubar(self):
@@ -77,40 +78,58 @@ class MainWindow(QMainWindow):
         file_menu = self.menubar.addMenu("File")
 
         new_option = file_menu.addAction("New")
+        new_icon = QIcon.fromTheme("document-new-symbolic")
+        new_option.setIcon(new_icon)
         new_option.triggered.connect(self.new)
         new_option.setShortcut("Ctrl+N")
 
         open_option = file_menu.addAction("Open")
+        open_icon = QIcon.fromTheme("document-open-symbolic")
+        open_option.setIcon(open_icon)
         open_option.triggered.connect(self.open)
         open_option.setShortcut("Ctrl+O")
 
         save_option = file_menu.addAction("Save")
+        save_icon = QIcon.fromTheme("document-save-symbolic")
+        save_option.setIcon(save_icon)
         save_option.triggered.connect(self.save)
         save_option.setShortcut("Ctrl+S")
 
         save_as_option = file_menu.addAction("Save As")
+        save_as_icon = QIcon.fromTheme("document-save-as-symbolic")
+        save_as_option.setIcon(save_as_icon)
         save_as_option.triggered.connect(self.save_as)
         save_as_option.setShortcut("Ctrl+Shift+S")
 
-        export = file_menu.addAction("Export")
-        export.triggered.connect(self.export_file)
-        export.setShortcut("Ctrl+Shift+E")
+        export_option = file_menu.addAction("Export")
+        export_icon = QIcon.fromTheme("document-export-symbolic")
+        export_option.setIcon(export_icon)
+        export_option.triggered.connect(self.export_file)
+        export_option.setShortcut("Ctrl+Shift+E")
 
         print_option = file_menu.addAction("Print")
+        print_icon = QIcon.fromTheme("document-print-symbolic")
+        print_option.setIcon(print_icon)
         print_option.triggered.connect(self.print_document)
         print_option.setShortcut("Ctrl+P")
 
         exit_option = file_menu.addAction("Exit")
+        exit_icon = QIcon.fromTheme("application-exit-symbolic")
+        exit_option.setIcon(exit_icon)
         exit_option.triggered.connect(self.app.quit)
-        exit_option.setShortcut("Ctrl+F4")
+        exit_option.setShortcut("Alt+F4")
 
         insert_menu = self.menubar.addMenu("Insert")
 
         table_option = insert_menu.addAction("Table")
+        insert_table_icon = QIcon.fromTheme("insert-table-symbolic")
+        table_option.setIcon(insert_table_icon)
         table_option.triggered.connect(self.insert_table)
         table_option.setShortcut("Ctrl+T")
 
         image_option = insert_menu.addAction("Image")
+        insert_image_icon = QIcon.fromTheme("insert-image-symbolic")
+        image_option.setIcon(insert_image_icon)
         image_option.triggered.connect(self.insert_image)
         image_option.setShortcut("Ctrl+I")
 
@@ -125,6 +144,7 @@ class MainWindow(QMainWindow):
 
     def add_toolbar(self):
         self.toolbar = QToolBar()
+        self.toolbar.setStyleSheet("QToolBar { padding: 10px; spacing: 4px;}")
         self.toolbar.setMovable(False)
         self.font_family_menu = QFontComboBox()
         self.size_unit = self.font_family_menu.sizeHint().height()
@@ -145,14 +165,23 @@ class MainWindow(QMainWindow):
         self.font_size_menu.setEditable(True)
         self.font_size_menu.lineEdit().setValidator(QIntValidator(6, 500, self))
         self.font_size_menu.activated.connect(self.change_font_size)
-        self.font_size_menu.lineEdit().returnPressed.connect(self.change_font_size)
+        self.font_size_menu.lineEdit().returnPressed.connect(lambda: (self.change_font_size(), self.view.viewport().setFocus()))
         self.font_size_menu.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        self.font_size_menu.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.font_size_menu.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
+        self.font_size_menu.setFixedWidth(self.size_unit*2.5)
+
+        pt = QLabel("pt", self.font_size_menu)
+        pt_layout = QHBoxLayout()
+        self.font_size_menu.lineEdit().setLayout(pt_layout)
+        pt_layout.setContentsMargins(self.size_unit, 0, 0, 0)
+        pt_layout.addWidget(pt)
+
         self.toolbar.addWidget(self.font_size_menu)
         self.toolbar.addSeparator()
 
-        self.color_button = QPushButton("", self)
+        self.color_button = QPushButton()
+        color_icon = QIcon.fromTheme("format-text-color-symbolic")
+        self.color_button.setIcon(color_icon)
         self.color_button.setToolTip("Font Color")
         self.color_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.color_button.setStyleSheet(f"QPushButton {{background-color: {self.editor.DEFAULT_FONT_COLOR};}}")
@@ -161,7 +190,9 @@ class MainWindow(QMainWindow):
         self.toolbar.addSeparator()
 
         self.highlight_color = QColor("yellow")
-        self.highlight_button = QPushButton("🖍", self)
+        self.highlight_button = QPushButton()
+        hightlight_icon = QIcon.fromTheme("draw-highlight-symbolic")
+        self.highlight_button.setIcon(hightlight_icon)
         self.highlight_button.setToolTip("Hightlight")
         self.highlight_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.highlight_button.setStyleSheet("QPushButton {background-color: yellow;}")
@@ -169,70 +200,78 @@ class MainWindow(QMainWindow):
         self.toolbar.addWidget(self.highlight_button)
         self.toolbar.addSeparator()
 
-        self.bold_button = QPushButton("B", self)
+        self.bold_button = QPushButton()
+        bold_icon = QIcon.fromTheme("format-text-bold-symbolic")
+        self.bold_button.setIcon(bold_icon)
         self.bold_button.setToolTip("Bold")
         self.bold_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.bold_button.setCheckable(True)
-        self.bold_button.setStyleSheet("QPushButton { font-weight: bold; }")
         self.bold_button.clicked.connect(self.toggle_bold)
         self.toolbar.addWidget(self.bold_button)
 
-        self.strikethrough_button = QPushButton("S", self)
+        self.strikethrough_button = QPushButton()
+        strikethrough_icon = QIcon.fromTheme("format-text-strikethrough-symbolic")
+        self.strikethrough_button.setIcon(strikethrough_icon)
         self.strikethrough_button.setToolTip("Strikethrough")
         self.strikethrough_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.strikethrough_button.setCheckable(True)
-        self.strikethrough_button.setStyleSheet("QPushButton { font-weight: bold; }")
         self.strikethrough_button.clicked.connect(self.toggle_strikethrough)
         self.toolbar.addWidget(self.strikethrough_button)
 
-        self.underline_button = QPushButton("U", self)
+        self.underline_button = QPushButton()
+        underline_icon = QIcon.fromTheme("format-text-underline-symbolic")
+        self.underline_button.setIcon(underline_icon)
         self.underline_button.setToolTip("Underline")
         self.underline_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.underline_button.setCheckable(True)
-        self.underline_button.setStyleSheet("QPushButton { font-weight: bold; }")
         self.underline_button.clicked.connect(self.toggle_underline)
         self.toolbar.addWidget(self.underline_button)
 
-        self.italic_button = QPushButton("𝐼", self)
+        self.italic_button = QPushButton()
+        italic_icon = QIcon.fromTheme("format-text-italic-symbolic")
+        self.italic_button.setIcon(italic_icon)
         self.italic_button.setToolTip("Italic")
         self.italic_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.italic_button.setCheckable(True)
-        self.italic_button.setStyleSheet("QPushButton { font-weight: bold; font-size:12pt;}")
         self.italic_button.clicked.connect(self.toggle_italic)
         self.toolbar.addWidget(self.italic_button)
 
-        self.clear_formatting_button = QPushButton("X", self)
+        self.clear_formatting_button = QPushButton()
+        clear_formatting_icon = QIcon.fromTheme("edit-clear-symbolic")
+        self.clear_formatting_button.setIcon(clear_formatting_icon)
         self.clear_formatting_button.setToolTip("Clear Formatting")
         self.clear_formatting_button.setFixedSize(self.size_unit*1.5, self.size_unit)
-        self.clear_formatting_button.setStyleSheet("QPushButton { font-weight: bold; }")
         self.clear_formatting_button.clicked.connect(self.clear_formatting)
         self.toolbar.addWidget(self.clear_formatting_button)
         self.toolbar.addSeparator()
 
-        self.align_left_button = QPushButton("←", self)
+        self.align_left_button = QPushButton()
+        align_left_icon = QIcon.fromTheme("format-justify-left-symbolic")
+        self.align_left_button.setIcon(align_left_icon)
         self.align_left_button.setShortcut("Ctrl+L")
         self.align_left_button.setToolTip("Align Left")
         self.align_left_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.align_left_button.setCheckable(True)
-        self.align_left_button.setStyleSheet("QPushButton {font-size: 18pt;}")
         self.align_left_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignLeft))
         self.toolbar.addWidget(self.align_left_button)
 
-        self.align_center_button = QPushButton("•", self)
+        self.align_center_button = QPushButton()
+        align_center_icon = QIcon.fromTheme("format-justify-center-symbolic")
+        self.align_center_button.setIcon(align_center_icon)
         self.align_center_button.setShortcut("Ctrl+E")
         self.align_center_button.setToolTip("Align Center")
         self.align_center_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.align_center_button.setCheckable(True)
-        self.align_center_button.setStyleSheet("QPushButton {font-size: 18pt;}")
         self.align_center_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignHCenter))
         self.toolbar.addWidget(self.align_center_button)
 
-        self.align_right_button = QPushButton("→", self)
+        self.align_right_button = QPushButton()
+        align_right_icon = QIcon.fromTheme("format-justify-right-symbolic")
+        self.align_right_button.setIcon(align_right_icon)
         self.align_right_button.setShortcut("Ctrl+R")
         self.align_right_button.setToolTip("Align Right")
         self.align_right_button.setFixedSize(self.size_unit*1.5, self.size_unit)
         self.align_right_button.setCheckable(True)
-        self.align_right_button.setStyleSheet("QPushButton {font-size: 18pt;}")
         self.align_right_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignRight))
         self.toolbar.addWidget(self.align_right_button)
         self.alignment_group = QButtonGroup(self)
@@ -362,6 +401,8 @@ class MainWindow(QMainWindow):
         self.file_name = None
         self.editor.clear()
         self.editor.document().setModified(False)
+        self.view.viewport().setFocus()
+        self.editor.setFocus()
 
     def _open_file(self):
         if self.file_path.endswith(".ktb"):
@@ -802,13 +843,13 @@ class Editor(QTextEdit):
                 return
             menu = QMenu()
 
-            undo_icon = QIcon.fromTheme("edit-undo")
-            redo_icon = QIcon.fromTheme("edit-redo")
-            cut_icon = QIcon.fromTheme("edit-cut")
-            copy_icon = QIcon.fromTheme("edit-copy")
-            paste_icon = QIcon.fromTheme("edit-paste")
-            find_icon = QIcon.fromTheme("edit-find")
-            select_all_icon = QIcon.fromTheme("edit-select-all")
+            undo_icon = QIcon.fromTheme("edit-undo-symbolic")
+            redo_icon = QIcon.fromTheme("edit-redo-symbolic")
+            cut_icon = QIcon.fromTheme("edit-cut-symbolic")
+            copy_icon = QIcon.fromTheme("edit-copy-symbolic")
+            paste_icon = QIcon.fromTheme("edit-paste-symbolic")
+            find_icon = QIcon.fromTheme("edit-find-symbolic")
+            select_all_icon = QIcon.fromTheme("edit-select-all-symbolic")
 
             undo = menu.addAction("Undo")
             undo.setShortcut("Ctrl+Z")
