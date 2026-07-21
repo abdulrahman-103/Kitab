@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QPushButton, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox
-from PySide6.QtGui import QTextCursor, QTextDocument
+from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength
 from PySide6.QtCore import QSize, QRectF
 
 class FindReplaceDialog(QDialog):
@@ -86,9 +86,60 @@ class FindReplaceDialog(QDialog):
         QMessageBox.information(self, "Replace all", f"{count} replacement(s) made.")
 
 
+class InsertTableDialog(QDialog):
+    def __init__(self, editor, main_window, size_unit):
+        super().__init__(main_window)
+        self.dialog = True
+        self.setWindowTitle("Insert Table")
+        self.setFixedWidth(size_unit * 10)
+
+        layout = QVBoxLayout()
+
+        page_size_combo = QComboBox()
+
+        columns_field = QDoubleSpinBox()
+        rows_field = QDoubleSpinBox()
+        width_field = QDoubleSpinBox()
+        fields = QFormLayout()
+        fields.addRow("Columns:", columns_field)
+        fields.addRow("Rows:", rows_field)
+        fields.addRow("Width:", width_field)
+        layout.addLayout(fields)
+
+        button_layout = QHBoxLayout()
+        apply_button = QPushButton("Apply")
+        cancel_button = QPushButton("Cancel")
+        apply_button.setAutoDefault(False)
+        cancel_button.setAutoDefault(False)
+        button_layout.addStretch()
+        button_layout.addWidget(apply_button)
+        button_layout.addWidget(cancel_button)
+
+        layout.addLayout(button_layout)
+        self.setLayout(layout)
+        
+        apply_button.clicked.connect(lambda: self.insert_table(main_window, editor, int(columns_field.value()), int(rows_field.value()), width_field.value()))
+        cancel_button.clicked.connect(self.reject)
+
+    def insert_table(self, main_window, editor, columns, rows, width_percentage):
+            table_format = QTextTableFormat()
+            table_format.setCellPadding(4)
+            table_format.setBorder(1)
+            table_format.setBorderStyle(QTextTableFormat.BorderStyle.BorderStyle_Solid)
+            table_format.setWidth(QTextLength(QTextLength.Type.PercentageLength, width_percentage))
+            column_width = 100 / columns
+            constraints = [QTextLength(QTextLength.Type.PercentageLength, column_width)] * columns
+            table_format.setColumnWidthConstraints(constraints)
+            cursor = editor.textCursor()
+            table = cursor.insertTable(rows, columns, table_format)
+            main_window.view.viewport().setFocus()
+            if self.dialog:
+                self.dialog = False
+                self.deleteLater()
+
 class PageSizeDialog(QDialog):
-    def __init__(self, editor, parent, size_unit, main_window):
-        super().__init__(parent)
+    def __init__(self, editor, main_window, size_unit):
+        super().__init__(main_window)
         self.dialog = True
         self.setWindowTitle("Page Size")
         self.setFixedWidth(size_unit * 10)
