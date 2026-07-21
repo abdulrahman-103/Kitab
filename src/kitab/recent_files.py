@@ -1,6 +1,7 @@
-# recent_files.py
 #Copyright (C) <2026> <Abdulrahman>
 #This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+#This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import json
@@ -9,7 +10,7 @@ from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QListWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QShortcut, QKeySequence
 
-HISTORY_FILE = Path(os.path.expanduser("~/.config/kitab/recent_history.json"))
+HISTORY_FILE = Path(os.path.expanduser("~/.local/state/kitab/recent_history.json"))
 
 def register_recent_file(file_path):
     if not file_path:
@@ -28,7 +29,7 @@ def register_recent_file(file_path):
             history.remove(file_path)
         history.insert(0, file_path)
         
-        # baka — limits the history length to 10 entries to avoid memory bloating
+        # limits the history length to 10 entries
         history = history[:10]
         
         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
