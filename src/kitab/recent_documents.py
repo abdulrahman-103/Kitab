@@ -72,7 +72,6 @@ class RecentFilesDialog(QDialog):
         self.main_window = main_window
         self.selected_file = None
         self.setWindowTitle("Recent Documents")
-        self.setWindowFlags(Qt.WindowType.Dialog)
         self.setFixedSize(self.main_window.size_unit * 15, self.main_window.size_unit * 10)
         
         layout = QVBoxLayout(self)
