@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QListWidgetItem
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QShortcut, QKeySequence
+from PySide6.QtGui import QShortcut, QKeySequence, QPalette
 
 HISTORY_FILE = Path(os.path.expanduser("~/.local/state/kitab/recent_history.json"))
 
@@ -20,8 +20,8 @@ def register_recent_file(file_path):
         history = []
         if HISTORY_FILE.exists():
             try:
-                with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-                    history = json.load(f)
+                with open(HISTORY_FILE, "r", encoding="utf-8") as file:
+                    history = json.load(file)
             except json.JSONDecodeError:
                 pass 
         
@@ -32,21 +32,26 @@ def register_recent_file(file_path):
         # limits the history length to 10 entries
         history = history[:10]
         
-        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-            json.dump(history, f, ensure_ascii=False)
+        with open(HISTORY_FILE, "w", encoding="utf-8") as file:
+            json.dump(history, file, ensure_ascii=False)
     except Exception:
         pass
-
-def setup_recent_shortcuts(main_window):
-    main_window.recent_shortcut = QShortcut(QKeySequence("Ctrl+H"), main_window)
-    main_window.recent_shortcut.activated.connect(lambda: _show_recent_dialog(main_window))
 
 def _show_recent_dialog(main_window):
     if not HISTORY_FILE.exists():
         return
     try:
-        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-            files = json.load(f)
+        with open(HISTORY_FILE, "r", encoding="utf-8") as file:
+            files = json.load(file)
+            # removes deleted paths from variable
+            files_after_deletion = [path for path in files if Path(path).exists()]
+
+        # removes deleted paths from file if files got deleted
+        if len(files_after_deletion) != len(files):
+            with open(HISTORY_FILE, "w", encoding="utf-8") as file:
+                json.dump(files_after_deletion, file, ensure_ascii=False)
+                files = files_after_deletion
+        
     except json.JSONDecodeError:
         HISTORY_FILE.unlink(missing_ok=True)
         return
@@ -62,58 +67,73 @@ def _show_recent_dialog(main_window):
         main_window._open_file()
 
 class RecentFilesDialog(QDialog):
-    def __init__(self, files, parent):
-        super().__init__(parent)
+    def __init__(self, files, main_window):
+        super().__init__(main_window)
+        self.main_window = main_window
         self.selected_file = None
         self.setWindowTitle("Recent Files")
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setFixedSize(500, 300)
+        self.setWindowFlags(Qt.WindowType.Dialog)
+        self.setFixedSize(self.main_window.size_unit * 15, self.main_window.size_unit * 10)
         
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         
         self.list_widget = QListWidget()
-        self.list_widget.setStyleSheet("""
-            QListWidget {
-                background-color: #252526;
-                border: 1px solid #3c3c3c;
-                border-radius: 6px;
+        
+        self.palette = self.main_window.app.palette()
+        self.background_color = self.palette.color(QPalette.ColorRole.Dark)
+        self.selected_text_color = self.palette.color(QPalette.ColorRole.Highlight)
+        self.selected_item_color = self.palette.color(QPalette.ColorRole.Window)
+        self.stylesheet = f"""
+            QListWidget {{
+                background-color: {self.background_color.name()};
                 color: #ffffff;
                 font-size: 12pt;
                 padding: 5px;
-            }
-            QListWidget::item {
+            }}
+            QListWidget::item {{
                 padding: 8px;
-                border-radius: 4px;
-            }
-            QListWidget::item:selected {
-                background-color: #37373d;
-                color: #007acc;
-            }
-        """)
-        
-        for f in files:
-            item = QListWidgetItem(Path(f).name)
-            item.setToolTip(f)
-            item.setData(Qt.ItemDataRole.UserRole, f)
+            }}
+            QListWidget::item:selected {{
+                background-color: {self.selected_item_color.name()};
+                color: {self.selected_text_color.name()};
+            }}
+        """
+        self.list_widget.setStyleSheet(self.stylesheet)
+        self.main_window.app.styleHints().colorSchemeChanged.connect(self.update_stylesheet)
+
+        for file in files:
+            item = QListWidgetItem(Path(file).name)
+            item.setToolTip(file)
+            item.setData(Qt.ItemDataRole.UserRole, file)
             self.list_widget.addItem(item)
             
         self.list_widget.setCurrentRow(0)
         layout.addWidget(self.list_widget)
-        
         self.list_widget.itemActivated.connect(self._accept_selection)
-        
+    
+    def update_stylesheet(self):
+        self.palette = self.main_window.app.palette()
+        self.background_color = self.palette.color(QPalette.ColorRole.Dark)
+        self.selected_text_color = self.palette.color(QPalette.ColorRole.Highlight)
+        self.selected_item_color = self.palette.color(QPalette.ColorRole.Window)
+        self.stylesheet = f"""
+            QListWidget {{
+                background-color: {self.background_color.name()};
+                color: #ffffff;
+                font-size: 12pt;
+                padding: 5px;
+            }}
+            QListWidget::item {{
+                padding: 8px;
+            }}
+            QListWidget::item:selected {{
+                background-color: {self.selected_item_color.name()};
+                color: {self.selected_text_color.name()};
+            }}
+        """
+        self.list_widget.setStyleSheet(self.stylesheet)
+
     def _accept_selection(self, item):
         self.selected_file = item.data(Qt.ItemDataRole.UserRole)
         self.accept()
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Escape:
-            self.reject()
-        elif event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            current_item = self.list_widget.currentItem()
-            if current_item:
-                self._accept_selection(current_item)
-        else:
-            super().keyPressEvent(event)
