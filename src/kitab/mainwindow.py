@@ -12,13 +12,13 @@ import sys
 from pathlib import Path
 import zipfile
 import json
-from dialogs import FindReplaceDialog, PageSizeDialog
-
+from dialogs import *
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         open_with_commandline = False
         self.app = QApplication.instance()
+        global BACKGROUND_COLOR
         BACKGROUND_COLOR = QColor("#141618")
         if self.app.styleHints().colorScheme() == Qt.ColorScheme.Light:
             BACKGROUND_COLOR = QColor("#c4c8cc")
@@ -74,6 +74,7 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(0, lambda: (self.view.viewport().setFocus(), self.editor.setFocus()))
 
     def change_background_color(self):
+        global BACKGROUND_COLOR
         if self.app.styleHints().colorScheme() == Qt.ColorScheme.Light:
             BACKGROUND_COLOR = QColor("#c4c8cc")
             self.view.setStyleSheet(f"QGraphicsView {{background-color: {BACKGROUND_COLOR.name()};}}")
@@ -639,28 +640,6 @@ class MainWindow(QMainWindow):
         cursor = self.editor.textCursor()
         cursor.insertImage(image_format)
 
-    def insert_table(self):
-        rows, ok = QInputDialog.getInt(self, "Insert table", "Rows:", 2, 1, 100)
-        if not ok:
-            return
-        columns, ok = QInputDialog.getInt(self, "Insert table", "Columns:", 2, 1, 20)
-        if not ok:
-            return
-        width_percentage, ok = QInputDialog.getInt(self, "Insert table", "Width:", 100, 10, 100)
-        if not ok:
-            return
-        table_format = QTextTableFormat()
-        table_format.setCellPadding(4)
-        table_format.setBorder(1)
-        table_format.setBorderStyle(QTextTableFormat.BorderStyle.BorderStyle_Solid)
-        table_format.setWidth(QTextLength(QTextLength.Type.PercentageLength, width_percentage))
-        column_width = 100 / columns
-        constraints = [QTextLength(QTextLength.Type.PercentageLength, column_width)] * columns
-        table_format.setColumnWidthConstraints(constraints)
-        cursor = self.editor.textCursor()
-        table = cursor.insertTable(rows, columns, table_format)
-        self.view.viewport().setFocus()
-
     def clear_formatting(self):
         cursor = self.editor.textCursor()
         plain = QTextCharFormat()
@@ -691,9 +670,22 @@ class MainWindow(QMainWindow):
         self.find_dialog.raise_()
         self.find_dialog.activateWindow()
 
+    def insert_table(self):
+            if getattr(self, "insert_table_dialog", None) is None:
+                self.insert_table_dialog = InsertTableDialog(self.editor, self, self.size_unit)
+            try:
+                self.insert_table_dialog.show()
+                self.insert_table_dialog.raise_()
+                self.insert_table_dialog.activateWindow()
+            except RuntimeError:
+                self.insert_table_dialog = PageSizeDialog(self.editor, self, self.size_unit, self)
+                self.insert_table_dialog.show()
+                self.insert_table_dialog.raise_()
+                self.insert_table_dialog.activateWindow()
+
     def page_size(self):
         if getattr(self, "page_size_dialog", None) is None:
-            self.page_size_dialog = PageSizeDialog(self.editor, self, self.size_unit, self)
+            self.page_size_dialog = PageSizeDialog(self.editor, self, self.size_unit)
         try:
             self.page_size_dialog.show()
             self.page_size_dialog.raise_()
@@ -828,6 +820,7 @@ class Editor(QTextEdit):
 
 
     def paintEvent(self, event):
+        global BACKGROUND_COLOR
         painter = QPainter(self.viewport())
         gap_height = 6  #The thickness of the gap (in pixels)
         for page_index in range(self.page_count):
