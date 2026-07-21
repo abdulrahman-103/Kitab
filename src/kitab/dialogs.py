@@ -91,10 +91,9 @@ class InsertTableDialog(QDialog):
         super().__init__(main_window)
         self.dialog = True
         self.setWindowTitle("Insert Table")
-        self.setFixedWidth(size_unit * 10)
+        self.setFixedWidth(size_unit * 6)
 
         layout = QVBoxLayout()
-
         page_size_combo = QComboBox()
 
         columns_field = QSpinBox()
@@ -142,7 +141,7 @@ class PageSizeDialog(QDialog):
         super().__init__(main_window)
         self.dialog = True
         self.setWindowTitle("Page Size")
-        self.setFixedWidth(size_unit * 10)
+        self.setFixedWidth(size_unit * 6)
 
         layout = QVBoxLayout()
 
