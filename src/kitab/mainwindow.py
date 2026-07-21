@@ -304,7 +304,14 @@ class MainWindow(QMainWindow):
         if event.type() == event.Type.Wheel:
             self.wheelEvent(event)
             return True
-        return super().eventFilter(watched, event) #If not a scroll return to original event filter
+        elif event.type() == event.Type.NativeGesture:
+            if event.gestureType() == Qt.ZoomNativeGesture:
+                scale = event.value()
+                if scale>0:
+                    self.zoom("in", 0.12)
+                elif scale<0:
+                    self.zoom("out", 0.12)
+        return super().eventFilter(watched, event)
 
 
     def keyPressEvent(self, event):
@@ -330,16 +337,18 @@ class MainWindow(QMainWindow):
                 self.scroll_bar.setValue(self.scroll_bar.value() - steps)
 
 
-    def zoom(self, direction: str):
+    def zoom(self, direction: str, gesture_term=0):
         self.editor.was_zooming = True
         resolution = self.app.primaryScreen().size()
         resolution_factor = resolution.height() / 720 #my resolution is 1080p with 150% scaling. the factor use is to make the max and min limits equal on all resolutions
         min = 0.05 * resolution_factor
         max = 5.0 * resolution_factor
+        zoom_in_factor = 1.15 - gesture_term
+        zoom_out_factor = 0.85 + gesture_term
         if direction == "in" and self.zoom_factor < max:
-            self.zoom_factor *= 1.15
+            self.zoom_factor *= zoom_in_factor
         elif direction == "out" and self.zoom_factor > min:
-            self.zoom_factor *= 0.85
+            self.zoom_factor *= zoom_out_factor
         elif direction == "reset":
             self.zoom_factor = self.default_zoom_factor
         
