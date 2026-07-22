@@ -9,7 +9,7 @@ import sys
 
 def main():
     app = QApplication(sys.argv)
-    window = MainWindow()
+    _window = MainWindow()
     app.exec()
 
 if __name__ == "__main__":
