@@ -114,7 +114,7 @@ def open_file(self):
     if not self.file_path:
         return
     self.last_directory = str(Path(self.file_path).parent)
-    _open_file()
+    _open_file(self)
 
 def export_file(self):
     file_path, format_filter = QFileDialog.getSaveFileName(self, "Export file", self.last_directory, "PDF File (*.pdf)")
@@ -277,5 +277,5 @@ def add_menubar(self):
     page_size_option = page_menu.addAction("Page Size")
     page_size_option.triggered.connect(lambda: page_size(self))
 
-    page_margins_option = page_menu.addAction("Page Margins")
+    #page_margins_option = page_menu.addAction("Page Margins")
     #page_margins_option.triggered.connect(self.page_margins)
