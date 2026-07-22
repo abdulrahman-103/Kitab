@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy
 from PySide6.QtGui import QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption
 from PySide6.QtCore import Qt, QSize, QRectF
 from menubar import _open_file
-from hyperlinks import handle_link_click
+from dialogs import handle_link_click
 
 class Editor(QTextEdit):
     PAGE_SIZES = {

@@ -11,8 +11,7 @@ from pathlib import Path
 import zipfile
 import json
 from recent_documents import *
-from dialogs import PageSizeDialog, InsertTableDialog
-from hyperlinks import InsertLinkDialog
+from dialogs import PageSizeDialog, InsertTableDialog, InsertLinkDialog
 
 def _save_file(self):
     saving = QProgressDialog("Saving...", None, 0, 0, self)
