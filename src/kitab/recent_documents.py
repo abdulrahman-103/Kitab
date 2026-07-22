@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QListWidgetItem
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QShortcut, QKeySequence, QPalette
+from PySide6.QtGui import QPalette
 
 HISTORY_FILE = Path(os.path.expanduser("~/.local/state/kitab/recent_history.json"))
 
@@ -37,7 +37,7 @@ def register_recent_file(file_path):
     except Exception:
         pass
 
-def _show_recent_dialog(main_window):
+def show_recent_dialog(main_window):
     if not HISTORY_FILE.exists():
         return
     try:
@@ -64,7 +64,8 @@ def _show_recent_dialog(main_window):
     dialog = RecentFilesDialog(files, main_window)
     if dialog.exec() == QDialog.DialogCode.Accepted and dialog.selected_file:
         main_window.file_path = dialog.selected_file
-        main_window._open_file()
+        from menubar import _open_file
+        _open_file(main_window)
 
 class RecentFilesDialog(QDialog):
     def __init__(self, files, main_window):

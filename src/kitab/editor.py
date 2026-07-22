@@ -6,6 +6,7 @@
 from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy
 from PySide6.QtGui import QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption
 from PySide6.QtCore import Qt, QSize, QRectF
+from menubar import _open_file
 class Editor(QTextEdit):
     PAGE_SIZES = {
         "A4": (794, 1123),
@@ -52,7 +53,7 @@ class Editor(QTextEdit):
                 path = path_list[0].toLocalFile()
                 if path.endswith(".txt") or path.endswith("ktb") or path.endswith("md"):
                     self.main_window.file_path = path
-                    self.main_window._open_file()
+                    _open_file()
             event.acceptProposedAction()
         else:
             super().dropEvent(event)
