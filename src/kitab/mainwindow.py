@@ -775,42 +775,15 @@ class Editor(QTextEdit):
         self.setStyleSheet(f"QTextEdit {{ background-color: {paper_color}; color: {font_color}; border: none; }};")
         self.paper_color = paper_color
 
-    
-
-
     def current_page(self):
         center_y = self.main_window.view.mapToScene(0, int(self.main_window.view.viewport().rect().center().y()))
         return int(center_y.y() // self.base_height + 1)
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            font = self.currentFont()
-            self.old_text_color = self.textColor()
-            self.old_text_align = self.text_alignment
-            
-            cursor = self.textCursor()
-            cursor.insertBlock()
-            
-            color = self.textColor()
-            if color == self.paper_color:
-                color = self.old_text_color
-            else:
-                self.old_text_color = self.textColor()
-            QTimer.singleShot(0, lambda: self.update_enter(font, color))
+            self.textCursor().insertBlock()
         else:
             super().keyPressEvent(event)
-    
-
-    def update_enter(self, font, color):
-        self.setCurrentFont(font)
-        self.main_window.align(self.old_text_align)
-        self.setTextColor(color)
-        self.main_window.color_button.setStyleSheet(f"QPushButton {{ background-color: {color.name()}; }}")
-        self.main_window.bold_button.setChecked(font.bold())
-        self.main_window.strikethrough_button.setChecked(font.strikeOut())
-        self.main_window.underline_button.setChecked(font.underline()) 
-        self.main_window.font_size_menu.setCurrentText(str(font.pointSize()))
-
 
     def check_page_limit(self):
         self.page_count = self.document().pageCount()
@@ -819,14 +792,12 @@ class Editor(QTextEdit):
         self.document().setPageSize(QSize(self.base_width, self.base_height))
         self.page_count = self.document().pageCount()
 
-
     def set_line_height(self, value):
         cursor = self.textCursor()
         cursor.select(QTextCursor.SelectionType.Document)
         block_format = cursor.blockFormat()
         block_format.setLineHeight(float(value), QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
         cursor.setBlockFormat(block_format)
-
 
     def paintEvent(self, event):
         painter = QPainter(self.viewport())
@@ -838,7 +809,6 @@ class Editor(QTextEdit):
                 painter.fillRect(gap_rect, self.main_window.background_color) #color gap
         painter.end()
         super().paintEvent(event)
-
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MouseButton.RightButton:
