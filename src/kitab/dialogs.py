@@ -94,7 +94,6 @@ class InsertTableDialog(QDialog):
         self.setFixedSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
 
         layout = QVBoxLayout()
-        page_size_combo = QComboBox()
 
         columns_field = QSpinBox()
         rows_field = QSpinBox()
