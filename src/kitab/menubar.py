@@ -11,9 +11,9 @@ from pathlib import Path
 import zipfile
 import json
 from recent_documents import *
-from dialogs import PageSizeDialog, InsertTableDialog
+from dialogs import PageSizeDialog, InsertTableDialog, InsertLinkDialog
 
-def _save_file(self): # base used by both save() and save_as()
+def _save_file(self):
     saving = QProgressDialog("Saving...", None, 0, 0, self)
     saving.setWindowTitle("Saving...")
     saving.setWindowModality(Qt.WindowModality.WindowModal)
@@ -36,7 +36,6 @@ def _save_file(self): # base used by both save() and save_as()
             zip.writestr("document.html", html_data)
             zip.writestr("info.json", json.dumps(json_data))
 
-
     self.editor.document().setModified(False)
     self.file_name = Path(self.file_path).name
     self.setWindowTitle(f"{self.file_name}  –  Kitab")
@@ -54,7 +53,6 @@ def _save_file(self): # base used by both save() and save_as()
         remaining_time = minimum_time - time_taken
         QTimer.singleShot(remaining_time, saving.close)
 
-
 def save(self):
     if not self.file_path:
         self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab File (*.ktb);;Text File (*.txt);;Markdown File  (*.md)")
@@ -64,7 +62,6 @@ def save(self):
         _save_file(self)
     else:
         _save_file(self)
-
 
 def save_as(self, show_dialog=True):
     file_path, format_filter = self.file_path, self.format_filter
@@ -117,7 +114,7 @@ def open_file(self):
     if not self.file_path:
         return
     self.last_directory = str(Path(self.file_path).parent)
-    _open_file()
+    _open_file(self)
 
 def export_file(self):
     file_path, format_filter = QFileDialog.getSaveFileName(self, "Export file", self.last_directory, "PDF File (*.pdf)")
@@ -168,6 +165,15 @@ def insert_table(self):
     except RuntimeError:
         self.insert_table_dialog = InsertTableDialog(self.editor, self)
         self.insert_table_dialog.exec()
+        
+def insert_link(self):
+    if getattr(self, "insert_link_dialog", None) is None:
+        self.insert_link_dialog = InsertLinkDialog(self.editor, self)
+    try:
+        self.insert_link_dialog.exec()
+    except RuntimeError:
+        self.insert_link_dialog = InsertLinkDialog(self.editor, self)
+        self.insert_link_dialog.exec()
 
 def page_size(self):
     if getattr(self, "page_size_dialog", None) is None:
@@ -194,76 +200,82 @@ def apply_page_size(self, size):
 
 
 def add_menubar(self):
-        self.menubar = self.menuBar()
+    self.menubar = self.menuBar()
 
-        file_menu = self.menubar.addMenu("File")
+    file_menu = self.menubar.addMenu("File")
 
-        new_option = file_menu.addAction("New")
-        new_icon = QIcon.fromTheme("document-new-symbolic")
-        new_option.setIcon(new_icon)
-        new_option.triggered.connect(lambda: new(self))
-        new_option.setShortcut("Ctrl+N")
+    new_option = file_menu.addAction("New")
+    new_icon = QIcon.fromTheme("document-new-symbolic")
+    new_option.setIcon(new_icon)
+    new_option.triggered.connect(lambda: new(self))
+    new_option.setShortcut("Ctrl+N")
 
-        open_option = file_menu.addAction("Open")
-        open_icon = QIcon.fromTheme("document-open-symbolic")
-        open_option.setIcon(open_icon)
-        open_option.triggered.connect(lambda: open_file(self))
-        open_option.setShortcut("Ctrl+O")
+    open_option = file_menu.addAction("Open")
+    open_icon = QIcon.fromTheme("document-open-symbolic")
+    open_option.setIcon(open_icon)
+    open_option.triggered.connect(lambda: open_file(self))
+    open_option.setShortcut("Ctrl+O")
 
-        recent_option = file_menu.addAction("Recent Documents")
-        recent_icon = QIcon.fromTheme("document-open-recent-symbolic")
-        recent_option.setIcon(recent_icon)
-        recent_option.triggered.connect(lambda: show_recent_dialog(self))
-        recent_option.setShortcut("Ctrl+H")
+    recent_option = file_menu.addAction("Recent Documents")
+    recent_icon = QIcon.fromTheme("document-open-recent-symbolic")
+    recent_option.setIcon(recent_icon)
+    recent_option.triggered.connect(lambda: show_recent_dialog(self))
+    recent_option.setShortcut("Ctrl+H")
 
-        save_option = file_menu.addAction("Save")
-        save_icon = QIcon.fromTheme("document-save-symbolic")
-        save_option.setIcon(save_icon)
-        save_option.triggered.connect(lambda: save(self))
-        save_option.setShortcut("Ctrl+S")
+    save_option = file_menu.addAction("Save")
+    save_icon = QIcon.fromTheme("document-save-symbolic")
+    save_option.setIcon(save_icon)
+    save_option.triggered.connect(lambda: save(self))
+    save_option.setShortcut("Ctrl+S")
 
-        save_as_option = file_menu.addAction("Save As")
-        save_as_icon = QIcon.fromTheme("document-save-as-symbolic")
-        save_as_option.setIcon(save_as_icon)
-        save_as_option.triggered.connect(lambda: save_as(self))
-        save_as_option.setShortcut("Ctrl+Shift+S")
+    save_as_option = file_menu.addAction("Save As")
+    save_as_icon = QIcon.fromTheme("document-save-as-symbolic")
+    save_as_option.setIcon(save_as_icon)
+    save_as_option.triggered.connect(lambda: save_as(self))
+    save_as_option.setShortcut("Ctrl+Shift+S")
 
-        export_option = file_menu.addAction("Export")
-        export_icon = QIcon.fromTheme("document-export-symbolic")
-        export_option.setIcon(export_icon)
-        export_option.triggered.connect(lambda: export_file(self))
-        export_option.setShortcut("Ctrl+Shift+E")
+    export_option = file_menu.addAction("Export")
+    export_icon = QIcon.fromTheme("document-export-symbolic")
+    export_option.setIcon(export_icon)
+    export_option.triggered.connect(lambda: export_file(self))
+    export_option.setShortcut("Ctrl+Shift+E")
 
-        print_option = file_menu.addAction("Print")
-        print_icon = QIcon.fromTheme("document-print-symbolic")
-        print_option.setIcon(print_icon)
-        print_option.triggered.connect(lambda: print_document(self))
-        print_option.setShortcut("Ctrl+P")
+    print_option = file_menu.addAction("Print")
+    print_icon = QIcon.fromTheme("document-print-symbolic")
+    print_option.setIcon(print_icon)
+    print_option.triggered.connect(lambda: print_document(self))
+    print_option.setShortcut("Ctrl+P")
 
-        exit_option = file_menu.addAction("Exit")
-        exit_icon = QIcon.fromTheme("application-exit-symbolic")
-        exit_option.setIcon(exit_icon)
-        exit_option.triggered.connect(self.app.quit)
-        exit_option.setShortcut("Alt+F4")
+    exit_option = file_menu.addAction("Exit")
+    exit_icon = QIcon.fromTheme("application-exit-symbolic")
+    exit_option.setIcon(exit_icon)
+    exit_option.triggered.connect(self.app.quit)
+    exit_option.setShortcut("Alt+F4")
 
-        insert_menu = self.menubar.addMenu("Insert")
+    insert_menu = self.menubar.addMenu("Insert")
 
-        table_option = insert_menu.addAction("Table")
-        insert_table_icon = QIcon.fromTheme("insert-table-symbolic")
-        table_option.setIcon(insert_table_icon)
-        table_option.triggered.connect(lambda: insert_table(self))
-        table_option.setShortcut("Ctrl+T")
+    table_option = insert_menu.addAction("Table")
+    insert_table_icon = QIcon.fromTheme("insert-table-symbolic")
+    table_option.setIcon(insert_table_icon)
+    table_option.triggered.connect(lambda: insert_table(self))
+    table_option.setShortcut("Ctrl+T")
 
-        image_option = insert_menu.addAction("Image")
-        insert_image_icon = QIcon.fromTheme("insert-image-symbolic")
-        image_option.setIcon(insert_image_icon)
-        image_option.triggered.connect(lambda: insert_image(self))
-        image_option.setShortcut("Ctrl+I")
+    image_option = insert_menu.addAction("Image")
+    insert_image_icon = QIcon.fromTheme("insert-image-symbolic")
+    image_option.setIcon(insert_image_icon)
+    image_option.triggered.connect(lambda: insert_image(self))
+    image_option.setShortcut("Ctrl+I")
+    
+    link_option = insert_menu.addAction("Link")
+    link_icon = QIcon.fromTheme("insert-link-symbolic")
+    link_option.setIcon(link_icon)
+    link_option.triggered.connect(lambda: insert_link(self))
+    link_option.setShortcut("Ctrl+K")
 
-        page_menu = self.menubar.addMenu("Page")
+    page_menu = self.menubar.addMenu("Page")
 
-        page_size_option = page_menu.addAction("Page Size")
-        page_size_option.triggered.connect(lambda: page_size(self))
+    page_size_option = page_menu.addAction("Page Size")
+    page_size_option.triggered.connect(lambda: page_size(self))
 
-        page_margins_option = page_menu.addAction("Page Margins")
-        #page_margins_option.triggered.connect(self.page_margins)
+    #page_margins_option = page_menu.addAction("Page Margins")
+    #page_margins_option.triggered.connect(self.page_margins)

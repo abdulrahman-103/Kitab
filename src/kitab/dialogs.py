@@ -4,8 +4,9 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox
-from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength
-from PySide6.QtCore import QSize, QRectF
+from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength, QDesktopServices
+from PySide6.QtCore import QSize, QRectF, Qt, QUrl
+from urllib.parse import urlparse
 
 class FindReplaceDialog(QDialog):
     def __init__(self, editor, main_window):
@@ -129,7 +130,7 @@ class InsertTableDialog(QDialog):
             constraints = [QTextLength(QTextLength.Type.PercentageLength, column_width)] * columns
             table_format.setColumnWidthConstraints(constraints)
             cursor = editor.textCursor()
-            table = cursor.insertTable(rows, columns, table_format)
+            cursor.insertTable(rows, columns, table_format)
             main_window.view.viewport().setFocus()
             if self.dialog:
                 self.dialog = False
@@ -194,3 +195,63 @@ class PageSizeDialog(QDialog):
         if self.dialog:
             self.dialog = False
             self.deleteLater()
+
+class InsertLinkDialog(QDialog):
+    def __init__(self, editor, main_window):
+        super().__init__(main_window)
+        self.dialog = True
+        self.setWindowTitle("Insert Link")
+        self.setFixedSize(main_window.size_unit * 7, main_window.size_unit * 4.5)
+
+        layout = QVBoxLayout()
+
+        text_field = QLineEdit()
+        url_field = QLineEdit()
+        fields = QFormLayout()
+        fields.addRow("Text:", text_field)
+        fields.addRow("URL:", url_field)
+        layout.addLayout(fields)
+
+        button_layout = QHBoxLayout()
+        apply_button = QPushButton("Apply")
+        cancel_button = QPushButton("Cancel")
+        apply_button.setAutoDefault(False)
+        cancel_button.setAutoDefault(False)
+        button_layout.addStretch()
+        button_layout.addWidget(apply_button)
+        button_layout.addWidget(cancel_button)
+
+        layout.addLayout(button_layout)
+        self.setLayout(layout)
+
+        apply_button.clicked.connect(lambda: self.insert_link(editor, text_field.text(), url_field.text()))
+        cancel_button.clicked.connect(self.reject)
+
+    @staticmethod
+    def insert_https(url):
+        url = url.strip()
+        # Check if a protocol (like http, https, ftp) already exists
+        parsed = urlparse(url)
+        if parsed.scheme:
+            return url
+        return f"https://{url}"
+
+    def insert_link(self, editor, text, url):
+        if not url:
+            return
+        url = self.insert_https(url)
+        display_text = text if text else url
+        cursor = editor.textCursor()
+        cursor.insertHtml(f'<a href="{url}">{display_text}</a>')
+        if self.dialog:
+            self.dialog = False
+            self.deleteLater()
+    
+    @staticmethod
+    def handle_link_click(editor, event):
+        if event.button() == Qt.MouseButton.LeftButton and event.modifiers() == Qt.KeyboardModifier.ControlModifier:
+            anchor = editor.anchorAt(event.pos())
+            if anchor:
+                QDesktopServices.openUrl(QUrl(anchor))
+                return True
+        return False

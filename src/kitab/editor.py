@@ -7,6 +7,8 @@ from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy
 from PySide6.QtGui import QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption
 from PySide6.QtCore import Qt, QSize, QRectF
 from menubar import _open_file
+from dialogs import InsertLinkDialog
+
 class Editor(QTextEdit):
     PAGE_SIZES = {
         "A4": (794, 1123),
@@ -18,6 +20,7 @@ class Editor(QTextEdit):
     DEFAULT_PAPER_COLOR = "white"
     DEFAULT_FONT_COLOR = "black"
     DEFAULT_PAGE_SIZE = "A4"
+    
     def __init__(self, main_window):
         super().__init__()
         self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute
@@ -27,7 +30,7 @@ class Editor(QTextEdit):
         self.main_window = main_window
         self.setMinimumSize(self.base_width, self.base_height)
         self.document().setPageSize(QSize(self.base_width, self.base_height))
-        self.document().setDocumentMargin(20*(96/25.4)) #mm to pt (inch is 72 pt and is 25.4mm)
+        self.document().setDocumentMargin(20*(96/25.4))
         self.page_count = self.document().pageCount()
         
         text_option = self.document().defaultTextOption()
@@ -46,7 +49,7 @@ class Editor(QTextEdit):
         self.was_zooming = False 
         self.document().setModified(False)
     
-    def dropEvent(self, event): #drag and drop a file
+    def dropEvent(self, event):
         if event.mimeData().hasUrls():
             path_list = event.mimeData().urls()
             if len(path_list) == 1:
@@ -88,12 +91,12 @@ class Editor(QTextEdit):
 
     def paintEvent(self, event):
         painter = QPainter(self.viewport())
-        gap_height = 6  #The thickness of the gap (in pixels)
+        gap_height = 6
         for page_index in range(self.page_count):
-            page_bottom = (page_index+1) * self.base_height - gap_height/2 #page bottom position
-            if page_index < self.page_count - 1: #excludes last page
-                gap_rect = QRectF(0, page_bottom, self.width(), gap_height) #create gap
-                painter.fillRect(gap_rect, self.main_window.background_color) #color gap
+            page_bottom = (page_index+1) * self.base_height - gap_height/2
+            if page_index < self.page_count - 1:
+                gap_rect = QRectF(0, page_bottom, self.width(), gap_height)
+                painter.fillRect(gap_rect, self.main_window.background_color)
         painter.end()
         super().paintEvent(event)
 
@@ -149,7 +152,6 @@ class Editor(QTextEdit):
             menu.addAction(self.main_window.find_action)
             self.main_window.find_action.setIcon(find_icon)
             
-            
             select_all = menu.addAction("Select All")
             select_all.setShortcut("Ctrl+A")
             select_all.setIcon(select_all_icon)
@@ -162,6 +164,10 @@ class Editor(QTextEdit):
         super().mouseReleaseEvent(event)
 
     def mousePressEvent(self, event):
+        if InsertLinkDialog.handle_link_click(self, event):
+            event.accept()
+            return
+            
         if event.button() == Qt.MouseButton.RightButton:
             self.was_zooming = False
         super().mousePressEvent(event)
