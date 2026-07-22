@@ -9,7 +9,6 @@ import sys
 
 def main():
     app = QApplication(sys.argv)
-    screen_resolution = app.primaryScreen().availableSize()
     window = MainWindow()
     app.exec()
 

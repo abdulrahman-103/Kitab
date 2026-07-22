@@ -3,19 +3,18 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QMainWindow, QColorDialog, QToolBar, QFileDialog, QLabel, QPushButton, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QButtonGroup, QProgressDialog, QDialog, QFontComboBox, QStatusBar
-from PySide6.QtGui import QAction, QIntValidator, QIcon, QColor, QPageSize, QImage, QPixmap, QPdfWriter, QTextCharFormat, QTextImageFormat, QShortcut, QPalette
+from PySide6.QtWidgets import QMainWindow, QColorDialog, QToolBar, QFileDialog, QLabel, QPushButton, QHBoxLayout, QApplication, QGraphicsScene, QGraphicsView, QComboBox, QButtonGroup, QProgressDialog, QDialog, QFontComboBox, QStatusBar, QMessageBox
+from PySide6.QtGui import QAction, QIntValidator, QIcon, QColor, QPageSize, QPdfWriter, QTextCharFormat, QTextImageFormat, QShortcut, QPalette
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 from PySide6.QtCore import QTimer, Qt, QSize, QElapsedTimer, QRectF
-import base64
 import sys
 from pathlib import Path
 import zipfile
 import json
-from images import ICON_BASE64
 from editor import Editor
 from dialogs import *
 from recent_documents import _show_recent_dialog, register_recent_file
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -29,8 +28,8 @@ class MainWindow(QMainWindow):
         self.format_filter = None
         self.last_directory = None
         
-        icon = QImage.fromData(base64.b64decode(ICON_BASE64))
-        self.setWindowIcon(QIcon(QPixmap.fromImage(icon)))
+        icon_path = str(Path(__file__).resolve().parent.parent.parent / "icon.png")
+        self.setWindowIcon(QIcon(icon_path))
 
         self.showMaximized()
         self.scene = QGraphicsScene()
@@ -74,6 +73,33 @@ class MainWindow(QMainWindow):
     def update_background_color(self): #updates background color on system theme change
         self.background_color = self.app.palette().color(QPalette.ColorRole.Dark)
         self.view.setStyleSheet(f"QGraphicsView {{background-color: {self.background_color.name()};}}")
+
+    def closeEvent(self, event):
+        if self.editor.document().isModified():
+            msg_box = QMessageBox(self)
+            msg_box.setWindowTitle("Unsaved changes")
+            msg_box.setText("Do you want to save the file?")
+            msg_box.setIcon(QMessageBox.Icon.Warning)
+
+            save_button = msg_box.addButton("Save", QMessageBox.ButtonRole.AcceptRole)
+            donotsave_button = msg_box.addButton("Don't Save", QMessageBox.ButtonRole.DestructiveRole)
+            cancel_button = msg_box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+
+            msg_box.setDefaultButton(save_button)
+            msg_box.exec()
+            clicked = msg_box.clickedButton()
+
+            if clicked == save_button:
+                status = self.save()
+                if status == "canceled":
+                    event.ignore()
+                else:
+                    event.accept() 
+                
+            elif clicked == donotsave_button:
+                event.accept()
+            else:
+                event.ignore()
 
     def add_menubar(self):
         self.menubar = self.menuBar()
@@ -402,7 +428,7 @@ class MainWindow(QMainWindow):
         if not self.file_path:
             self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab File (*.ktb);;Text File (*.txt);;Markdown File  (*.md)")
             if not self.file_path:
-                return
+                return "canceled"
             self.last_directory = str(Path(self.file_path).parent)
             self._save_file()
         else:
