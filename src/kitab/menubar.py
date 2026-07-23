@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QFileDialog, QProgressDialog, QDialog
-from PySide6.QtGui import QIcon, QPageSize, QPdfWriter, QTextImageFormat
+from PySide6.QtGui import QIcon, QPageSize, QPdfWriter, QTextImageFormat, QTextDocumentWriter
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 from PySide6.QtCore import QTimer, Qt, QSize, QElapsedTimer, QRectF
 from pathlib import Path
@@ -35,6 +35,10 @@ def _save_file(self):
         with zipfile.ZipFile(self.file_path, mode="w", compression=zipfile.ZIP_DEFLATED) as zip:
             zip.writestr("document.html", html_data)
             zip.writestr("info.json", json.dumps(json_data))
+    elif self.file_path.endswith(".odt"):
+        writer = QTextDocumentWriter(self.file_path)
+        writer.setFormat(b"odf") 
+        writer.write(self.editor.document())
 
     self.editor.document().setModified(False)
     self.file_name = Path(self.file_path).name
@@ -55,7 +59,7 @@ def _save_file(self):
 
 def save(self):
     if not self.file_path:
-        self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab File (*.ktb);;Text File (*.txt);;Markdown File  (*.md)")
+        self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text File (*.txt);;Markdown File  (*.md)")
         if not self.file_path:
             return "canceled"
         self.last_directory = str(Path(self.file_path).parent)
@@ -65,7 +69,7 @@ def save(self):
 
 def save_as(self, show_dialog=True):
     file_path, format_filter = self.file_path, self.format_filter
-    self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab File (*.ktb);;Text File (*.txt);;Markdown File  (*.md)")
+    self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text File (*.txt);;Markdown File  (*.md)")
     if not self.file_path:
         self.file_path, self.format_filter = file_path, format_filter
     else:
@@ -97,6 +101,9 @@ def _open_file(self):
         with open(self.file_path, "r", encoding="utf-8") as file:
             data = file.read()
             self.editor.setMarkdown(data)
+    elif self.file_path.endswith(".odt"):
+        pass
+    
     self.editor.document().setModified(False)
     self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
     total_pages = self.editor.document().pageCount()
@@ -110,7 +117,7 @@ def _open_file(self):
         pass
 
 def open_file(self):
-    self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", self.last_directory, "Kitab, Text and Markdown Files (*.ktb *.txt *.md);;Kitab Files (*.ktb);;Text Files (*.txt);;Markdown Files (*.md)")
+    self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", self.last_directory, "Kitab, Text, Markdown and ODF Text Documents (*.ktb *.odt *.txt *.md);;Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text File (*.txt);;Markdown File (*.md)")
     if not self.file_path:
         return
     self.last_directory = str(Path(self.file_path).parent)
