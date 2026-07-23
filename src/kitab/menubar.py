@@ -12,6 +12,7 @@ import zipfile
 import json
 from recent_documents import *
 from dialogs import PageSizeDialog, InsertTableDialog, InsertLinkDialog
+import subprocess
 
 def _save_file(self):
     saving = QProgressDialog("Saving...", None, 0, 0, self)
@@ -102,8 +103,11 @@ def _open_file(self):
             data = file.read()
             self.editor.setMarkdown(data)
     elif self.file_path.endswith(".odt"):
-        pass
-    
+        odf_kit = Path(__file__).resolve().parent.parent / "odf-kit"
+        js = odf_kit / "main.js"
+        result = subprocess.run(["node", js, self.file_path], cwd=odf_kit, capture_output=True, text=True)
+        self.editor.setHtml(result.stdout)
+
     self.editor.document().setModified(False)
     self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
     total_pages = self.editor.document().pageCount()
