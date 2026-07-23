@@ -12,6 +12,7 @@ import zipfile
 import json
 from recent_documents import *
 from dialogs import PageSizeDialog, InsertTableDialog, InsertLinkDialog
+from history import show_history_dialog
 
 def _save_file(self):
     saving = QProgressDialog("Saving...", None, 0, 0, self)
@@ -240,6 +241,10 @@ def add_menubar(self):
     save_as_option.setIcon(save_as_icon)
     save_as_option.triggered.connect(lambda: save_as(self))
     save_as_option.setShortcut("Ctrl+Shift+S")
+
+    history_option = file_menu.addAction("Version History")
+    history_option.triggered.connect(lambda: show_history_dialog(self))
+    history_option.setShortcut("Ctrl+G")
 
     export_option = file_menu.addAction("Export")
     export_icon = QIcon.fromTheme("document-export-symbolic")

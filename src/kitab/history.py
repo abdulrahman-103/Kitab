@@ -4,13 +4,14 @@
 # You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import os
+import sys
+import types
 import hashlib
 import logging
 from datetime import datetime
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QTextEdit, QMessageBox
 from PySide6.QtGui import QKeySequence, QAction
-import menubar
 
 log_dir = Path.home() / ".kitab"
 log_dir.mkdir(parents=True, exist_ok=True)
@@ -191,24 +192,38 @@ def show_history_dialog(main_window):
     dialog = HistoryDialog(main_window)
     dialog.exec()
 
-_orig_save_file = menubar._save_file
+class _MenubarProxy(types.ModuleType):
+    def __init__(self, real_module):
+        super().__init__(real_module.__name__)
+        self._real_module = real_module
+        self._patched_save = None
 
-def _patched_save_file(self):
-    _orig_save_file(self)
-    try:
-        if self.file_path:
-            if self.file_path.endswith(".txt"):
-                content = self.editor.toPlainText()
-            elif self.file_path.endswith(".md"):
-                content = self.editor.toMarkdown()
-            elif self.file_path.endswith(".ktb"):
-                content = self.editor.toHtml()
-            elif self.file_path.endswith(".odt"):
-                content = self.editor.toPlainText()
-            else:
-                content = self.editor.toPlainText()
-            HistoryManager.save_snapshot(self.file_path, content)
-    except Exception as e:
-        logging.error(f"Error in history hook: {e}")
+    def __getattr__(self, name):
+        val = getattr(self._real_module, name)
+        if name == '_save_file':
+            if not self._patched_save:
+                def _wrapped(self_inner):
+                    val(self_inner)
+                    try:
+                        if self_inner.file_path:
+                            if self_inner.file_path.endswith(".md"):
+                                content = self_inner.editor.toMarkdown()
+                            elif self_inner.file_path.endswith(".ktb"):
+                                content = self_inner.editor.toHtml()
+                            else:
+                                content = self_inner.editor.toPlainText()
+                            HistoryManager.save_snapshot(self_inner.file_path, content)
+                    except Exception as e:
+                        logging.error(f"Error in history hook: {e}")
+                self._patched_save = _wrapped
+            return self._patched_save
+        return val
 
-menubar._save_file = _patched_save_file
+    def __setattr__(self, name, value):
+        if name in ('_real_module', '_patched_save'):
+            super().__setattr__(name, value)
+        else:
+            setattr(self._real_module, name, value)
+
+if 'menubar' in sys.modules and not isinstance(sys.modules['menubar'], _MenubarProxy):
+    sys.modules['menubar'] = _MenubarProxy(sys.modules['menubar'])
