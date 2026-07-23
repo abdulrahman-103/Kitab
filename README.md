@@ -26,7 +26,7 @@ python main.py
 ### Arch Linux
 
 ```bash
-sudo pacman -Syu git pyside6
+sudo pacman -Syu pyside6 git
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -35,7 +35,7 @@ python main.py
 ###  Fedora Linux
 
 ```bash
-sudo dnf install -y git python3-pyside6
+sudo dnf install -y python3-pyside6 git
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -44,7 +44,7 @@ python main.py
 ### Other platforms (no theming)
 
 ```bash
-pip install pyside6-essentials
+pip install pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -84,7 +84,7 @@ python main.py
 ### Arch Linux
 
 ```bash
-sudo pacman -Syu git pyside6
+sudo pacman -Syu pyside6 git
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -93,7 +93,7 @@ python main.py
 ###  Fedora Linux
 
 ```bash
-sudo dnf install -y git python3-pyside6
+sudo dnf install -y python3-pyside6 git
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -102,7 +102,7 @@ python main.py
 #### المنصات الأخرى
 
 ```bash
-pip install pyside6-essentials
+pip install pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py

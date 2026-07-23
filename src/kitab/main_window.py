@@ -56,7 +56,7 @@ class MainWindow(QMainWindow):
         #opening file with commandline
         if len(sys.argv) == 2:
             self.file_path = sys.argv[1]
-            _open_file()
+            _open_file(self)
 
         self.scroll_bar = self.view.verticalScrollBar()
         self.add_statusbar()
