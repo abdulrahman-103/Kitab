@@ -56,7 +56,7 @@ class Editor(QTextEdit):
                 path = path_list[0].toLocalFile()
                 if path.endswith(".txt") or path.endswith("ktb") or path.endswith("md"):
                     self.main_window.file_path = path
-                    _open_file()
+                    _open_file(self.main_window)
             event.acceptProposedAction()
         else:
             super().dropEvent(event)
