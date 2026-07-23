@@ -12,6 +12,7 @@ from editor import Editor
 from toolbar import add_toolbar, align, sync_font
 from menubar import add_menubar, _open_file
 from dialogs import FindReplaceDialog
+from history import show_history_dialog
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -187,6 +188,12 @@ class MainWindow(QMainWindow):
         self.find_action.triggered.connect(self.find_replace)
         self.addAction(self.find_action)
 
+        self.history_action = QAction(self)
+        self.history_action.setText("Version History")
+        self.history_action.setShortcut("Ctrl+G")
+        self.history_action.triggered.connect(lambda: show_history_dialog(self))
+        self.addAction(self.history_action)
+
         # binds Ctrl+1 through Ctrl+9 to quickly jump to specific pages
         for i in range(1, 10):
             shortcut = QShortcut(f"Ctrl+{i}", self)
@@ -197,4 +204,3 @@ class MainWindow(QMainWindow):
                 return
             target_y = (page - 1) * self.editor.base_height + (self.editor.base_height / 2)
             self.view.centerOn(self.view.sceneRect().center().x(), target_y)
-

@@ -1,0 +1,214 @@
+# Copyright (C) <2026> <Abdulrahman>
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+import os
+import hashlib
+import logging
+from datetime import datetime
+from pathlib import Path
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QTextEdit, QMessageBox
+from PySide6.QtGui import QKeySequence, QAction
+import menubar
+
+log_dir = Path.home() / ".kitab"
+log_dir.mkdir(parents=True, exist_ok=True)
+logging.basicConfig(
+    filename=str(log_dir / "history.log"),
+    level=logging.DEBUG,
+    format='%(asctime)s [%(levelname)s] %(message)s'
+)
+
+class HistoryManager:
+    @staticmethod
+    def get_history_dir(file_path):
+        if not file_path:
+            return None
+        abs_path = os.path.abspath(file_path)
+        path_hash = hashlib.md5(abs_path.encode('utf-8')).hexdigest()[:8]
+        base_name = os.path.basename(abs_path)
+        history_dir = Path.home() / ".kitab" / "history" / f"{base_name}_{path_hash}"
+        return str(history_dir)
+
+    @classmethod
+    def save_snapshot(cls, file_path, content):
+        logging.info(f"save_snapshot called for: {file_path}")
+        if not file_path:
+            logging.error("save_snapshot: empty file_path")
+            return
+        
+        h_dir = cls.get_history_dir(file_path)
+        os.makedirs(h_dir, exist_ok=True)
+        
+        snapshots = cls.list_snapshots(file_path)
+        if snapshots:
+            latest = snapshots[0]['path']
+            try:
+                with open(latest, 'r', encoding='utf-8', errors='ignore') as f:
+                    if content == f.read():
+                        logging.info("save_snapshot: Content identical to the last one, ignored.")
+                        return
+            except Exception as e:
+                logging.error(f"Error comparing with last snapshot: {e}")
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        base_name, ext = os.path.splitext(os.path.basename(file_path))
+        snapshot_name = f"{base_name}_{timestamp}{ext}"
+        snapshot_path = os.path.join(h_dir, snapshot_name)
+        
+        try:
+            with open(snapshot_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            logging.info(f"Snapshot successfully saved to: {snapshot_path}")
+        except Exception as e:
+            logging.error(f"Error writing snapshot file: {e}")
+        
+        snapshots = cls.list_snapshots(file_path)
+        if len(snapshots) > 20:
+            oldest = snapshots[-1]['path']
+            try:
+                os.remove(oldest)
+                logging.info(f"Old snapshot removed: {oldest}")
+            except OSError as e:
+                logging.error(f"Error removing old snapshot: {e}")
+
+    @classmethod
+    def list_snapshots(cls, file_path):
+        h_dir = cls.get_history_dir(file_path)
+        if not h_dir or not os.path.exists(h_dir):
+            return []
+        
+        snapshots = []
+        for filename in os.listdir(h_dir):
+            path = os.path.join(h_dir, filename)
+            if os.path.isfile(path):
+                try:
+                    mtime = os.path.getmtime(path)
+                    snapshots.append({
+                        'path': path,
+                        'time': mtime,
+                        'filename': filename
+                    })
+                except Exception:
+                    continue
+        
+        snapshots.sort(key=lambda x: x['time'])
+        
+        formatted_snapshots = []
+        for i, snap in enumerate(snapshots):
+            dt = datetime.fromtimestamp(snap['time'])
+            display_str = f"Version {i + 1} - {dt.strftime('%Y/%m/%d %H:%M:%S')}"
+            formatted_snapshots.append({
+                'path': snap['path'],
+                'display': display_str,
+                'time': snap['time']
+            })
+            
+        formatted_snapshots.sort(key=lambda x: x['time'], reverse=True)
+        return formatted_snapshots
+
+class HistoryDialog(QDialog):
+    def __init__(self, main_window):
+        super().__init__(main_window)
+        self.main_window = main_window
+        self.editor = main_window.editor
+        self.setWindowTitle("Version History")
+        self.resize(700, 450)
+
+        self.file_path = getattr(self.main_window, 'file_path', None)
+        
+        layout = QHBoxLayout(self)
+
+        self.list_widget = QListWidget()
+        layout.addWidget(self.list_widget, 1)
+
+        right_layout = QVBoxLayout()
+        self.preview_text = QTextEdit()
+        self.preview_text.setReadOnly(True)
+        self.preview_text.setStyleSheet("background-color: white; color: black;")
+        right_layout.addWidget(self.preview_text, 1)
+
+        btn_layout = QHBoxLayout()
+        self.restore_btn = QPushButton("Restore Version")
+        self.restore_btn.setEnabled(False)
+        self.restore_btn.clicked.connect(self.restore_selected)
+        btn_layout.addStretch()
+        btn_layout.addWidget(self.restore_btn)
+        
+        right_layout.addLayout(btn_layout)
+        layout.addLayout(right_layout, 2)
+
+        self.list_widget.currentRowChanged.connect(self.load_preview)
+        self.load_snapshots()
+
+    def load_snapshots(self):
+        self.list_widget.clear()
+        if not self.file_path:
+            return
+        
+        self.snapshots = HistoryManager.list_snapshots(self.file_path)
+        for snap in self.snapshots:
+            self.list_widget.addItem(snap['display'])
+
+    def load_preview(self, index):
+        if index < 0 or index >= len(self.snapshots):
+            self.preview_text.clear()
+            self.restore_btn.setEnabled(False)
+            return
+
+        path = self.snapshots[index]['path']
+        try:
+            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+            self.preview_text.setText(content)
+            self.restore_btn.setEnabled(True)
+        except Exception:
+            self.preview_text.setText("Error loading preview.")
+            self.restore_btn.setEnabled(False)
+
+    def restore_selected(self):
+        index = self.list_widget.currentRow()
+        if index < 0 or index >= len(self.snapshots):
+            return
+
+        path = self.snapshots[index]['path']
+        try:
+            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+            
+            self.editor.setPlainText(content)
+            self.editor.document().setModified(True)
+            QMessageBox.information(self, "Success", "Version restored successfully.")
+            self.accept()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Could not restore: {e}")
+
+def show_history_dialog(main_window):
+    if not getattr(main_window, 'file_path', None):
+        QMessageBox.warning(main_window, "Warning", "Save the current file before viewing history.")
+        return
+    dialog = HistoryDialog(main_window)
+    dialog.exec()
+
+_orig_save_file = menubar._save_file
+
+def _patched_save_file(self):
+    _orig_save_file(self)
+    try:
+        if self.file_path:
+            if self.file_path.endswith(".txt"):
+                content = self.editor.toPlainText()
+            elif self.file_path.endswith(".md"):
+                content = self.editor.toMarkdown()
+            elif self.file_path.endswith(".ktb"):
+                content = self.editor.toHtml()
+            elif self.file_path.endswith(".odt"):
+                content = self.editor.toPlainText()
+            else:
+                content = self.editor.toPlainText()
+            HistoryManager.save_snapshot(self.file_path, content)
+    except Exception as e:
+        logging.error(f"Error in history hook: {e}")
+
+menubar._save_file = _patched_save_file
