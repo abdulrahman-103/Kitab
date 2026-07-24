@@ -1,17 +1,17 @@
-# Copyright (C) <2026> <Abdulrahman>
+# Copyright (C) 2026 Abdulrahman
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 # You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import os
-import sys
-import types
 import hashlib
 import logging
 from datetime import datetime
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QTextEdit, QMessageBox
 from PySide6.QtGui import QKeySequence, QAction
+from PySide6.QtCore import Qt, QTimer
+import menubar
 
 log_dir = Path.home() / ".kitab"
 log_dir.mkdir(parents=True, exist_ok=True)
@@ -192,38 +192,48 @@ def show_history_dialog(main_window):
     dialog = HistoryDialog(main_window)
     dialog.exec()
 
-class _MenubarProxy(types.ModuleType):
-    def __init__(self, real_module):
-        super().__init__(real_module.__name__)
-        self._real_module = real_module
-        self._patched_save = None
 
-    def __getattr__(self, name):
-        val = getattr(self._real_module, name)
-        if name == '_save_file':
-            if not self._patched_save:
-                def _wrapped(self_inner):
-                    val(self_inner)
-                    try:
-                        if self_inner.file_path:
-                            if self_inner.file_path.endswith(".md"):
-                                content = self_inner.editor.toMarkdown()
-                            elif self_inner.file_path.endswith(".ktb"):
-                                content = self_inner.editor.toHtml()
-                            else:
-                                content = self_inner.editor.toPlainText()
-                            HistoryManager.save_snapshot(self_inner.file_path, content)
-                    except Exception as e:
-                        logging.error(f"Error in history hook: {e}")
-                self._patched_save = _wrapped
-            return self._patched_save
-        return val
+if not getattr(menubar, '_history_hooked', False):
+    _orig_save_file = menubar._save_file
 
-    def __setattr__(self, name, value):
-        if name in ('_real_module', '_patched_save'):
-            super().__setattr__(name, value)
-        else:
-            setattr(self._real_module, name, value)
+    def _patched_save_file(self):
+        _orig_save_file(self)
+        try:
+            if self.file_path:
+                if self.file_path.endswith(".md"):
+                    content = self.editor.toMarkdown()
+                elif self.file_path.endswith(".ktb"):
+                    content = self.editor.toHtml()
+                else:
+                    content = self.editor.toPlainText()
+                HistoryManager.save_snapshot(self.file_path, content)
+        except Exception as e:
+            logging.error(f"Error in history hook: {e}")
 
-if 'menubar' in sys.modules and not isinstance(sys.modules['menubar'], _MenubarProxy):
-    sys.modules['menubar'] = _MenubarProxy(sys.modules['menubar'])
+    menubar._save_file = _patched_save_file
+
+    _orig_add_menubar = menubar.add_menubar
+
+    def _patched_add_menubar(self):
+        _orig_add_menubar(self)
+        
+        def force_inject_shortcut():
+            for action in self.findChildren(QAction):
+                if action.shortcut() == QKeySequence("Ctrl+G"):
+                    action.setShortcut(QKeySequence())
+            
+            for action in self.menubar.actions():
+                if action.text().replace("&", "") == "File":
+                    file_menu = action.menu()
+                    if file_menu:
+                        hist_act = file_menu.addAction("Version History")
+                        hist_act.setShortcut(QKeySequence("Ctrl+G"))
+                        hist_act.setShortcutContext(Qt.ShortcutContext.ApplicationShortcut)
+                        hist_act.triggered.connect(lambda: show_history_dialog(self))
+                        self.addAction(hist_act)
+                    break
+
+        QTimer.singleShot(100, force_inject_shortcut)
+
+    menubar.add_menubar = _patched_add_menubar
+    menubar._history_hooked = True
