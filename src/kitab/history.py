@@ -5,7 +5,6 @@
 
 import os
 import hashlib
-import logging
 from datetime import datetime
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QTextEdit, QMessageBox
@@ -13,17 +12,11 @@ from PySide6.QtGui import QKeySequence, QAction
 from PySide6.QtCore import Qt, QTimer
 import menubar
 
-log_dir = Path.home() / ".kitab"
-log_dir.mkdir(parents=True, exist_ok=True)
-logging.basicConfig(
-    filename=str(log_dir / "history.log"),
-    level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] %(message)s'
-)
-
 class HistoryManager:
     @staticmethod
     def get_history_dir(file_path):
+        # Build a unique, stable directory for this file's snapshots based on its
+        # absolute path (hashed) plus the original file name for readability.
         if not file_path:
             return None
         abs_path = os.path.abspath(file_path)
@@ -34,9 +27,7 @@ class HistoryManager:
 
     @classmethod
     def save_snapshot(cls, file_path, content):
-        logging.info(f"save_snapshot called for: {file_path}")
         if not file_path:
-            logging.error("save_snapshot: empty file_path")
             return
         
         h_dir = cls.get_history_dir(file_path)
@@ -48,10 +39,9 @@ class HistoryManager:
             try:
                 with open(latest, 'r', encoding='utf-8', errors='ignore') as f:
                     if content == f.read():
-                        logging.info("save_snapshot: Content identical to the last one, ignored.")
                         return
-            except Exception as e:
-                logging.error(f"Error comparing with last snapshot: {e}")
+            except Exception:
+                pass
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         base_name, ext = os.path.splitext(os.path.basename(file_path))
@@ -61,18 +51,16 @@ class HistoryManager:
         try:
             with open(snapshot_path, 'w', encoding='utf-8') as f:
                 f.write(content)
-            logging.info(f"Snapshot successfully saved to: {snapshot_path}")
-        except Exception as e:
-            logging.error(f"Error writing snapshot file: {e}")
+        except Exception:
+            pass
         
         snapshots = cls.list_snapshots(file_path)
         if len(snapshots) > 20:
             oldest = snapshots[-1]['path']
             try:
                 os.remove(oldest)
-                logging.info(f"Old snapshot removed: {oldest}")
-            except OSError as e:
-                logging.error(f"Error removing old snapshot: {e}")
+            except OSError:
+                pass
 
     @classmethod
     def list_snapshots(cls, file_path):
@@ -105,7 +93,7 @@ class HistoryManager:
                 'display': display_str,
                 'time': snap['time']
             })
-            
+        
         formatted_snapshots.sort(key=lambda x: x['time'], reverse=True)
         return formatted_snapshots
 
@@ -193,10 +181,15 @@ def show_history_dialog(main_window):
     dialog.exec()
 
 
+# The following block patches the existing menubar module at import time,
+# so the history feature can hook into save actions and add its own menu
+# entry without modifying menubar.py directly.
 if not getattr(menubar, '_history_hooked', False):
     _orig_save_file = menubar._save_file
 
     def _patched_save_file(self):
+        # Run the original save logic first, then take a history snapshot
+        # of the saved content based on the file's format.
         _orig_save_file(self)
         try:
             if self.file_path:
@@ -207,8 +200,8 @@ if not getattr(menubar, '_history_hooked', False):
                 else:
                     content = self.editor.toPlainText()
                 HistoryManager.save_snapshot(self.file_path, content)
-        except Exception as e:
-            logging.error(f"Error in history hook: {e}")
+        except Exception:
+            pass
 
     menubar._save_file = _patched_save_file
 
