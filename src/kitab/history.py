@@ -20,9 +20,9 @@ class HistoryManager:
         if not file_path:
             return None
         abs_path = os.path.abspath(file_path)
-        path_hash = hashlib.md5(abs_path.encode('utf-8')).hexdigest()[:8]
+        path_hash = hashlib.sha256(abs_path.encode('utf-8')).hexdigest()[:16]
         base_name = os.path.basename(abs_path)
-        history_dir = Path.home() / ".kitab" / "history" / f"{base_name}_{path_hash}"
+        history_dir = Path.home() / ".local" / "state" / "kitab" / "history" / f"{base_name}_{path_hash}"
         return str(history_dir)
 
     @classmethod
