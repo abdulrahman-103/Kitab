@@ -3,14 +3,13 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import os
 import json
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QListWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
 
-HISTORY_FILE = Path(os.path.expanduser("~/.local/state/kitab/recent_history.json"))
+HISTORY_FILE = Path.home() / ".local" / "state" / "kitab" / "recent_history.json"
 
 def register_recent_file(file_path):
     if not file_path:
