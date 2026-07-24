@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QFileDialog, QProgressDialog, QDialog
-from PySide6.QtGui import QIcon, QPageSize, QPdfWriter, QTextImageFormat, QTextDocumentWriter
+from PySide6.QtGui import QIcon, QPageSize, QPdfWriter, QTextImageFormat
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 from PySide6.QtCore import QTimer, Qt, QSize, QElapsedTimer, QRectF
 from pathlib import Path
@@ -37,9 +37,12 @@ def _save_file(self):
             zip.writestr("document.html", html_data)
             zip.writestr("info.json", json.dumps(json_data))
     elif self.file_path.endswith(".odt"):
-        writer = QTextDocumentWriter(self.file_path)
-        writer.setFormat(b"odf") 
-        writer.write(self.editor.document())
+        odf_kit = Path(__file__).resolve().parent.parent / "odf-kit"
+        js = odf_kit / "html_to_odt.js"
+        temp_html = odf_kit / "temp.html"
+        with open(temp_html, "w", encoding="utf-8") as file:
+            file.write(self.editor.toHtml())
+        data = subprocess.run(["node", js, self.file_path], cwd=odf_kit, capture_output=True)
 
     self.editor.document().setModified(False)
     self.file_name = Path(self.file_path).name
@@ -104,9 +107,9 @@ def _open_file(self):
             self.editor.setMarkdown(data)
     elif self.file_path.endswith(".odt"):
         odf_kit = Path(__file__).resolve().parent.parent / "odf-kit"
-        js = odf_kit / "main.js"
-        result = subprocess.run(["node", js, self.file_path], cwd=odf_kit, capture_output=True, text=True)
-        self.editor.setHtml(result.stdout)
+        js = odf_kit / "odt_to_html.js"
+        data = subprocess.run(["node", js, self.file_path], cwd=odf_kit, capture_output=True, text=True)
+        self.editor.setHtml(data.stdout)
 
     self.editor.document().setModified(False)
     self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
