@@ -119,8 +119,6 @@ def toggle_italic(self):
 def clear_formatting(self):
     cursor = self.editor.textCursor()
     plain = QTextCharFormat()
-    plain.setFontPointSize(self.editor.DEFAULT_FONT_SIZE)
-    plain.setForeground(QColor(self.editor.DEFAULT_FONT_COLOR)) 
     cursor.setCharFormat(plain)
     block_format = cursor.blockFormat()
     block_format.clearBackground()

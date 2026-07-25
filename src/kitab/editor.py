@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy
-from PySide6.QtGui import QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption
+from PySide6.QtGui import QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat
 from PySide6.QtCore import Qt, QSize, QRectF
 from menubar import _open_file
 from dialogs import InsertLinkDialog
@@ -71,7 +71,8 @@ class Editor(QTextEdit):
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            self.textCursor().insertBlock()
+            cursor = self.textCursor()
+            cursor.insertBlock()
         else:
             super().keyPressEvent(event)
 
