@@ -2,8 +2,8 @@
 name: Bug report
 about: File a bug report
 title: "[BUG] "
-labels: bug
-assignees: ''
+labels: bug, feature
+assignees: abdulrahman-103
 
 ---
 
