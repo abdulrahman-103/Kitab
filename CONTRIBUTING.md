@@ -1,10 +1,5 @@
 # Contributing to Kitab
 
-## Reporting Issues
-
-- **Bug report**: describe what you expected vs what happened, steps to reproduce, and your environment (OS, Python version, PySide6 version).
-- **Feature request**: explain the use case.
-
 ## Setting Up the Development Environment
 
 1. Fork the repo and clone your fork.
