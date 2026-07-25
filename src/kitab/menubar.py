@@ -37,7 +37,7 @@ def _save_file(self):
             zip.writestr("document.html", html_data)
             zip.writestr("info.json", json.dumps(json_data))
     elif self.file_path.endswith(".odt"):
-        odf_kit = Path(__file__).resolve().parent.parent / "odf-kit"
+        odf_kit = Path(__file__).resolve().parent / "odf-kit"
         js = odf_kit / "html_to_odt.js"
         html = self.editor.toHtml()
         data = subprocess.run(["node", js, self.file_path], cwd=odf_kit, capture_output=True, text=True, input=html)
@@ -104,7 +104,7 @@ def _open_file(self):
             data = file.read()
             self.editor.setMarkdown(data)
     elif self.file_path.endswith(".odt"):
-        odf_kit = Path(__file__).resolve().parent.parent / "odf-kit"
+        odf_kit = Path(__file__).resolve().parent / "odf-kit"
         js = odf_kit / "odt_to_html.js"
         data = subprocess.run(["node", js, self.file_path], cwd=odf_kit, capture_output=True, text=True)
         self.editor.setHtml(data.stdout)
