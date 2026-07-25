@@ -39,10 +39,8 @@ def _save_file(self):
     elif self.file_path.endswith(".odt"):
         odf_kit = Path(__file__).resolve().parent.parent / "odf-kit"
         js = odf_kit / "html_to_odt.js"
-        temp_html = odf_kit / "temp.html"
-        with open(temp_html, "w", encoding="utf-8") as file:
-            file.write(self.editor.toHtml())
-        data = subprocess.run(["node", js, self.file_path], cwd=odf_kit, capture_output=True)
+        html = self.editor.toHtml()
+        data = subprocess.run(["node", js, self.file_path], cwd=odf_kit, capture_output=True, text=True, input=html)
 
     self.editor.document().setModified(False)
     self.file_name = Path(self.file_path).name
