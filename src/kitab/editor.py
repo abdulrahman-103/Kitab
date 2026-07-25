@@ -49,12 +49,12 @@ class Editor(QTextEdit):
         self.was_zooming = False 
         self.document().setModified(False)
     
-    def dropEvent(self, event):
+    def dropEvent(self, event): # drag and drop giles
         if event.mimeData().hasUrls():
             path_list = event.mimeData().urls()
             if len(path_list) == 1:
                 path = path_list[0].toLocalFile()
-                if path.endswith(".txt") or path.endswith("ktb") or path.endswith("md"):
+                if path.endswith(".txt") or path.endswith("ktb") or path.endswith("md") or path.endswith("odt"):
                     self.main_window.file_path = path
                     _open_file(self.main_window)
             event.acceptProposedAction()
