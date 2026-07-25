@@ -26,13 +26,14 @@ class MainWindow(QMainWindow):
         self.format_filter = None
         self.last_directory = None
         
-        icon_path = str(Path(__file__).resolve().parent.parent.parent / "icon.png")
+        icon_path = str(Path(__file__).resolve().parent / "images" / "icon.png")
         self.setWindowIcon(QIcon(icon_path))
 
         self.showMaximized()
         self.scene = QGraphicsScene()
         self.editor = Editor(self)
 
+        self.color_scheme = self.app.styleHints().colorScheme()
         add_toolbar(self)
         add_menubar(self)
 
@@ -43,7 +44,7 @@ class MainWindow(QMainWindow):
         self.view.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.background_color = self.app.palette().color(QPalette.ColorRole.Dark)
         self.view.setStyleSheet(f"QGraphicsView {{background-color: {self.background_color.name()};}}")
-        self.app.styleHints().colorSchemeChanged.connect(self.update_background_color)
+        self.app.styleHints().colorSchemeChanged.connect(self.update_colors)
         self.view.centerOn(self.editor.width() / 2, 0)
         self.setCentralWidget(self.view)
 
@@ -68,9 +69,18 @@ class MainWindow(QMainWindow):
         self.editor.document().setModified(False)
         QTimer.singleShot(0, lambda: (self.view.viewport().setFocus(), self.editor.setFocus()))
 
-    def update_background_color(self): #updates background color on system theme change
+    def update_colors(self): #updates colors on system theme change
+        self.color_scheme = self.app.styleHints().colorScheme()
         self.background_color = self.app.palette().color(QPalette.ColorRole.Dark)
         self.view.setStyleSheet(f"QGraphicsView {{background-color: {self.background_color.name()};}}")
+        if self.color_scheme == Qt.ColorScheme.Dark:
+            horizontal_line_icon_path = str(Path(__file__).resolve().parent / "images" / "insert_horizontal_line_dark.svg")
+            horizontal_line_icon = QIcon(horizontal_line_icon_path)
+            self.horizontal_line_option.setIcon(horizontal_line_icon)
+        elif self.color_scheme == Qt.ColorScheme.Light:
+            horizontal_line_icon_path = str(Path(__file__).resolve().parent / "images" / "insert_horizontal_line_light.svg")
+            horizontal_line_icon = QIcon(horizontal_line_icon_path)
+            self.horizontal_line_option.setIcon(horizontal_line_icon)
 
     def closeEvent(self, event):
         if self.editor.document().isModified():

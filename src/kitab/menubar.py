@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QFileDialog, QProgressDialog, QDialog
-from PySide6.QtGui import QIcon, QPageSize, QPdfWriter, QTextImageFormat
+from PySide6.QtGui import QIcon, QPageSize, QPdfWriter, QTextImageFormat, QTextCharFormat, QTextBlockFormat
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 from PySide6.QtCore import QTimer, Qt, QSize, QElapsedTimer, QRectF
 from pathlib import Path
@@ -187,6 +187,11 @@ def insert_link(self):
         self.insert_link_dialog = InsertLinkDialog(self.editor, self)
         self.insert_link_dialog.exec()
 
+def insert_horizontal_line(self):
+    cursor = self.editor.textCursor()
+    cursor.insertHtml("<hr>")
+    cursor.insertBlock(QTextBlockFormat(), QTextCharFormat())
+
 def page_size(self):
     if getattr(self, "page_size_dialog", None) is None:
         self.page_size_dialog = PageSizeDialog(self.editor, self)
@@ -283,6 +288,16 @@ def add_menubar(self):
     link_option.setIcon(link_icon)
     link_option.triggered.connect(lambda: insert_link(self))
     link_option.setShortcut("Ctrl+K")
+
+    self.horizontal_line_option = insert_menu.addAction("Horizontal Line")
+    if self.color_scheme == Qt.ColorScheme.Dark:
+        horizontal_line_icon_path = str(Path(__file__).resolve().parent / "images" / "insert_horizontal_line_dark.svg")
+    elif self.color_scheme == Qt.ColorScheme.Light:
+        horizontal_line_icon_path = str(Path(__file__).resolve().parent / "images" / "insert_horizontal_line_light.svg")
+    horizontal_line_icon = QIcon(horizontal_line_icon_path)
+    self.horizontal_line_option.setIcon(horizontal_line_icon)
+    self.horizontal_line_option.triggered.connect(lambda: insert_horizontal_line(self))
+    self.horizontal_line_option.setShortcut("Ctrl+K")
 
     page_menu = self.menubar.addMenu("Page")
 
