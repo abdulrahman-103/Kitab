@@ -4,6 +4,7 @@
 # You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import os
+import re
 import hashlib
 from datetime import datetime
 from pathlib import Path
@@ -15,8 +16,6 @@ import menubar
 class HistoryManager:
     @staticmethod
     def get_history_dir(file_path):
-        # Build a unique, stable directory for this file's snapshots based on its
-        # absolute path (hashed) plus the original file name for readability.
         if not file_path:
             return None
         abs_path = os.path.abspath(file_path)
@@ -72,29 +71,30 @@ class HistoryManager:
         for filename in os.listdir(h_dir):
             path = os.path.join(h_dir, filename)
             if os.path.isfile(path):
-                try:
-                    mtime = os.path.getmtime(path)
-                    snapshots.append({
-                        'path': path,
-                        'time': mtime,
-                        'filename': filename
-                    })
-                except Exception:
-                    continue
+                match = re.search(r"_(\d{8}_\d{6}_\d+)(?:\.[^.]+)?$", filename)
+                if match:
+                    try:
+                        dt = datetime.strptime(match.group(1), "%Y%m%d_%H%M%S_%f")
+                        snapshots.append({
+                            'path': path,
+                            'dt': dt,
+                            'filename': filename
+                        })
+                    except ValueError:
+                        continue
         
-        snapshots.sort(key=lambda x: x['time'])
+        snapshots.sort(key=lambda x: x['dt'])
         
         formatted_snapshots = []
         for i, snap in enumerate(snapshots):
-            dt = datetime.fromtimestamp(snap['time'])
-            display_str = f"Version {i + 1} - {dt.strftime('%Y/%m/%d %H:%M:%S')}"
+            display_str = f"Version {i + 1} - {snap['dt'].strftime('%Y/%m/%d %H:%M:%S')}"
             formatted_snapshots.append({
                 'path': snap['path'],
                 'display': display_str,
-                'time': snap['time']
+                'dt': snap['dt']
             })
         
-        formatted_snapshots.sort(key=lambda x: x['time'], reverse=True)
+        formatted_snapshots.sort(key=lambda x: x['dt'], reverse=True)
         return formatted_snapshots
 
 class HistoryDialog(QDialog):
@@ -180,16 +180,10 @@ def show_history_dialog(main_window):
     dialog = HistoryDialog(main_window)
     dialog.exec()
 
-
-# The following block patches the existing menubar module at import time,
-# so the history feature can hook into save actions and add its own menu
-# entry without modifying menubar.py directly.
 if not getattr(menubar, '_history_hooked', False):
     _orig_save_file = menubar._save_file
 
     def _patched_save_file(self):
-        # Run the original save logic first, then take a history snapshot
-        # of the saved content based on the file's format.
         _orig_save_file(self)
         try:
             if self.file_path:
