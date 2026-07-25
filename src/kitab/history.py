@@ -6,6 +6,7 @@
 import os
 import re
 import hashlib
+import difflib
 from datetime import datetime
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton, QTextEdit, QMessageBox
@@ -103,7 +104,7 @@ class HistoryDialog(QDialog):
         self.main_window = main_window
         self.editor = main_window.editor
         self.setWindowTitle("Version History")
-        self.resize(700, 450)
+        self.resize(800, 500)
 
         self.file_path = getattr(self.main_window, 'file_path', None)
         
@@ -116,7 +117,7 @@ class HistoryDialog(QDialog):
         self.preview_text = QTextEdit()
         self.preview_text.setReadOnly(True)
         self.preview_text.setStyleSheet("background-color: white; color: black;")
-        right_layout.addWidget(self.preview_text, 1)
+        right_layout.addWidget(self.preview_text, 2)
 
         btn_layout = QHBoxLayout()
         self.restore_btn = QPushButton("Restore Version")
@@ -149,11 +150,34 @@ class HistoryDialog(QDialog):
         path = self.snapshots[index]['path']
         try:
             with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read()
-            self.preview_text.setText(content)
+                snap_content = f.read()
+
+            if self.file_path and self.file_path.endswith(".md"):
+                current_content = self.editor.toMarkdown()
+            elif self.file_path and self.file_path.endswith(".ktb"):
+                current_content = self.editor.toHtml()
+            else:
+                current_content = self.editor.toPlainText()
+
+            diff = difflib.ndiff(current_content.splitlines(), snap_content.splitlines())
+            
+            html = "<div style='font-family: monospace; white-space: pre-wrap;'>"
+            for line in diff:
+                clean_line = line[2:].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                if line.startswith('- '):
+                    html += f"<div style='background-color: #ffcccc; color: black;'>- {clean_line}</div>"
+                elif line.startswith('+ '):
+                    html += f"<div style='background-color: #ccffcc; color: black;'>+ {clean_line}</div>"
+                elif line.startswith('? '):
+                    continue
+                else:
+                    html += f"<div>  {clean_line}</div>"
+            html += "</div>"
+
+            self.preview_text.setHtml(html)
             self.restore_btn.setEnabled(True)
-        except Exception:
-            self.preview_text.setText("Error loading preview.")
+        except Exception as e:
+            self.preview_text.setText(f"Error loading preview: {e}")
             self.restore_btn.setEnabled(False)
 
     def restore_selected(self):
