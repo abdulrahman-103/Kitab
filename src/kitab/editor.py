@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt, QSize, QRectF
 from menubar import _open_file
 from dialogs import InsertLinkDialog
 from toolbar import sync_font
+from menubar import insert_horizontal_line
 
 class Editor(QTextEdit):
     PAGE_SIZES = {
@@ -83,6 +84,27 @@ class Editor(QTextEdit):
             block_format = QTextBlockFormat()
             block_format.setAlignment(alignment)
             char_format = self.currentCharFormat()
+
+            # insert horizontal rule by ---
+            is_four_dashes = False
+            pos = cursor.position()
+            line_start = cursor.block().position()
+            beginning = max(line_start, pos - 3)
+            cursor.setPosition(beginning, QTextCursor.MoveMode.KeepAnchor)
+            selection = cursor.selectedText()
+            length = self.textCursor().block().length()
+            if length > 2 and selection == "---":
+                if pos - line_start >= 4:
+                    cursor.setPosition(pos - 4, QTextCursor.MoveMode.KeepAnchor)
+                    if cursor.selectedText() == "----":
+                        is_four_dashes = True
+                if not is_four_dashes:
+                    cursor.setPosition(pos)
+                    cursor.setPosition(beginning, QTextCursor.MoveMode.KeepAnchor)
+                    cursor.removeSelectedText()
+                    insert_horizontal_line(self.main_window)
+                    return
+            cursor.setPosition(pos)
             cursor.insertBlock(block_format, char_format)
         else:
             super().keyPressEvent(event)
