@@ -167,7 +167,12 @@ def insert_image(self):
     image_format.setName(path)
     image_format.setWidth(self.editor.base_width - 100)
     cursor = self.editor.textCursor()
+    block_format = cursor.blockFormat()
+    char_format = cursor.charFormat()
     cursor.insertImage(image_format)
+    cursor.setBlockFormat(block_format)
+    cursor.setCharFormat(char_format)
+    cursor.insertBlock(block_format, char_format)
 
 def insert_table(self):
     if getattr(self, "insert_table_dialog", None) is None:
