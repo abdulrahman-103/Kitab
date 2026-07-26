@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QFileDialog, QProgressDialog, QDialog
-from PySide6.QtGui import QIcon, QPageSize, QPdfWriter, QTextImageFormat, QTextCharFormat, QTextBlockFormat
+from PySide6.QtGui import QIcon, QPageSize, QPdfWriter, QTextImageFormat, QTextBlockFormat
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 from PySide6.QtCore import QTimer, Qt, QSize, QElapsedTimer, QRectF
 from pathlib import Path
@@ -189,8 +189,12 @@ def insert_link(self):
 
 def insert_horizontal_line(self):
     cursor = self.editor.textCursor()
+    alignment = cursor.blockFormat().alignment()
+    block_format = QTextBlockFormat()
+    block_format.setAlignment(alignment)
+    char_format = cursor.charFormat()
     cursor.insertHtml("<hr>")
-    cursor.insertBlock(QTextBlockFormat(), QTextCharFormat())
+    cursor.insertBlock(block_format, char_format)
 
 def page_size(self):
     if getattr(self, "page_size_dialog", None) is None:

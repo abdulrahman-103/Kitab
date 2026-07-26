@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QToolBar, QLabel, QPushButton, QHBoxLayout, QComboBox, QButtonGroup, QFontComboBox, QColorDialog
-from PySide6.QtGui import QIntValidator, QIcon, QColor, QTextCharFormat
+from PySide6.QtGui import QIntValidator, QIcon, QColor
 from PySide6.QtCore import Qt
 
 def sync_font(self):
@@ -48,16 +48,13 @@ def sync_font(self):
             self.align_right_button.setChecked(True)
 
 def font_family(self, font):
-    new_font = self.editor.currentFont()
-    new_font.setFamily(font.family())
-    self.editor.setCurrentFont(new_font)
+    self.editor.setFontFamily(font.family())
 
 def change_font_size(self):
     self.font_size = int(self.font_size_menu.currentText())
     font = self.editor.currentFont()
     font.setPointSize(self.font_size)
     self.editor.setCurrentFont(font)
-
     self.view.viewport().setFocus()
 
 def font_color(self):
@@ -117,20 +114,23 @@ def toggle_italic(self):
     self.view.viewport().setFocus()
 
 def clear_formatting(self):
+    self.editor.blockSignals(True)
     cursor = self.editor.textCursor()
-    plain = QTextCharFormat()
+    plain = self.editor.DEFAULT_CHAR_FORMAT
     cursor.setCharFormat(plain)
+    self.editor.setFont(self.editor.DEFAULT_FONT)
     block_format = cursor.blockFormat()
     block_format.clearBackground()
     block_format.setIndent(0)
     block_format.setObjectIndex(-1)
     cursor.setBlockFormat(block_format)
     self.editor.setCurrentCharFormat(plain)
-    sync_font(self)
     font_size = self.editor.currentFont().pointSize()
     self.font_size_menu.setCurrentText(str(font_size))
     self.color_button.setStyleSheet(f"QPushButton {{ background-color: {self.editor.textColor().name()}; }}")
     self.view.viewport().setFocus()
+    sync_font(self)
+    self.editor.blockSignals(False)
 
 def align(self, alignment):
     match alignment:

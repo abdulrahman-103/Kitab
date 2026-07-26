@@ -8,6 +8,7 @@ from PySide6.QtGui import QIcon, QPainter, QCursor, QTextCursor, QTextBlockForma
 from PySide6.QtCore import Qt, QSize, QRectF
 from menubar import _open_file
 from dialogs import InsertLinkDialog
+from toolbar import sync_font
 
 class Editor(QTextEdit):
     PAGE_SIZES = {
@@ -23,6 +24,8 @@ class Editor(QTextEdit):
     
     def __init__(self, main_window):
         super().__init__()
+        self.last_char_format = None
+        self.last_font = None
         self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute
         self.set_paper_and_font_color(self.DEFAULT_PAPER_COLOR, self.DEFAULT_FONT_COLOR)
         self.base_width, self.base_height = self.PAGE_SIZES[self.DEFAULT_PAGE_SIZE]
@@ -45,7 +48,11 @@ class Editor(QTextEdit):
         font = self.font()
         font.setPointSize(self.DEFAULT_FONT_SIZE)
         self.setFont(font)
+        self.DEFAULT_FONT = font
+        self.DEFAULT_CHAR_FORMAT = QTextCharFormat()
+        self.DEFAULT_BLOCK_FORMAT = QTextBlockFormat()
         self.textChanged.connect(self.check_page_limit)
+        self.textChanged.connect(self.preserve_font_when_empty_page)
         self.was_zooming = False 
         self.document().setModified(False)
     
@@ -72,7 +79,11 @@ class Editor(QTextEdit):
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             cursor = self.textCursor()
-            cursor.insertBlock()
+            alignment = cursor.blockFormat().alignment()
+            block_format = QTextBlockFormat()
+            block_format.setAlignment(alignment)
+            char_format = self.currentCharFormat()
+            cursor.insertBlock(block_format, char_format)
         else:
             super().keyPressEvent(event)
 
@@ -82,6 +93,19 @@ class Editor(QTextEdit):
         self.main_window.scene.setSceneRect(QRectF(self.rect()))
         self.document().setPageSize(QSize(self.base_width, self.base_height))
         self.page_count = self.document().pageCount()
+
+    def preserve_font_when_empty_page(self):
+        if not self.document().isEmpty():
+            captured_font = self.currentFont()
+            if captured_font is not None:
+                self.last_font = captured_font
+            captured_char_format = self.currentCharFormat()
+            if captured_char_format is not None:
+                self.last_char_format = captured_char_format
+        if self.document().isEmpty() and self.last_font:
+            self.setFont(self.last_font)
+            self.setCurrentCharFormat(self.last_char_format)
+            sync_font(self.main_window)
 
     def set_line_height(self, value):
         cursor = self.textCursor()
