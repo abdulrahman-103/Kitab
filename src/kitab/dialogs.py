@@ -199,6 +199,7 @@ class PageSizeDialog(QDialog):
 class InsertLinkDialog(QDialog):
     def __init__(self, editor, main_window):
         super().__init__(main_window)
+        self.main_window = main_window
         self.dialog = True
         self.setWindowTitle("Insert Link")
         self.setFixedSize(main_window.size_unit * 7, main_window.size_unit * 4.5)
@@ -242,14 +243,14 @@ class InsertLinkDialog(QDialog):
         url = self.insert_https(url)
         display_text = text if text else url
         cursor = editor.textCursor()
-        font_size = cursor.charFormat().fontPointSize()
-        font_family = cursor.charFormat().fontFamily()
+        font_size = cursor.charFormat().font().pointSize()
+        font_family = cursor.charFormat().font().families()
         old_pos = cursor.position()
         cursor.insertHtml(f'<a href="{url}">{display_text}</a>')
         cursor.setPosition(old_pos, QTextCursor.MoveMode.KeepAnchor)
         char_format = cursor.charFormat()
         char_format.setFontPointSize(font_size)
-        char_format.setFontFamily(font_family)
+        char_format.setFontFamilies(font_family)
         cursor.mergeCharFormat(char_format)
         if self.dialog:
             self.dialog = False
