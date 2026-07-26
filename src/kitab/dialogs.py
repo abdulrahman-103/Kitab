@@ -242,7 +242,15 @@ class InsertLinkDialog(QDialog):
         url = self.insert_https(url)
         display_text = text if text else url
         cursor = editor.textCursor()
+        font_size = cursor.charFormat().fontPointSize()
+        font_family = cursor.charFormat().fontFamily()
+        old_pos = cursor.position()
         cursor.insertHtml(f'<a href="{url}">{display_text}</a>')
+        cursor.setPosition(old_pos, QTextCursor.MoveMode.KeepAnchor)
+        char_format = cursor.charFormat()
+        char_format.setFontPointSize(font_size)
+        char_format.setFontFamily(font_family)
+        cursor.mergeCharFormat(char_format)
         if self.dialog:
             self.dialog = False
             self.deleteLater()
