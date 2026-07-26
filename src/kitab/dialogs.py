@@ -130,7 +130,7 @@ class InsertTableDialog(QDialog):
             constraints = [QTextLength(QTextLength.Type.PercentageLength, column_width)] * columns
             table_format.setColumnWidthConstraints(constraints)
             cursor = editor.textCursor()
-            block_format = QTextBlockFormat()
+            block_format = cursor.blockFormat()
             char_format = cursor.charFormat()
             
             table = cursor.insertTable(rows, columns, table_format)
