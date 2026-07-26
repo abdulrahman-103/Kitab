@@ -6,7 +6,6 @@
 import json
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QListWidgetItem
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
 
 HISTORY_FILE = Path.home() / ".local" / "state" / "kitab" / "recent_history.json"
@@ -22,7 +21,7 @@ def register_recent_file(file_path):
                 with open(HISTORY_FILE, "r", encoding="utf-8") as file:
                     history = json.load(file)
             except json.JSONDecodeError:
-                pass 
+                history = []
         
         if file_path in history:
             history.remove(file_path)
@@ -33,8 +32,8 @@ def register_recent_file(file_path):
         
         with open(HISTORY_FILE, "w", encoding="utf-8") as file:
             json.dump(history, file, ensure_ascii=False)
-    except Exception:
-        pass
+    except OSError:
+        return
 
 def show_recent_dialog(main_window):
     if not HISTORY_FILE.exists():
@@ -54,7 +53,7 @@ def show_recent_dialog(main_window):
     except json.JSONDecodeError:
         HISTORY_FILE.unlink(missing_ok=True)
         return
-    except Exception:
+    except OSError:
         return
         
     if not files:
@@ -104,7 +103,7 @@ class RecentFilesDialog(QDialog):
         for file in files:
             item = QListWidgetItem(Path(file).name)
             item.setToolTip(file)
-            item.setData(Qt.ItemDataRole.UserRole, file)
+            item.path = file
             self.list_widget.addItem(item)
             
         self.list_widget.setCurrentRow(0)
@@ -135,5 +134,5 @@ class RecentFilesDialog(QDialog):
         self.list_widget.setStyleSheet(self.stylesheet)
 
     def _accept_selection(self, item):
-        self.selected_file = item.data(Qt.ItemDataRole.UserRole)
+        self.selected_file = item.path
         self.accept()
