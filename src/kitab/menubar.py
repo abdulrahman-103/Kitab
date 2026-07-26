@@ -189,9 +189,7 @@ def insert_link(self):
 
 def insert_horizontal_line(self):
     cursor = self.editor.textCursor()
-    alignment = cursor.blockFormat().alignment()
-    block_format = QTextBlockFormat()
-    block_format.setAlignment(alignment)
+    block_format = cursor.blockFormat()
     char_format = cursor.charFormat()
     cursor.insertHtml("<hr>")
     cursor.insertBlock(block_format, char_format)

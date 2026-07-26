@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox
-from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength, QDesktopServices
+from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength, QDesktopServices, QTextBlockFormat
 from PySide6.QtCore import QSize, QRectF, Qt, QUrl
 from urllib.parse import urlparse
 
@@ -130,7 +130,17 @@ class InsertTableDialog(QDialog):
             constraints = [QTextLength(QTextLength.Type.PercentageLength, column_width)] * columns
             table_format.setColumnWidthConstraints(constraints)
             cursor = editor.textCursor()
-            cursor.insertTable(rows, columns, table_format)
+            block_format = QTextBlockFormat()
+            char_format = cursor.charFormat()
+            
+            table = cursor.insertTable(rows, columns, table_format)
+            for r in range(rows):
+                for c in range(columns):
+                    cell = table.cellAt(r, c)
+                    cell_cursor = cell.firstCursorPosition()
+                    cell_cursor.setBlockCharFormat(char_format)
+            cursor.movePosition(QTextCursor.MoveOperation.End)
+            cursor.insertBlock(block_format, char_format)
             main_window.view.viewport().setFocus()
             if self.dialog:
                 self.dialog = False
@@ -199,7 +209,6 @@ class PageSizeDialog(QDialog):
 class InsertLinkDialog(QDialog):
     def __init__(self, editor, main_window):
         super().__init__(main_window)
-        self.main_window = main_window
         self.dialog = True
         self.setWindowTitle("Insert Link")
         self.setFixedSize(main_window.size_unit * 7, main_window.size_unit * 4.5)
