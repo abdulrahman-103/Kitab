@@ -56,10 +56,9 @@ python main.py
 
 
 ---
+---
 
----
-## [discord server](https://discord.gg/vQ87JRxZW8)
----
+
 
 ## كتاب — معالج نصوص عربي
 
@@ -107,7 +106,3 @@ cd Kitab
 python main.py
 ```
 ```
-
----
-## [سيرفر ديسكورد](https://discord.gg/vQ87JRxZW8)
----
