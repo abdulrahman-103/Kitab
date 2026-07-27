@@ -128,7 +128,7 @@ def _render_diff_html(current_lines, snap_lines):
                     f"padding: 1px 6px; border-left: 3px solid {COLOR_MODIFIED}; "
                     f"white-space: pre-wrap;'>~ {inline}</div>"
                 )
-            # Unpaired leftover lines are genuinely added or removed, not modified.
+            # Linhas restantes sem par são efetivamente adicionadas ou removidas, não modificadas.
             for line in old_block[paired:]:
                 rows.append(
                     f"<div style='background-color:{COLOR_REMOVED}1a; color:{COLOR_REMOVED}; "
@@ -166,11 +166,11 @@ class HistoryManager:
         h_dir = cls.get_history_dir(file_path)
         os.makedirs(h_dir, exist_ok=True)
 
-        # Objective de-duplication rule: skip creating a new snapshot if its
-        # (newline-normalized) content matches ANY existing snapshot, not
-        # just the most recent one. This stops duplicates even when the
-        # matching version is far back in the history (e.g. content that
-        # was cleared, then restored, then cleared again).
+        # Regra de desduplicação de objetivo: evitar a criação de um novo snapshot se o seu
+        # conteúdo (com quebras de linha normalizadas) corresponder a QUALQUER snapshot existente, e não
+        # apenas ao mais recente. Isso impede duplicatas mesmo quando a
+        # versão correspondente está muito atrás no histórico (por exemplo, conteúdo que
+        # foi limpo, depois restaurado e, em seguida, limpo novamente).
         normalized_new = _normalize_newlines(content)
         for snap in cls.list_snapshots(file_path):
             try:
