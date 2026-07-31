@@ -3,10 +3,7 @@ from PySide6.QtWidgets import QGraphicsView, QFrame, QMenu
 from PySide6.QtGui import QPainter, QColor, QPen, QBrush, QLinearGradient, QFont, QShortcut, QKeySequence
 from PySide6.QtCore import Qt, QRectF, QTimer
 
-
 class Minimap(QGraphicsView):
-
-    PAGE_ASPECT_RATIO = 1.4142
 
     def __init__(self, main_window, size_unit):
         super().__init__(main_window.scene)
@@ -123,19 +120,9 @@ class Minimap(QGraphicsView):
 
         painter.end()
 
-    def _get_page_height(self):
-        page_height = getattr(self.main_window.editor, "page_height", None)
-        if page_height:
-            return page_height
-        page_height = getattr(self.main_window, "page_height", None)
-        if page_height:
-            return page_height
-        scene_rect = self.scene().sceneRect()
-        return scene_rect.width() * self.PAGE_ASPECT_RATIO
-
     def _draw_page_numbers(self, painter: QPainter):
         scene_rect = self.scene().sceneRect()
-        page_height = self._get_page_height()
+        page_height = self.main_window.editor.base_height
         if page_height <= 0:
             return
 
