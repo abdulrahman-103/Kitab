@@ -167,7 +167,7 @@ class Toolbar(QToolBar):
 
     def toggle_minimap(self):
         minimap = self.main_window.minimap
-        minimap.toggle_visibility()
+        minimap.setVisible(not minimap.isVisible())
         if minimap.isVisible():
             self.toggle_minimap_button.setToolTip("Close Minimap (F7)")
             self.toggle_minimap_button.setIcon(self.minimap_close_icon)
