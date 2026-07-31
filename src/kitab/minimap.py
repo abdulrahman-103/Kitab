@@ -5,10 +5,10 @@ from PySide6.QtCore import Qt, QRectF, QTimer
 
 class Minimap(QGraphicsView):
 
-    def __init__(self, main_window, size_unit):
+    def __init__(self, main_window):
         super().__init__(main_window.scene)
         self.main_window = main_window
-        self.WIDTH = size_unit * 5
+        self.WIDTH = self.main_window.size_unit * 5
         self._hovering = False
         self._dragging = False
 
