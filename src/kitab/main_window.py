@@ -3,7 +3,7 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QMainWindow, QApplication, QGraphicsScene, QGraphicsView, QStatusBar, QMessageBox
+from PySide6.QtWidgets import QMainWindow, QApplication, QGraphicsScene, QGraphicsView, QStatusBar, QMessageBox, QWidget, QHBoxLayout
 from PySide6.QtGui import QAction, QIcon, QShortcut, QPalette
 from PySide6.QtCore import QTimer, Qt
 import sys
@@ -12,6 +12,7 @@ from editor import Editor
 from toolbar import add_toolbar, align, sync_font
 from menubar import add_menubar, _open_file
 from dialogs import FindReplaceDialog
+from minimap import Minimap
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -46,7 +47,15 @@ class MainWindow(QMainWindow):
         self.view.setStyleSheet(f"QGraphicsView {{background-color: {self.background_color.name()};}}")
         self.app.styleHints().colorSchemeChanged.connect(self.update_colors)
         self.view.centerOn(self.editor.width() / 2, 0)
-        self.setCentralWidget(self.view)
+        
+        self.minimap = Minimap(self, self.size_unit)
+        central_widget = QWidget()
+        layout = QHBoxLayout(central_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self.view)
+        layout.addWidget(self.minimap)
+        self.setCentralWidget(central_widget)
 
         align(self, Qt.AlignmentFlag.AlignHCenter)
 
@@ -81,6 +90,8 @@ class MainWindow(QMainWindow):
             horizontal_line_icon_path = str(Path(__file__).resolve().parent / "images" / "insert_horizontal_line_light.svg")
             horizontal_line_icon = QIcon(horizontal_line_icon_path)
             self.horizontal_line_option.setIcon(horizontal_line_icon)
+        
+        self.minimap.setStyleSheet(f"background-color: {self.background_color.name()};")
 
     def closeEvent(self, event):
         if self.editor.document().isModified():
@@ -207,4 +218,3 @@ class MainWindow(QMainWindow):
                 return
             target_y = (page - 1) * self.editor.base_height + (self.editor.base_height / 2)
             self.view.centerOn(self.view.sceneRect().center().x(), target_y)
-
