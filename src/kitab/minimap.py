@@ -13,6 +13,10 @@ class Minimap(QGraphicsView):
         self._dragging = False
         self._side = "right"
 
+        self._page_font = QFont()
+        self._page_font.setPointSizeF(8)
+        self._page_font.setBold(True)
+
         self._setup_view()
         self._apply_style()
         self._connect_signals()
@@ -72,7 +76,9 @@ class Minimap(QGraphicsView):
         if layout is None:
             return
 
-        layout.removeWidget(self)
+        index = layout.indexOf(self)
+        if index != -1:
+            layout.takeAt(index)
 
         if self._side == "right":
             layout.insertWidget(0, self)
@@ -87,7 +93,7 @@ class Minimap(QGraphicsView):
     def _connect_signals(self):
         self._update_timer = QTimer(self)
         self._update_timer.setSingleShot(True)
-        self._update_timer.setInterval(16)
+        self._update_timer.setInterval(32)
         self._update_timer.timeout.connect(self.viewport().update)
 
         self.main_window.view.verticalScrollBar().valueChanged.connect(
@@ -154,10 +160,9 @@ class Minimap(QGraphicsView):
         page_count = max(1, math.ceil(scene_rect.height() / page_height))
         viewport_bounds = self.viewport().rect()
 
-        font = QFont()
-        font.setPointSizeF(8)
-        font.setBold(True)
-        painter.setFont(font)
+        painter.setFont(self._page_font)
+        metrics = painter.fontMetrics()
+        text_height = metrics.height()
 
         for i in range(page_count):
             page_top = scene_rect.top() + i * page_height
@@ -168,9 +173,7 @@ class Minimap(QGraphicsView):
                 continue
 
             label = str(i + 1)
-            metrics = painter.fontMetrics()
             text_width = metrics.horizontalAdvance(label)
-            text_height = metrics.height()
 
             padding_x = 4
             padding_y = 2
