@@ -90,9 +90,8 @@ class MainWindow(QMainWindow):
             horizontal_line_icon_path = str(Path(__file__).resolve().parent / "images" / "insert_horizontal_line_light.svg")
             horizontal_line_icon = QIcon(horizontal_line_icon_path)
             self.horizontal_line_option.setIcon(horizontal_line_icon)
-            
-        if hasattr(self, 'minimap'):
-            self.minimap.setStyleSheet(f"background-color: {self.background_color.name()};")
+        
+        self.minimap.setStyleSheet(f"background-color: {self.background_color.name()};")
 
     def closeEvent(self, event):
         if self.editor.document().isModified():
