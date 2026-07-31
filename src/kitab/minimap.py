@@ -1,6 +1,6 @@
 import math
-from PySide6.QtWidgets import QGraphicsView, QFrame
-from PySide6.QtGui import QPainter, QColor, QPen, QBrush, QLinearGradient, QFont
+from PySide6.QtWidgets import QGraphicsView, QFrame, QMenu
+from PySide6.QtGui import QPainter, QColor, QPen, QBrush, QLinearGradient, QFont, QShortcut, QKeySequence
 from PySide6.QtCore import Qt, QRectF, QTimer
 
 
@@ -18,6 +18,7 @@ class Minimap(QGraphicsView):
         self._setup_view()
         self._apply_style()
         self._connect_signals()
+        self._setup_shortcut()
         self._update_scale()
 
     def _setup_view(self):
@@ -45,6 +46,21 @@ class Minimap(QGraphicsView):
                 border-left: 1px solid rgba(255, 255, 255, 25);
             }}
         """)
+
+    def _setup_shortcut(self):
+        self._toggle_shortcut = QShortcut(QKeySequence("F9"), self.main_window)
+        self._toggle_shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
+        self._toggle_shortcut.activated.connect(self.toggle_visibility)
+
+    def toggle_visibility(self):
+        self.setVisible(not self.isVisible())
+
+    def contextMenuEvent(self, event):
+        menu = QMenu(self)
+        action_label = "Hide minimap (F9)"
+        action = menu.addAction(action_label)
+        action.triggered.connect(self.toggle_visibility)
+        menu.exec(event.globalPos())
 
     def _connect_signals(self):
         self._update_timer = QTimer(self)
