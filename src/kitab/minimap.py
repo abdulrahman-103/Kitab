@@ -48,7 +48,7 @@ class Minimap(QGraphicsView):
         """)
 
     def _setup_shortcut(self):
-        self._toggle_shortcut = QShortcut(QKeySequence("F9"), self.main_window)
+        self._toggle_shortcut = QShortcut(QKeySequence("F7"), self.main_window)
         self._toggle_shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
         self._toggle_shortcut.activated.connect(self.toggle_visibility)
 
