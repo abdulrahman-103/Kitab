@@ -157,7 +157,7 @@ class Toolbar(QToolBar):
         self.minimap_close_icon = QIcon.fromTheme("sidebar-collapse-right-symbolic")
         self.minimap_open_icon = QIcon.fromTheme("sidebar-expand-right-symbolic")
         self.toggle_minimap_button.setIcon(self.minimap_close_icon)
-        self.toggle_minimap_button.setToolTip("Close Minimap")
+        self.toggle_minimap_button.setToolTip("Close Minimap (F7)")
         self.toggle_minimap_button.setIconSize(QSize(self.main_window.size_unit/1.25, self.main_window.size_unit/1.25))
         self.toggle_minimap_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit*1)
         self.toggle_minimap_button.clicked.connect(self.toggle_minimap)
