@@ -57,7 +57,7 @@ class Minimap(QGraphicsView):
 
     def contextMenuEvent(self, event):
         menu = QMenu(self)
-        action_label = "Hide minimap (F9)"
+        action_label = "Hide minimap (F7)"
         action = menu.addAction(action_label)
         action.triggered.connect(self.toggle_visibility)
         menu.exec(event.globalPos())
