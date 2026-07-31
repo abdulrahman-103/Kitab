@@ -8,7 +8,6 @@ from PySide6.QtGui import QIcon, QPainter, QCursor, QTextCursor, QTextBlockForma
 from PySide6.QtCore import Qt, QSize, QRectF
 from menubar import _open_file
 from dialogs import InsertLinkDialog
-from toolbar import sync_font
 from menubar import insert_horizontal_line
 
 class Editor(QTextEdit):
@@ -127,7 +126,7 @@ class Editor(QTextEdit):
         if self.document().isEmpty() and self.last_font:
             self.setFont(self.last_font)
             self.setCurrentCharFormat(self.last_char_format)
-            sync_font(self.main_window)
+            self.main_window.toolbar.sync_font(self.main_window)
 
     def set_line_height(self, value):
         cursor = self.textCursor()

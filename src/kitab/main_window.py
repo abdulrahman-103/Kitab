@@ -9,7 +9,7 @@ from PySide6.QtCore import QTimer, Qt
 import sys
 from pathlib import Path
 from editor import Editor
-from toolbar import add_toolbar, align, sync_font
+from toolbar import Toolbar
 from menubar import add_menubar, _open_file
 from dialogs import FindReplaceDialog
 from minimap import Minimap
@@ -35,7 +35,8 @@ class MainWindow(QMainWindow):
         self.editor = Editor(self)
 
         self.color_scheme = self.app.styleHints().colorScheme()
-        add_toolbar(self)
+
+        self.toolbar = Toolbar(self)
         add_menubar(self)
 
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
@@ -48,7 +49,7 @@ class MainWindow(QMainWindow):
         self.app.styleHints().colorSchemeChanged.connect(self.update_colors)
         self.view.centerOn(self.editor.width() / 2, 0)
         
-        self.minimap = Minimap(self, self.size_unit)
+        self.minimap = Minimap(self)
         central_widget = QWidget()
         layout = QHBoxLayout(central_widget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -57,9 +58,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.minimap)
         self.setCentralWidget(central_widget)
 
-        align(self, Qt.AlignmentFlag.AlignHCenter)
+        self.toolbar.align(Qt.AlignmentFlag.AlignHCenter)
 
-        self.editor.cursorPositionChanged.connect(lambda: sync_font(self))
+        self.editor.cursorPositionChanged.connect(self.toolbar.sync_font)
 
         self.shortcuts()
 
