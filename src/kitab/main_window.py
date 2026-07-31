@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
         self.app.styleHints().colorSchemeChanged.connect(self.update_colors)
         self.view.centerOn(self.editor.width() / 2, 0)
         
-        self.minimap = Minimap(self)
+        self.minimap = Minimap(self, self.size_unit)
         central_widget = QWidget()
         layout = QHBoxLayout(central_widget)
         layout.setContentsMargins(0, 0, 0, 0)
