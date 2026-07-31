@@ -1,6 +1,6 @@
 import math
 from PySide6.QtWidgets import QGraphicsView, QFrame, QMenu
-from PySide6.QtGui import QPainter, QColor, QPen, QBrush, QLinearGradient, QFont, QShortcut, QKeySequence
+from PySide6.QtGui import QPainter, QColor, QPen, QFont, QShortcut, QKeySequence
 from PySide6.QtCore import Qt, QRectF, QTimer
 
 class Minimap(QGraphicsView):
@@ -172,10 +172,8 @@ class Minimap(QGraphicsView):
     def _draw_viewport_box(self, painter: QPainter, rect: QRectF):
         accent = QColor(90, 160, 255) if not self._hovering else QColor(120, 180, 255)
 
-        gradient = QLinearGradient(rect.topLeft(), rect.bottomLeft())
-        gradient.setColorAt(0.0, QColor(accent.red(), accent.green(), accent.blue(), 55))
-        gradient.setColorAt(1.0, QColor(accent.red(), accent.green(), accent.blue(), 30))
-        painter.setBrush(QBrush(gradient))
+        color = QColor(accent.red(), accent.green(), accent.blue(), 100)
+        painter.setBrush(color)
 
         pen = QPen(accent, 1.4)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
