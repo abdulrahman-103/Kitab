@@ -11,6 +11,7 @@ class Minimap(QGraphicsView):
         self.WIDTH = self.main_window.size_unit * 5
         self._hovering = False
         self._dragging = False
+        self._side = "right"
 
         self._setup_view()
         self._apply_style()
@@ -37,10 +38,11 @@ class Minimap(QGraphicsView):
 
     def _apply_style(self):
         bg = self.main_window.background_color.name()
+        border_side = "border-left" if self._side == "right" else "border-right"
         self.setStyleSheet(f"""
             QGraphicsView {{
                 background-color: {bg};
-                border-left: 1px solid rgba(255, 255, 255, 25);
+                {border_side}: 1px solid rgba(255, 255, 255, 25);
             }}
         """)
 
@@ -53,8 +55,34 @@ class Minimap(QGraphicsView):
         menu = QMenu(self)
         action_label = "Hide minimap (F7)"
         action = menu.addAction(action_label)
-        action.triggered.connect(self.toggle_visibility)
+        action.triggered.connect(self.main_window.toolbar.toggle_minimap)
+
+        side_label = "Move to left" if self._side == "right" else "Move to right"
+        side_action = menu.addAction(side_label)
+        side_action.triggered.connect(self.toggle_side)
+
         menu.exec(event.globalPos())
+
+    def _get_container_layout(self):
+        parent = self.parentWidget()
+        return parent.layout() if parent is not None else None
+
+    def toggle_side(self):
+        layout = self._get_container_layout()
+        if layout is None:
+            return
+
+        layout.removeWidget(self)
+
+        if self._side == "right":
+            layout.insertWidget(0, self)
+            self._side = "left"
+        else:
+            layout.addWidget(self)
+            self._side = "right"
+
+        self._apply_style()
+        self.viewport().update()
 
     def _connect_signals(self):
         self._update_timer = QTimer(self)
