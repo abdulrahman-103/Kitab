@@ -6,12 +6,12 @@ from PySide6.QtCore import Qt, QRectF, QTimer
 
 class Minimap(QGraphicsView):
 
-    WIDTH = 150
     PAGE_ASPECT_RATIO = 1.4142
 
-    def __init__(self, main_window):
+    def __init__(self, main_window, size_unit):
         super().__init__(main_window.scene)
         self.main_window = main_window
+        self.WIDTH = size_unit * 5
         self._hovering = False
         self._dragging = False
 
