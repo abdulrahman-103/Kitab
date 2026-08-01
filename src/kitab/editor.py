@@ -61,7 +61,7 @@ class Editor(QTextEdit):
             path_list = event.mimeData().urls()
             if len(path_list) == 1:
                 path = path_list[0].toLocalFile()
-                if path.endswith(".txt") or path.endswith("ktb") or path.endswith("md") or path.endswith("odt"):
+                if path.endswith(".txt") or path.endswith(".ktb") or path.endswith(".md") or path.endswith(".odt") or path.endswith(".html"):
                     self.main_window.file_path = path
                     _open_file(self.main_window)
             event.acceptProposedAction()
