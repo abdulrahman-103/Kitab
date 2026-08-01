@@ -55,6 +55,9 @@ python main.py
 **ctrl+1 to ctrl+9:** go to pages 1 to 9.
 
 
+**type --- then enter:** inserts a horizontal line.
+
+
 ---
 ---
 
