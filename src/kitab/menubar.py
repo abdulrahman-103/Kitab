@@ -26,6 +26,10 @@ def _save_file(self):
         data = self.editor.toPlainText()
         with open(self.file_path, "w", encoding="utf-8") as file:
             file.write(data)
+    elif self.file_path.endswith(".html"):
+        data = self.editor.toHtml()
+        with open(self.file_path, "w", encoding="utf-8") as file:
+            file.write(data)
     elif self.file_path.endswith(".md"):
         data = self.editor.toMarkdown()
         with open(self.file_path, "w", encoding="utf-8") as file:
@@ -61,7 +65,7 @@ def _save_file(self):
 
 def save(self):
     if not self.file_path:
-        self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text File (*.txt);;Markdown File  (*.md)")
+        self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text (*.txt);;Markdown File  (*.md);;HTML Document (*.html)")
         if not self.file_path:
             return "canceled"
         self.last_directory = str(Path(self.file_path).parent)
@@ -71,7 +75,7 @@ def save(self):
 
 def save_as(self, show_dialog=True):
     file_path, format_filter = self.file_path, self.format_filter
-    self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text File (*.txt);;Markdown File  (*.md)")
+    self.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.last_directory, "Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text (*.txt);;Markdown File  (*.md);;HTML Document (*.html)")
     if not self.file_path:
         self.file_path, self.format_filter = file_path, format_filter
     else:
@@ -93,6 +97,11 @@ def _open_file(self):
         with zipfile.ZipFile(self.file_path, "r") as zip:
             html_data = zip.read("document.html").decode("utf-8")
             json_data = json.loads(zip.read("info.json").decode("utf-8"))
+        self.editor.setHtml(html_data)
+        apply_page_size(self, json_data["page size"])
+    elif self.file_path.endswith(".html"):
+        with open(self.file_path, "r", encoding="utf-8") as file:
+            html_data = file.read()
         self.editor.setHtml(html_data)
         apply_page_size(self, json_data["page size"])
     elif self.file_path.endswith(".txt"):
@@ -122,7 +131,7 @@ def _open_file(self):
         pass
 
 def open_file(self):
-    self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", self.last_directory, "Kitab, Text, Markdown and ODF Text Documents (*.ktb *.odt *.txt *.md);;Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text File (*.txt);;Markdown File (*.md)")
+    self.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", self.last_directory, "Kitab, Text, Markdown, ODF Text Documents and HTML Documents (*.ktb *.odt *.txt *.md *.html);;Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text (*.txt);;Markdown File (*.md);;HTML Document (*.html)")
     if not self.file_path:
         return
     self.last_directory = str(Path(self.file_path).parent)
