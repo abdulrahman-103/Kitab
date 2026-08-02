@@ -9,7 +9,7 @@
 
 A lightweight word processor built with **PySide6 (Qt6)**.  
 A simple alternative to LibreOffice Writer and Microsoft Word.  
-Saves documents in `.ktb` format and exports to PDF.
+Saves documents mainly in the IANA registered `.ktb` format (also supports odt, md, html and txt) and exports to PDF.
 
 
 ## Installation
