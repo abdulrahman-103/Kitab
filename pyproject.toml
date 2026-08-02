@@ -23,7 +23,7 @@ Homepage = "https://github.com/abdulrahman-103/Kitab"
 Issues = "https://github.com/abdulrahman-103/Kitab/issues"
 
 [project.gui-scripts]
-kitab = "kitab.main:main"
+kitab = "main:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/kitab"]
