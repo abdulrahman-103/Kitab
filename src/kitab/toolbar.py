@@ -61,9 +61,9 @@ class Toolbar(QToolBar):
 
         self.highlight_color = QColor("yellow")
         self.highlight_button = QPushButton()
-        hightlight_icon = QIcon.fromTheme("draw-highlight-symbolic")
-        self.highlight_button.setIcon(hightlight_icon)
-        self.highlight_button.setToolTip("Hightlight")
+        highlight_icon = QIcon.fromTheme("draw-highlight-symbolic")
+        self.highlight_button.setIcon(highlight_icon)
+        self.highlight_button.setToolTip("Highlight")
         self.highlight_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.highlight_button.clicked.connect(self.highlight_text)
         self.toolbar.addWidget(self.highlight_button)
