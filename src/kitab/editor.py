@@ -86,7 +86,6 @@ class Editor(QTextEdit):
             selection = cursor.selectedText()
             length = self.textCursor().block().length()
             
-            # Checagem da linha horizontal
             if length > 2 and selection == "---":
                 is_four_dashes = False
                 if pos - line_start >= 4:
@@ -100,7 +99,6 @@ class Editor(QTextEdit):
                     insert_horizontal_line(self.main_window)
                     return
             
-            # Se não for linha horizontal, repassa o evento pro Qt resolver.
             super().keyPressEvent(event)
         else:
             super().keyPressEvent(event)
@@ -214,4 +212,3 @@ class Editor(QTextEdit):
         if event.button() == Qt.MouseButton.RightButton:
             self.was_zooming = False
         super().mousePressEvent(event)
-
