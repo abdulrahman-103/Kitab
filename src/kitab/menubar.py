@@ -37,9 +37,10 @@ def _save_file(self):
     elif self.file_path.endswith(".ktb"):
         html_data = self.editor.toHtml()
         json_data = {"page size": self.editor.page_size}
-        with zipfile.ZipFile(self.file_path, mode="w", compression=zipfile.ZIP_DEFLATED) as zip:
-            zip.writestr("document.html", html_data)
-            zip.writestr("info.json", json.dumps(json_data))
+        with zipfile.ZipFile(self.file_path, mode="w") as zip:
+            zip.writestr("mimetype", "application/prs.ktb+zip", compress_type=zipfile.ZIP_STORED)
+            zip.writestr("document.html", html_data, compress_type=zipfile.ZIP_DEFLATED)
+            zip.writestr("info.json", json.dumps(json_data), compress_type=zipfile.ZIP_DEFLATED)
     elif self.file_path.endswith(".odt"):
         odf_kit = Path(__file__).resolve().parent / "odf-kit"
         js = odf_kit / "html_to_odt.js"
