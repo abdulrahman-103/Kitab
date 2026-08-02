@@ -57,11 +57,11 @@ class Minimap(QGraphicsView):
 
     def contextMenuEvent(self, event):
         menu = QMenu(self)
-        action_label = "Hide minimap (F7)"
+        action_label = "Hide Minimap (F7)"
         action = menu.addAction(action_label)
         action.triggered.connect(self.main_window.toolbar.toggle_minimap)
 
-        side_label = "Move to left" if self._side == "right" else "Move to right"
+        side_label = "Move to Left" if self._side == "right" else "Move to Right"
         side_action = menu.addAction(side_label)
         side_action.triggered.connect(self.toggle_side)
 
