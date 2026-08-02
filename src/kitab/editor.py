@@ -56,7 +56,7 @@ class Editor(QTextEdit):
         self.was_zooming = False 
         self.document().setModified(False)
     
-    def dropEvent(self, event): # drag and drop files
+    def dropEvent(self, event):
         if event.mimeData().hasUrls():
             path_list = event.mimeData().urls()
             if len(path_list) == 1:
@@ -79,20 +79,16 @@ class Editor(QTextEdit):
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             cursor = self.textCursor()
-            alignment = cursor.blockFormat().alignment()
-            block_format = QTextBlockFormat()
-            block_format.setAlignment(alignment)
-            char_format = self.currentCharFormat()
-
-            # insert horizontal rule by ---
-            is_four_dashes = False
             pos = cursor.position()
             line_start = cursor.block().position()
             beginning = max(line_start, pos - 3)
             cursor.setPosition(beginning, QTextCursor.MoveMode.KeepAnchor)
             selection = cursor.selectedText()
             length = self.textCursor().block().length()
+            
+            # Checagem da linha horizontal
             if length > 2 and selection == "---":
+                is_four_dashes = False
                 if pos - line_start >= 4:
                     cursor.setPosition(pos - 4, QTextCursor.MoveMode.KeepAnchor)
                     if cursor.selectedText() == "----":
@@ -103,8 +99,9 @@ class Editor(QTextEdit):
                     cursor.removeSelectedText()
                     insert_horizontal_line(self.main_window)
                     return
-            cursor.setPosition(pos)
-            cursor.insertBlock(block_format, char_format)
+            
+            # Se não for linha horizontal, repassa o evento pro Qt resolver.
+            super().keyPressEvent(event)
         else:
             super().keyPressEvent(event)
 
@@ -126,7 +123,7 @@ class Editor(QTextEdit):
         if self.document().isEmpty() and self.last_font:
             self.setFont(self.last_font)
             self.setCurrentCharFormat(self.last_char_format)
-            self.main_window.toolbar.sync_font(self.main_window)
+            self.main_window.toolbar.sync_font()
 
     def set_line_height(self, value):
         cursor = self.textCursor()
@@ -217,3 +214,4 @@ class Editor(QTextEdit):
         if event.button() == Qt.MouseButton.RightButton:
             self.was_zooming = False
         super().mousePressEvent(event)
+
