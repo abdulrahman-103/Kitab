@@ -20,7 +20,6 @@ class MainWindow(QMainWindow):
         self.app = QApplication.instance()
         resolution = self.app.primaryScreen().availableSize()
         self.resize(resolution.width()/1.5, resolution.height()/1.5)
-        self.move((resolution.width()-self.width())/2, 0)
         self.setWindowTitle("Kitab")
         self.file_path = None
         self.file_name = None
