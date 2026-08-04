@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QSizePolicy, QWidget, QToolBar, QLabel, QPushButton, QHBoxLayout, QComboBox, QButtonGroup, QFontComboBox, QColorDialog
-from PySide6.QtGui import QIntValidator, QIcon, QColor, QTextListFormat
+from PySide6.QtGui import QIntValidator, QIcon, QColor, QTextListFormat, QTextCursor
 from PySide6.QtCore import Qt, QSize
 
 class Toolbar(QToolBar):
@@ -183,20 +183,58 @@ class Toolbar(QToolBar):
         self.main_window.addToolBar(self.toolbar)
 
     def _toggle_list(self, style):
-        cursor = self.main_window.editor.textCursor()
+        editor = self.main_window.editor
+        cursor = editor.textCursor()
         cursor.beginEditBlock()
-        current_list = cursor.currentList()
 
-        if current_list and current_list.format().style() == style:
-            block_format = cursor.blockFormat()
-            block_format.setObjectIndex(-1)
-            block_format.setIndent(0)
-            cursor.mergeBlockFormat(block_format)
+        if cursor.hasSelection():
+            doc = editor.document()
+            start_pos = cursor.selectionStart()
+            end_pos = cursor.selectionEnd()
+
+            start_block = doc.findBlock(start_pos)
+            end_block = doc.findBlock(end_pos)
+            if end_block.position() == end_pos and end_block != start_block:
+                end_block = end_block.previous()
+
+            first_list = start_block.textList()
+            removing = bool(first_list) and first_list.format().style() == style
+
+            block = start_block
+            while True:
+                block_cursor = QTextCursor(block)
+                current_list = block.textList()
+
+                if removing:
+                    if current_list and current_list.format().style() == style:
+                        current_list.remove(block)
+                        block_format = block_cursor.blockFormat()
+                        block_format.setObjectIndex(-1)
+                        block_format.setIndent(0)
+                        block_cursor.setBlockFormat(block_format)
+                else:
+                    if not (current_list and current_list.format().style() == style):
+                        list_format = QTextListFormat()
+                        list_format.setStyle(style)
+                        block_cursor.createList(list_format)
+
+                if block == end_block:
+                    break
+                block = block.next()
         else:
-            list_format = QTextListFormat()
-            list_format.setStyle(style)
-            cursor.createList(list_format)
-            
+            current_list = cursor.currentList()
+
+            if current_list and current_list.format().style() == style:
+                current_list.remove(cursor.block())
+                block_format = cursor.blockFormat()
+                block_format.setObjectIndex(-1)
+                block_format.setIndent(0)
+                cursor.mergeBlockFormat(block_format)
+            else:
+                list_format = QTextListFormat()
+                list_format.setStyle(style)
+                cursor.createList(list_format)
+
         cursor.endEditBlock()
         self.main_window.view.viewport().setFocus()
 
