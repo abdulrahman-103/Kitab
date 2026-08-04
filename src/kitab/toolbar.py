@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QSizePolicy, QWidget, QToolBar, QLabel, QPushButton, QHBoxLayout, QComboBox, QButtonGroup, QFontComboBox, QColorDialog
-from PySide6.QtGui import QIntValidator, QIcon, QColor
+from PySide6.QtGui import QIntValidator, QIcon, QColor, QTextListFormat
 from PySide6.QtCore import Qt, QSize
 
 class Toolbar(QToolBar):
@@ -61,9 +61,9 @@ class Toolbar(QToolBar):
 
         self.highlight_color = QColor("yellow")
         self.highlight_button = QPushButton()
-        highlight_icon = QIcon.fromTheme("draw-highlight-symbolic")
-        self.highlight_button.setIcon(highlight_icon)
-        self.highlight_button.setToolTip("Highlight")
+        hightlight_icon = QIcon.fromTheme("draw-highlight-symbolic")
+        self.highlight_button.setIcon(hightlight_icon)
+        self.highlight_button.setToolTip("Hightlight")
         self.highlight_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.highlight_button.clicked.connect(self.highlight_text)
         self.toolbar.addWidget(self.highlight_button)
@@ -112,6 +112,23 @@ class Toolbar(QToolBar):
         self.clear_formatting_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.clear_formatting_button.clicked.connect(self.clear_formatting)
         self.toolbar.addWidget(self.clear_formatting_button)
+        self.toolbar.addSeparator()
+
+        self.num_list_btn = QPushButton()
+        self.num_list_btn.setIcon(QIcon.fromTheme("format-list-ordered-symbolic"))
+        self.num_list_btn.setToolTip("Numbered List")
+        self.num_list_btn.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
+        self.num_list_btn.setCheckable(True)
+        self.num_list_btn.clicked.connect(self.toggle_numbered_list)
+        self.toolbar.addWidget(self.num_list_btn)
+
+        self.bullet_list_btn = QPushButton()
+        self.bullet_list_btn.setIcon(QIcon.fromTheme("format-list-unordered-symbolic"))
+        self.bullet_list_btn.setToolTip("Bullet List")
+        self.bullet_list_btn.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
+        self.bullet_list_btn.setCheckable(True)
+        self.bullet_list_btn.clicked.connect(self.toggle_bullet_list)
+        self.toolbar.addWidget(self.bullet_list_btn)
         self.toolbar.addSeparator()
 
         self.align_left_button = QPushButton()
@@ -165,6 +182,30 @@ class Toolbar(QToolBar):
 
         self.main_window.addToolBar(self.toolbar)
 
+    def _toggle_list(self, style):
+        cursor = self.main_window.editor.textCursor()
+        cursor.beginEditBlock()
+        current_list = cursor.currentList()
+
+        if current_list and current_list.format().style() == style:
+            block_format = cursor.blockFormat()
+            block_format.setObjectIndex(-1)
+            block_format.setIndent(0)
+            cursor.mergeBlockFormat(block_format)
+        else:
+            list_format = QTextListFormat()
+            list_format.setStyle(style)
+            cursor.createList(list_format)
+            
+        cursor.endEditBlock()
+        self.main_window.view.viewport().setFocus()
+
+    def toggle_numbered_list(self):
+        self._toggle_list(QTextListFormat.Style.ListDecimal)
+
+    def toggle_bullet_list(self):
+        self._toggle_list(QTextListFormat.Style.ListDisc)
+
     def toggle_minimap(self):
         minimap = self.main_window.minimap
         minimap.setVisible(not minimap.isVisible())
@@ -196,6 +237,15 @@ class Toolbar(QToolBar):
 
             italic_status = font.italic()
             self.italic_button.setChecked(italic_status)
+
+            current_list = self.main_window.editor.textCursor().currentList()
+            if current_list:
+                style = current_list.format().style()
+                self.num_list_btn.setChecked(style == QTextListFormat.Style.ListDecimal)
+                self.bullet_list_btn.setChecked(style == QTextListFormat.Style.ListDisc)
+            else:
+                self.num_list_btn.setChecked(False)
+                self.bullet_list_btn.setChecked(False)
 
             char_format = self.main_window.editor.textCursor().charFormat()
             bg_color = char_format.background()
