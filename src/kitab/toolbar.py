@@ -200,27 +200,24 @@ class Toolbar(QToolBar):
             first_list = start_block.textList()
             removing = bool(first_list) and first_list.format().style() == style
 
-            block = start_block
-            while True:
-                block_cursor = QTextCursor(block)
-                current_list = block.textList()
-
-                if removing:
+            if removing:
+                block = start_block
+                while True:
+                    current_list = block.textList()
                     if current_list and current_list.format().style() == style:
+                        block_cursor = QTextCursor(block)
                         current_list.remove(block)
                         block_format = block_cursor.blockFormat()
                         block_format.setObjectIndex(-1)
                         block_format.setIndent(0)
                         block_cursor.setBlockFormat(block_format)
-                else:
-                    if not (current_list and current_list.format().style() == style):
-                        list_format = QTextListFormat()
-                        list_format.setStyle(style)
-                        block_cursor.createList(list_format)
-
-                if block == end_block:
-                    break
-                block = block.next()
+                    if block == end_block:
+                        break
+                    block = block.next()
+            else:
+                list_format = QTextListFormat()
+                list_format.setStyle(style)
+                cursor.createList(list_format)
         else:
             current_list = cursor.currentList()
 
