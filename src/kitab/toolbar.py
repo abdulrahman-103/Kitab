@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QSizePolicy, QWidget, QToolBar, QLabel, QPushButton, QHBoxLayout, QComboBox, QButtonGroup, QFontComboBox, QColorDialog
-from PySide6.QtGui import QIntValidator, QIcon, QColor
+from PySide6.QtGui import QIntValidator, QIcon, QColor, QTextListFormat, QTextCursor
 from PySide6.QtCore import Qt, QSize
 
 class Toolbar(QToolBar):
@@ -114,6 +114,23 @@ class Toolbar(QToolBar):
         self.toolbar.addWidget(self.clear_formatting_button)
         self.toolbar.addSeparator()
 
+        self.numbered_list_button = QPushButton()
+        self.numbered_list_button.setIcon(QIcon.fromTheme("format-list-ordered-symbolic"))
+        self.numbered_list_button.setToolTip("Numbered List")
+        self.numbered_list_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
+        self.numbered_list_button.setCheckable(True)
+        self.numbered_list_button.clicked.connect(self.toggle_numbered_list)
+        self.toolbar.addWidget(self.numbered_list_button)
+
+        self.bullet_list_button = QPushButton()
+        self.bullet_list_button.setIcon(QIcon.fromTheme("format-list-unordered-symbolic"))
+        self.bullet_list_button.setToolTip("Bullet List")
+        self.bullet_list_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
+        self.bullet_list_button.setCheckable(True)
+        self.bullet_list_button.clicked.connect(self.toggle_bullet_list)
+        self.toolbar.addWidget(self.bullet_list_button)
+        self.toolbar.addSeparator()
+
         self.align_left_button = QPushButton()
         align_left_icon = QIcon.fromTheme("format-justify-left-symbolic")
         self.align_left_button.setIcon(align_left_icon)
@@ -165,6 +182,70 @@ class Toolbar(QToolBar):
 
         self.main_window.addToolBar(self.toolbar)
 
+    def toggle_list(self, style):
+        editor = self.main_window.editor
+        cursor = editor.textCursor()
+        cursor.beginEditBlock()
+
+        if cursor.hasSelection():
+            doc = editor.document()
+
+            start_block = doc.findBlock(cursor.selectionStart())
+            end_block = doc.findBlock(cursor.selectionEnd())
+
+            removing = True
+            block = start_block
+            while True:
+                lst = block.textList()
+                if not lst or lst.format().style() != style:
+                    removing = False
+                    break
+                if block == end_block:
+                    break
+                block = block.next()
+            
+            if removing:
+                block = start_block
+                while True:
+                    current_list = block.textList()
+                    if current_list and current_list.format().style() == style:
+                        block_cursor = QTextCursor(block)
+                        current_list.remove(block)
+                        block_format = block_cursor.blockFormat()
+                        block_format.setObjectIndex(-1)
+                        block_format.setIndent(0)
+                        block_cursor.setBlockFormat(block_format)
+                    if block == end_block:
+                        break
+                    block = block.next()
+            else:
+                list_format = QTextListFormat()
+                list_format.setStyle(style)
+                cursor.createList(list_format)
+        else:
+            current_list = cursor.currentList()
+
+            if current_list and current_list.format().style() == style:
+                current_list.remove(cursor.block())
+                block_format = cursor.blockFormat()
+                block_format.setObjectIndex(-1)
+                block_format.setIndent(0)
+                cursor.mergeBlockFormat(block_format)
+            else:
+                list_format = QTextListFormat()
+                list_format.setStyle(style)
+                cursor.createList(list_format)
+
+        cursor.endEditBlock()
+        self.sync_font()
+        self.main_window.view.viewport().setFocus()
+
+    def toggle_numbered_list(self):
+        self.toggle_list(QTextListFormat.Style.ListDecimal)
+
+    def toggle_bullet_list(self):
+        self.toggle_list(QTextListFormat.Style.ListDisc)
+        
     def toggle_minimap(self):
         minimap = self.main_window.minimap
         minimap.setVisible(not minimap.isVisible())
@@ -196,6 +277,15 @@ class Toolbar(QToolBar):
 
             italic_status = font.italic()
             self.italic_button.setChecked(italic_status)
+
+            current_list = self.main_window.editor.textCursor().currentList()
+            if current_list:
+                style = current_list.format().style()
+                self.numbered_list_button.setChecked(style == QTextListFormat.Style.ListDecimal)
+                self.bullet_list_button.setChecked(style == QTextListFormat.Style.ListDisc)
+            else:
+                self.numbered_list_button.setChecked(False)
+                self.bullet_list_button.setChecked(False)
 
             char_format = self.main_window.editor.textCursor().charFormat()
             bg_color = char_format.background()
