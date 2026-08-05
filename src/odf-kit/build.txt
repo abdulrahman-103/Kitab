@@ -1,6 +1,0 @@
-bash
-mkdir odf-kit-bundle && cd odf-kit-bundle
-npm init -y
-npm install odf-kit@0.13.10
-echo 'export { odtToHtml } from "odf-kit/reader";' > entry.js
-npx esbuild entry.js --bundle --format=esm --outfile=reader.js
