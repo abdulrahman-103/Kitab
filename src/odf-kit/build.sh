@@ -9,3 +9,7 @@ npx esbuild entry.js --bundle --format=esm --outfile=reader.js
 echo 'export { htmlToOdt } from "odf-kit/odt";' > entry.js
 npx esbuild entry.js --bundle --format=esm --outfile=odt.js
 
+mv ./odt.js ../odt.js
+mv ./reader.js ../reader.js
+cd ..
+rm -r odf-kit
