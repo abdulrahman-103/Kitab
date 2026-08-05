@@ -11,10 +11,9 @@ class Toolbar(QToolBar):
     def __init__(self, main_window, parent=None):
         super().__init__(parent)
         self.main_window = main_window
-        self.toolbar = QToolBar()
-        self.toolbar.layout().setSpacing(5)
-        self.toolbar.setContentsMargins(3, 3, 3, 3)
-        self.toolbar.setMovable(False)
+        self.layout().setSpacing(5)
+        self.setContentsMargins(3, 3, 3, 3)
+        self.setMovable(False)
         self.font_family_menu = QFontComboBox()
         self.main_window.size_unit = self.font_family_menu.sizeHint().height()
         self.font_family_menu.setToolTip("Font Family")
@@ -23,8 +22,8 @@ class Toolbar(QToolBar):
         self.font_family_menu.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.font_family_menu.currentFontChanged.connect(lambda font: (self.font_family(font), self.main_window.view.viewport().setFocus()))
         self.font_family_menu.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
-        self.toolbar.addWidget(self.font_family_menu)
-        self.toolbar.addSeparator()
+        self.addWidget(self.font_family_menu)
+        self.addSeparator()
 
         self.font_size_menu = QComboBox()
         self.font_size_menu.setToolTip("Font Size")
@@ -46,8 +45,8 @@ class Toolbar(QToolBar):
         pt_layout.setContentsMargins(self.main_window.size_unit, 0, 0, 0)
         pt_layout.addWidget(pt)
 
-        self.toolbar.addWidget(self.font_size_menu)
-        self.toolbar.addSeparator()
+        self.addWidget(self.font_size_menu)
+        self.addSeparator()
 
         self.color_button = QPushButton()
         color_icon = QIcon.fromTheme("format-text-color-symbolic")
@@ -56,8 +55,8 @@ class Toolbar(QToolBar):
         self.color_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.color_button.setStyleSheet(f"QPushButton {{background-color: {self.main_window.editor.DEFAULT_FONT_COLOR};}}")
         self.color_button.clicked.connect(self.font_color)
-        self.toolbar.addWidget(self.color_button)
-        self.toolbar.addSeparator()
+        self.addWidget(self.color_button)
+        self.addSeparator()
 
         self.highlight_color = QColor("yellow")
         self.highlight_button = QPushButton()
@@ -66,8 +65,8 @@ class Toolbar(QToolBar):
         self.highlight_button.setToolTip("Highlight")
         self.highlight_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.highlight_button.clicked.connect(self.highlight_text)
-        self.toolbar.addWidget(self.highlight_button)
-        self.toolbar.addSeparator()
+        self.addWidget(self.highlight_button)
+        self.addSeparator()
 
         self.bold_button = QPushButton()
         bold_icon = QIcon.fromTheme("format-text-bold-symbolic")
@@ -76,7 +75,7 @@ class Toolbar(QToolBar):
         self.bold_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.bold_button.setCheckable(True)
         self.bold_button.clicked.connect(self.toggle_bold)
-        self.toolbar.addWidget(self.bold_button)
+        self.addWidget(self.bold_button)
 
         self.strikethrough_button = QPushButton()
         strikethrough_icon = QIcon.fromTheme("format-text-strikethrough-symbolic")
@@ -85,7 +84,7 @@ class Toolbar(QToolBar):
         self.strikethrough_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.strikethrough_button.setCheckable(True)
         self.strikethrough_button.clicked.connect(self.toggle_strikethrough)
-        self.toolbar.addWidget(self.strikethrough_button)
+        self.addWidget(self.strikethrough_button)
 
         self.underline_button = QPushButton()
         underline_icon = QIcon.fromTheme("format-text-underline-symbolic")
@@ -94,7 +93,7 @@ class Toolbar(QToolBar):
         self.underline_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.underline_button.setCheckable(True)
         self.underline_button.clicked.connect(self.toggle_underline)
-        self.toolbar.addWidget(self.underline_button)
+        self.addWidget(self.underline_button)
 
         self.italic_button = QPushButton()
         italic_icon = QIcon.fromTheme("format-text-italic-symbolic")
@@ -103,7 +102,7 @@ class Toolbar(QToolBar):
         self.italic_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.italic_button.setCheckable(True)
         self.italic_button.clicked.connect(self.toggle_italic)
-        self.toolbar.addWidget(self.italic_button)
+        self.addWidget(self.italic_button)
 
         self.clear_formatting_button = QPushButton()
         clear_formatting_icon = QIcon.fromTheme("edit-clear-symbolic")
@@ -111,8 +110,8 @@ class Toolbar(QToolBar):
         self.clear_formatting_button.setToolTip("Clear Formatting")
         self.clear_formatting_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.clear_formatting_button.clicked.connect(self.clear_formatting)
-        self.toolbar.addWidget(self.clear_formatting_button)
-        self.toolbar.addSeparator()
+        self.addWidget(self.clear_formatting_button)
+        self.addSeparator()
 
         self.numbered_list_button = QPushButton()
         self.numbered_list_button.setIcon(QIcon.fromTheme("format-list-ordered-symbolic"))
@@ -120,7 +119,7 @@ class Toolbar(QToolBar):
         self.numbered_list_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.numbered_list_button.setCheckable(True)
         self.numbered_list_button.clicked.connect(self.toggle_numbered_list)
-        self.toolbar.addWidget(self.numbered_list_button)
+        self.addWidget(self.numbered_list_button)
 
         self.bullet_list_button = QPushButton()
         self.bullet_list_button.setIcon(QIcon.fromTheme("format-list-unordered-symbolic"))
@@ -128,8 +127,8 @@ class Toolbar(QToolBar):
         self.bullet_list_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.bullet_list_button.setCheckable(True)
         self.bullet_list_button.clicked.connect(self.toggle_bullet_list)
-        self.toolbar.addWidget(self.bullet_list_button)
-        self.toolbar.addSeparator()
+        self.addWidget(self.bullet_list_button)
+        self.addSeparator()
 
         self.align_left_button = QPushButton()
         align_left_icon = QIcon.fromTheme("format-justify-left-symbolic")
@@ -139,7 +138,7 @@ class Toolbar(QToolBar):
         self.align_left_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.align_left_button.setCheckable(True)
         self.align_left_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignLeft))
-        self.toolbar.addWidget(self.align_left_button)
+        self.addWidget(self.align_left_button)
 
         self.align_center_button = QPushButton()
         align_center_icon = QIcon.fromTheme("format-justify-center-symbolic")
@@ -149,7 +148,7 @@ class Toolbar(QToolBar):
         self.align_center_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.align_center_button.setCheckable(True)
         self.align_center_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignHCenter))
-        self.toolbar.addWidget(self.align_center_button)
+        self.addWidget(self.align_center_button)
 
         self.align_right_button = QPushButton()
         align_right_icon = QIcon.fromTheme("format-justify-right-symbolic")
@@ -159,7 +158,7 @@ class Toolbar(QToolBar):
         self.align_right_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.align_right_button.setCheckable(True)
         self.align_right_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignRight))
-        self.toolbar.addWidget(self.align_right_button)
+        self.addWidget(self.align_right_button)
         self.alignment_group = QButtonGroup(self)
         self.alignment_group.setExclusive(True)
         self.alignment_group.addButton(self.align_left_button)
@@ -168,7 +167,7 @@ class Toolbar(QToolBar):
 
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        self.toolbar.addWidget(spacer)
+        self.addWidget(spacer)
         
         self.toggle_minimap_button = QPushButton()
         self.minimap_right_close_icon = QIcon.fromTheme("sidebar-collapse-right-symbolic")
@@ -180,9 +179,9 @@ class Toolbar(QToolBar):
         self.toggle_minimap_button.setIconSize(QSize(self.main_window.size_unit/1.25, self.main_window.size_unit/1.25))
         self.toggle_minimap_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit*1)
         self.toggle_minimap_button.clicked.connect(self.toggle_minimap)
-        self.toolbar.addWidget(self.toggle_minimap_button)
+        self.addWidget(self.toggle_minimap_button)
 
-        self.main_window.addToolBar(self.toolbar)
+        self.main_window.addToolBar(self)
 
     def toggle_list(self, style):
         editor = self.main_window.editor

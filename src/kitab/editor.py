@@ -6,24 +6,23 @@
 from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy
 from PySide6.QtGui import QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat
 from PySide6.QtCore import Qt, QSize, QRectF
-from menubar import _open_file
 from dialogs import InsertLinkDialog
-from menubar import insert_horizontal_line
 
 class Editor(QTextEdit):
-    PAGE_SIZES = {
+    def __init__(self, main_window):
+        super().__init__()
+
+        self.PAGE_SIZES = {
         "A4": (794, 1123),
         "Letter": (816, 1056),
         "A5": (559, 794),
         "Legal": (816, 1344),
-    }
-    DEFAULT_FONT_SIZE = 14
-    DEFAULT_PAPER_COLOR = "white"
-    DEFAULT_FONT_COLOR = "black"
-    DEFAULT_PAGE_SIZE = "A4"
-    
-    def __init__(self, main_window):
-        super().__init__()
+        }
+        self.DEFAULT_FONT_SIZE = 14
+        self.DEFAULT_PAPER_COLOR = "white"
+        self.DEFAULT_FONT_COLOR = "black"
+        self.DEFAULT_PAGE_SIZE = "A4"
+
         self.last_char_format = None
         self.last_font = None
         self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute
@@ -63,7 +62,7 @@ class Editor(QTextEdit):
                 path = path_list[0].toLocalFile()
                 if path.endswith(".txt") or path.endswith(".ktb") or path.endswith(".md") or path.endswith(".odt") or path.endswith(".html"):
                     self.main_window.file_path = path
-                    _open_file(self.main_window)
+                    self.main_window.menubar._open_file(self.main_window)
             event.acceptProposedAction()
         else:
             super().dropEvent(event)
@@ -102,7 +101,7 @@ class Editor(QTextEdit):
                     cursor.setPosition(pos)
                     cursor.setPosition(beginning, QTextCursor.MoveMode.KeepAnchor)
                     cursor.removeSelectedText()
-                    insert_horizontal_line(self.main_window)
+                    self.main_window.menubar.insert_horizontal_line()
                     return
             cursor.setPosition(pos)
             cursor.insertBlock(block_format, char_format)
