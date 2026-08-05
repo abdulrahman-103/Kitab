@@ -11,7 +11,7 @@ class Minimap(QGraphicsView):
         self.WIDTH = self.main_window.size_unit * 5
         self._hovering = False
         self._dragging = False
-        self._side = "right"
+        self.side = "right"
 
         self._page_font = QFont()
         self._page_font.setPointSizeF(8)
@@ -42,7 +42,7 @@ class Minimap(QGraphicsView):
 
     def _apply_style(self):
         bg = self.main_window.background_color.name()
-        border_side = "border-left" if self._side == "right" else "border-right"
+        border_side = "border-left" if self.side == "right" else "border-right"
         self.setStyleSheet(f"""
             QGraphicsView {{
                 background-color: {bg};
@@ -61,7 +61,7 @@ class Minimap(QGraphicsView):
         action = menu.addAction(action_label)
         action.triggered.connect(self.main_window.toolbar.toggle_minimap)
 
-        side_label = "Move to Left" if self._side == "right" else "Move to Right"
+        side_label = "Move to Left" if self.side == "right" else "Move to Right"
         side_action = menu.addAction(side_label)
         side_action.triggered.connect(self.toggle_side)
 
@@ -80,15 +80,16 @@ class Minimap(QGraphicsView):
         if index != -1:
             layout.takeAt(index)
 
-        if self._side == "right":
+        if self.side == "right":
             layout.insertWidget(0, self)
-            self._side = "left"
+            self.side = "left"
         else:
             layout.addWidget(self)
-            self._side = "right"
+            self.side = "right"
 
         self._apply_style()
         self.viewport().update()
+        self.main_window.toolbar.update_minimap_icon()
 
     def _connect_signals(self):
         self._update_timer = QTimer(self)

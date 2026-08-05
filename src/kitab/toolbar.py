@@ -171,9 +171,11 @@ class Toolbar(QToolBar):
         self.toolbar.addWidget(spacer)
         
         self.toggle_minimap_button = QPushButton()
-        self.minimap_close_icon = QIcon.fromTheme("sidebar-collapse-right-symbolic")
-        self.minimap_open_icon = QIcon.fromTheme("sidebar-expand-right-symbolic")
-        self.toggle_minimap_button.setIcon(self.minimap_close_icon)
+        self.minimap_right_close_icon = QIcon.fromTheme("sidebar-collapse-right-symbolic")
+        self.minimap_right_open_icon = QIcon.fromTheme("sidebar-expand-right-symbolic")
+        self.minimap_left_close_icon = QIcon.fromTheme("sidebar-collapse-left-symbolic")
+        self.minimap_left_open_icon = QIcon.fromTheme("sidebar-expand-left-symbolic")
+        self.toggle_minimap_button.setIcon(self.minimap_right_close_icon)
         self.toggle_minimap_button.setToolTip("Close Minimap (F7)")
         self.toggle_minimap_button.setIconSize(QSize(self.main_window.size_unit/1.25, self.main_window.size_unit/1.25))
         self.toggle_minimap_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit*1)
@@ -251,10 +253,22 @@ class Toolbar(QToolBar):
         minimap.setVisible(not minimap.isVisible())
         if minimap.isVisible():
             self.toggle_minimap_button.setToolTip("Close Minimap (F7)")
-            self.toggle_minimap_button.setIcon(self.minimap_close_icon)
         else:
             self.toggle_minimap_button.setToolTip("Open Minimap (F7)")
-            self.toggle_minimap_button.setIcon(self.minimap_open_icon)
+        self.update_minimap_icon()
+
+    def update_minimap_icon(self):
+        minimap = self.main_window.minimap
+        if minimap.isVisible():
+            if minimap.side == "right":
+                self.toggle_minimap_button.setIcon(self.minimap_right_close_icon)
+            else:
+                self.toggle_minimap_button.setIcon(self.minimap_left_close_icon)
+        else:
+            if minimap.side == "right":
+                self.toggle_minimap_button.setIcon(self.minimap_right_open_icon)
+            else:
+                self.toggle_minimap_button.setIcon(self.minimap_left_open_icon)
     
     def sync_font(self):
         if not self.main_window.editor.textCursor().hasSelection():
