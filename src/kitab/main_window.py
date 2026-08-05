@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from editor import Editor
 from toolbar import Toolbar
-from menubar import add_menubar, _open_file
+from menubar import  MenuBar
 from dialogs import FindReplaceDialog
 from minimap import Minimap
 
@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
         self.color_scheme = self.app.styleHints().colorScheme()
 
         self.toolbar = Toolbar(self)
-        add_menubar(self)
+        self.menubar = MenuBar(self)
 
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         
@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
         #opening file with commandline
         if len(sys.argv) == 2:
             self.file_path = sys.argv[1]
-            _open_file(self)
+            self.menubar._open_file()
 
         self.scroll_bar = self.view.verticalScrollBar()
         self.add_statusbar()
@@ -85,11 +85,11 @@ class MainWindow(QMainWindow):
         if self.color_scheme == Qt.ColorScheme.Dark:
             horizontal_line_icon_path = str(Path(__file__).resolve().parent / "images" / "insert_horizontal_line_dark.svg")
             horizontal_line_icon = QIcon(horizontal_line_icon_path)
-            self.horizontal_line_option.setIcon(horizontal_line_icon)
+            self.menubar.horizontal_line_option.setIcon(horizontal_line_icon)
         elif self.color_scheme == Qt.ColorScheme.Light:
             horizontal_line_icon_path = str(Path(__file__).resolve().parent / "images" / "insert_horizontal_line_light.svg")
             horizontal_line_icon = QIcon(horizontal_line_icon_path)
-            self.horizontal_line_option.setIcon(horizontal_line_icon)
+            self.menubar.horizontal_line_option.setIcon(horizontal_line_icon)
         
         self.minimap.setStyleSheet(f"background-color: {self.background_color.name()};")
 
@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
             clicked = msg_box.clickedButton()
 
             if clicked == save_button:
-                status = self.save()
+                status = self.menubar.save()
                 if status == "canceled":
                     event.ignore()
                 else:
