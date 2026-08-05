@@ -7,7 +7,12 @@ from PySide6.QtWidgets import QApplication
 from main_window import MainWindow
 import sys
 
+version = "0.2.0"
+
 def main():
+    if len(sys.argv) == 2 and sys.argv[1] == "--version":
+        print(version)
+        sys.exit(0)
     app = QApplication(sys.argv)
     _window = MainWindow()
     app.exec()
