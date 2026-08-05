@@ -81,6 +81,7 @@ class Editor(QTextEdit):
             cursor = self.textCursor()
             alignment = cursor.blockFormat().alignment()
             block_format = QTextBlockFormat()
+            block_format.setObjectIndex(cursor.blockFormat().objectIndex())
             block_format.setAlignment(alignment)
             char_format = self.currentCharFormat()
 
