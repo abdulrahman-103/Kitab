@@ -126,7 +126,7 @@ class Editor(QTextEdit):
         if self.document().isEmpty() and self.last_font:
             self.setFont(self.last_font)
             self.setCurrentCharFormat(self.last_char_format)
-            self.main_window.toolbar.sync_font(self.main_window)
+            self.main_window.toolbar.sync_font()
 
     def set_line_height(self, value):
         cursor = self.textCursor()

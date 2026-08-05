@@ -5714,7 +5714,8 @@ async function walkBlockElement(node, doc, ctx, defaultParaOpts) {
     case "h6": {
       const level = parseInt(tag[1], 10);
       const runs = await extractInline(node.children, {}, ctx);
-      doc.addHeading((p) => applyRunsToBuilder(p, runs), level);
+      const headingOpts = mergeParagraphOptions(defaultParaOpts, parseParagraphOptions(node));
+      doc.addHeading((p) => applyRunsToBuilder(p, runs), level, headingOpts);
       break;
     }
     // ── Paragraph ──────────────────────────────────────────────────
@@ -6081,7 +6082,7 @@ function extractCssProperty(style, property) {
 }
 function parseParagraphOptions(node) {
   const style = node.attrs["style"] ?? "";
-  const align = extractCssProperty(style, "text-align");
+  const align = (extractCssProperty(style, "text-align") ?? node.attrs["align"] ?? "").trim().toLowerCase();
   if (align === "left" || align === "center" || align === "right" || align === "justify") {
     return { align };
   }
