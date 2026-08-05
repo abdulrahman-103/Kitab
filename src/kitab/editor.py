@@ -79,15 +79,21 @@ class Editor(QTextEdit):
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             cursor = self.textCursor()
+            alignment = cursor.blockFormat().alignment()
+            block_format = QTextBlockFormat()
+            block_format.setObjectIndex(cursor.blockFormat().objectIndex())
+            block_format.setAlignment(alignment)
+            char_format = self.currentCharFormat()
+
+            # insert horizontal rule by ---
+            is_four_dashes = False
             pos = cursor.position()
             line_start = cursor.block().position()
             beginning = max(line_start, pos - 3)
             cursor.setPosition(beginning, QTextCursor.MoveMode.KeepAnchor)
             selection = cursor.selectedText()
             length = self.textCursor().block().length()
-            
             if length > 2 and selection == "---":
-                is_four_dashes = False
                 if pos - line_start >= 4:
                     cursor.setPosition(pos - 4, QTextCursor.MoveMode.KeepAnchor)
                     if cursor.selectedText() == "----":
@@ -98,8 +104,8 @@ class Editor(QTextEdit):
                     cursor.removeSelectedText()
                     insert_horizontal_line(self.main_window)
                     return
-            
-            super().keyPressEvent(event)
+            cursor.setPosition(pos)
+            cursor.insertBlock(block_format, char_format)
         else:
             super().keyPressEvent(event)
 
