@@ -61,9 +61,9 @@ class Toolbar(QToolBar):
 
         self.highlight_color = QColor("yellow")
         self.highlight_button = QPushButton()
-        hightlight_icon = QIcon.fromTheme("draw-highlight-symbolic")
-        self.highlight_button.setIcon(hightlight_icon)
-        self.highlight_button.setToolTip("Hightlight")
+        highlight_icon = QIcon.fromTheme("draw-highlight-symbolic")
+        self.highlight_button.setIcon(highlight_icon)
+        self.highlight_button.setToolTip("Highlight")
         self.highlight_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.highlight_button.clicked.connect(self.highlight_text)
         self.toolbar.addWidget(self.highlight_button)
@@ -114,21 +114,21 @@ class Toolbar(QToolBar):
         self.toolbar.addWidget(self.clear_formatting_button)
         self.toolbar.addSeparator()
 
-        self.num_list_btn = QPushButton()
-        self.num_list_btn.setIcon(QIcon.fromTheme("format-list-ordered-symbolic"))
-        self.num_list_btn.setToolTip("Numbered List")
-        self.num_list_btn.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
-        self.num_list_btn.setCheckable(True)
-        self.num_list_btn.clicked.connect(self.toggle_numbered_list)
-        self.toolbar.addWidget(self.num_list_btn)
+        self.numbered_list_button = QPushButton()
+        self.numbered_list_button.setIcon(QIcon.fromTheme("format-list-ordered-symbolic"))
+        self.numbered_list_button.setToolTip("Numbered List")
+        self.numbered_list_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
+        self.numbered_list_button.setCheckable(True)
+        self.numbered_list_button.clicked.connect(self.toggle_numbered_list)
+        self.toolbar.addWidget(self.numbered_list_button)
 
-        self.bullet_list_btn = QPushButton()
-        self.bullet_list_btn.setIcon(QIcon.fromTheme("format-list-unordered-symbolic"))
-        self.bullet_list_btn.setToolTip("Bullet List")
-        self.bullet_list_btn.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
-        self.bullet_list_btn.setCheckable(True)
-        self.bullet_list_btn.clicked.connect(self.toggle_bullet_list)
-        self.toolbar.addWidget(self.bullet_list_btn)
+        self.bullet_list_button = QPushButton()
+        self.bullet_list_button.setIcon(QIcon.fromTheme("format-list-unordered-symbolic"))
+        self.bullet_list_button.setToolTip("Bullet List")
+        self.bullet_list_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
+        self.bullet_list_button.setCheckable(True)
+        self.bullet_list_button.clicked.connect(self.toggle_bullet_list)
+        self.toolbar.addWidget(self.bullet_list_button)
         self.toolbar.addSeparator()
 
         self.align_left_button = QPushButton()
@@ -182,24 +182,28 @@ class Toolbar(QToolBar):
 
         self.main_window.addToolBar(self.toolbar)
 
-    def _toggle_list(self, style):
+    def toggle_list(self, style):
         editor = self.main_window.editor
         cursor = editor.textCursor()
         cursor.beginEditBlock()
 
         if cursor.hasSelection():
             doc = editor.document()
-            start_pos = cursor.selectionStart()
-            end_pos = cursor.selectionEnd()
 
-            start_block = doc.findBlock(start_pos)
-            end_block = doc.findBlock(end_pos)
-            if end_block.position() == end_pos and end_block != start_block:
-                end_block = end_block.previous()
+            start_block = doc.findBlock(cursor.selectionStart())
+            end_block = doc.findBlock(cursor.selectionEnd())
 
-            first_list = start_block.textList()
-            removing = bool(first_list) and first_list.format().style() == style
-
+            removing = True
+            block = start_block
+            while True:
+                lst = block.textList()
+                if not lst or lst.format().style() != style:
+                    removing = False
+                    break
+                if block == end_block:
+                    break
+                block = block.next()
+            
             if removing:
                 block = start_block
                 while True:
@@ -233,14 +237,15 @@ class Toolbar(QToolBar):
                 cursor.createList(list_format)
 
         cursor.endEditBlock()
+        self.sync_font()
         self.main_window.view.viewport().setFocus()
 
     def toggle_numbered_list(self):
-        self._toggle_list(QTextListFormat.Style.ListDecimal)
+        self.toggle_list(QTextListFormat.Style.ListDecimal)
 
     def toggle_bullet_list(self):
-        self._toggle_list(QTextListFormat.Style.ListDisc)
-
+        self.toggle_list(QTextListFormat.Style.ListDisc)
+        
     def toggle_minimap(self):
         minimap = self.main_window.minimap
         minimap.setVisible(not minimap.isVisible())
@@ -276,11 +281,11 @@ class Toolbar(QToolBar):
             current_list = self.main_window.editor.textCursor().currentList()
             if current_list:
                 style = current_list.format().style()
-                self.num_list_btn.setChecked(style == QTextListFormat.Style.ListDecimal)
-                self.bullet_list_btn.setChecked(style == QTextListFormat.Style.ListDisc)
+                self.numbered_list_button.setChecked(style == QTextListFormat.Style.ListDecimal)
+                self.bullet_list_button.setChecked(style == QTextListFormat.Style.ListDisc)
             else:
-                self.num_list_btn.setChecked(False)
-                self.bullet_list_btn.setChecked(False)
+                self.numbered_list_button.setChecked(False)
+                self.bullet_list_button.setChecked(False)
 
             char_format = self.main_window.editor.textCursor().charFormat()
             bg_color = char_format.background()
