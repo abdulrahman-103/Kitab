@@ -3,7 +3,7 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QFileDialog, QProgressDialog, QDialog, QMenuBar, QDockWidget
+from PySide6.QtWidgets import QFileDialog, QProgressDialog, QDialog, QMenuBar, QDockWidget, QStyle
 from PySide6.QtGui import QIcon, QPageSize, QPdfWriter, QTextImageFormat
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 from PySide6.QtCore import QTimer, Qt, QSize, QElapsedTimer, QRectF
@@ -84,8 +84,9 @@ class MenuBar(QMenuBar):
         image_option.setIcon(insert_image_icon)
         image_option.triggered.connect(self.insert_image)
         image_option.setShortcut("Ctrl+I")
+
         chart_option = insert_menu.addAction("Chart")
-        chart_icon = QIcon.fromTheme("insert-chart")
+        chart_icon = next((i for name in ("office-chart-bar", "x-office-chart", "view-statistics") if not (i := QIcon.fromTheme(name)).isNull()), QIcon())
         chart_option.setIcon(chart_icon)
         chart_option.triggered.connect(self.insert_chart)
         chart_option.setShortcut("Ctrl+Shift+C")
