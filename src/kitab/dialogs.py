@@ -389,7 +389,9 @@ class ChartPanel(QWidget):
     def add_row(self):
         index = self.table.rowCount()
         letter = chr(ord('A') + index) if index < 26 else str(index + 1)
-        self._append_row(f'Data {letter}', '1', '#4caf50')
+        value = f'{index + 1}.0'
+        color = ['#4caf50', '#f44336', '#2196f3'][index % 3]
+        self._append_row(f'Data {letter}', value, color)
 
     def _append_row(self, label, value, color):
         row = self.table.rowCount()
