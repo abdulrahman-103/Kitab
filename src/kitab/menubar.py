@@ -3,7 +3,7 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QFileDialog, QProgressDialog, QDialog, QMenuBar
+from PySide6.QtWidgets import QFileDialog, QProgressDialog, QDialog, QMenuBar, QDockWidget
 from PySide6.QtGui import QIcon, QPageSize, QPdfWriter, QTextImageFormat
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 from PySide6.QtCore import QTimer, Qt, QSize, QElapsedTimer, QRectF
@@ -11,8 +11,10 @@ from pathlib import Path
 import zipfile
 import json
 from recent_documents import *
-from dialogs import PageSizeDialog, InsertTableDialog, InsertLinkDialog
+from dialogs import PageSizeDialog, InsertTableDialog, InsertLinkDialog, ChartPanel
 import subprocess
+import pygal
+import uuid
 
 class MenuBar(QMenuBar):
     def __init__(self, main_window, parent=None):
@@ -82,6 +84,11 @@ class MenuBar(QMenuBar):
         image_option.setIcon(insert_image_icon)
         image_option.triggered.connect(self.insert_image)
         image_option.setShortcut("Ctrl+I")
+        chart_option = insert_menu.addAction("Chart")
+        chart_icon = QIcon.fromTheme("insert-chart")
+        chart_option.setIcon(chart_icon)
+        chart_option.triggered.connect(self.insert_chart)
+        chart_option.setShortcut("Ctrl+Shift+C")
         
         link_option = insert_menu.addAction("Link")
         link_icon = QIcon.fromTheme("insert-link-symbolic")
@@ -109,6 +116,16 @@ class MenuBar(QMenuBar):
 
         self.main_window.setMenuBar(self)
 
+        if not hasattr(self.main_window, 'chart_data'):
+            self.main_window.chart_data = {}
+
+        self.chart_dock = QDockWidget('Chart', self.main_window)
+        self.chart_panel = ChartPanel(self.main_window, self._on_chart_apply)
+        self.chart_dock.setWidget(self.chart_panel)
+        self.chart_dock.setFeatures(QDockWidget.DockWidgetClosable | QDockWidget.DockWidgetMovable)
+        self.main_window.addDockWidget(Qt.RightDockWidgetArea, self.chart_dock)
+        self.chart_dock.hide()
+
     def _save_file(self):
         saving = QProgressDialog("Saving...", None, 0, 0, self)
         saving.setWindowTitle("Saving...")
@@ -131,7 +148,7 @@ class MenuBar(QMenuBar):
                 file.write(data)
         elif self.main_window.file_path.endswith(".ktb"):
             html_data = self.editor.toHtml()
-            json_data = {"page size": self.editor.page_size}
+            json_data = {"page size": self.editor.page_size, "charts": getattr(self.main_window, 'chart_data', {})}
             with zipfile.ZipFile(self.main_window.file_path, mode="w") as zip:
                 zip.writestr("mimetype", "application/prs.ktb+zip", compress_type=zipfile.ZIP_STORED)
                 zip.writestr("document.html", html_data, compress_type=zipfile.ZIP_DEFLATED)
@@ -194,12 +211,13 @@ class MenuBar(QMenuBar):
                 html_data = zip.read("document.html").decode("utf-8")
                 json_data = json.loads(zip.read("info.json").decode("utf-8"))
             self.editor.setHtml(html_data)
+            self.main_window.chart_data = json_data.get("charts", {})
             self.apply_page_size(json_data["page size"])
         elif self.main_window.file_path.endswith(".html"):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
                 html_data = file.read()
             self.editor.setHtml(html_data)
-            self.apply_page_size(json_data["page size"])
+            pass
         elif self.main_window.file_path.endswith(".txt"):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
                 data = file.read()
@@ -278,6 +296,99 @@ class MenuBar(QMenuBar):
         cursor.setBlockFormat(block_format)
         cursor.setCharFormat(char_format)
         cursor.insertBlock(block_format, char_format)
+
+    def insert_chart(self):
+        self.chart_panel.set_data(None, None)
+        self.chart_dock.show()
+        self.chart_panel.show()
+
+    def edit_chart(self, chart_id):
+        data = self.main_window.chart_data.get(chart_id)
+        if data is None:
+            return
+        self.chart_panel.set_data(data, chart_id)
+        self.chart_dock.show()
+        self.chart_panel.show()
+
+    def _create_chart_data_uri(self, data):
+        chart_type = data.get('type', 'Bar')
+        show_legend = bool(data.get('show_legend', True))
+        legend_position = data.get('legend_position', 'Right')
+        title = data.get('title', '')
+        labels = data.get('labels', [])
+        values = data.get('values', [])
+        colors = data.get('colors', ['#4caf50', '#f44336', '#2196f3'])
+        style = pygal.style.Style(colors=colors, background='white', plot_background='white')
+        if chart_type == 'Bar':
+            chart = pygal.Bar(style=style)
+            chart.x_labels = labels
+            if show_legend:
+                chart.add(title or 'Series', values)
+            else:
+                chart.add('', values)
+        elif chart_type == 'Line':
+            chart = pygal.Line(style=style)
+            chart.x_labels = labels
+            if show_legend:
+                chart.add(title or 'Series', values)
+            else:
+                chart.add('', values)
+        else:
+            chart = pygal.Pie(style=style)
+            for l, v in zip(labels, values):
+                chart.add(l, v)
+        chart.title = title
+        if not show_legend:
+            try:
+                setattr(chart, 'show_legend', False)
+            except Exception:
+                pass
+        if legend_position == 'Bottom':
+            try:
+                setattr(chart, 'legend_at_bottom', True)
+            except Exception:
+                pass
+        return chart.render_data_uri()
+
+    def _on_chart_apply(self, chart_id, data):
+        data_uri = self._create_chart_data_uri(data)
+        if chart_id is None:
+            new_id = f"chart-{uuid.uuid4().hex}"
+            self.main_window.chart_data[new_id] = data
+            cursor = self.editor.textCursor()
+            block_format = cursor.blockFormat()
+            char_format = cursor.charFormat()
+            img_html = f'<a href="chart://{new_id}"><img src="{data_uri}" width="450"/></a>'
+            cursor.insertHtml(img_html)
+            cursor.setBlockFormat(block_format)
+            cursor.setCharFormat(char_format)
+            cursor.insertBlock(block_format, char_format)
+        else:
+            self.main_window.chart_data[chart_id] = data
+            new_html = f'<a href="chart://{chart_id}"><img src="{data_uri}" width="450"/></a>'
+            doc = self.editor.document()
+            block = doc.begin()
+            while block.isValid():
+                it = block.begin()
+                while not it.atEnd():
+                    frag = it.fragment()
+                    if frag.isValid():
+                        fmt = frag.charFormat()
+                        try:
+                            href = fmt.anchorHref()
+                        except Exception:
+                            href = ''
+                        if href == f'chart://{chart_id}':
+                            pos = frag.position()
+                            length = frag.length()
+                            cursor = self.editor.textCursor()
+                            cursor.setPosition(pos)
+                            cursor.setPosition(pos + length, cursor.MoveMode.KeepAnchor)
+                            cursor.removeSelectedText()
+                            cursor.insertHtml(new_html)
+                            return
+                    it += 1
+                block = block.next()
 
     def insert_table(self):
         if getattr(self, "insert_table_dialog", None) is None:
