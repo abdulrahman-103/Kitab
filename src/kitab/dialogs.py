@@ -3,11 +3,30 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox, QTableWidget, QTableWidgetItem, QLabel, QWidget, QDockWidget, QColorDialog, QGroupBox, QHeaderView
+from PySide6.QtWidgets import QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox, QTableWidget, QTableWidgetItem, QWidget, QColorDialog, QGroupBox, QHeaderView
 from PySide6.QtGui import QColor
 from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength, QDesktopServices, QTextBlockFormat
 from PySide6.QtCore import QSize, QRectF, Qt, QUrl
 from urllib.parse import urlparse
+import base64
+import json
+
+def encode_chart_href(chart_id, data):
+    payload = base64.urlsafe_b64encode(json.dumps(data).encode('utf-8')).decode('ascii')
+    return f'chart://{chart_id}?d={payload}'
+
+def decode_chart_href(href):
+    if not href.startswith('chart://'):
+        return None, None
+    remainder = href[len('chart://'):]
+    chart_id, _, query = remainder.partition('?')
+    if not query.startswith('d='):
+        return chart_id, None
+    try:
+        data = json.loads(base64.urlsafe_b64decode(query[2:].encode('ascii')).decode('utf-8'))
+    except Exception:
+        return chart_id, None
+    return chart_id, data
 
 class FindReplaceDialog(QDialog):
     def __init__(self, editor, main_window):
@@ -271,7 +290,12 @@ class InsertLinkDialog(QDialog):
         if event.button() == Qt.MouseButton.LeftButton and event.modifiers() == Qt.KeyboardModifier.ControlModifier:
             anchor = editor.anchorAt(event.pos())
             if anchor:
-                QDesktopServices.openUrl(QUrl(anchor))
+                if anchor.startswith("chart://"):
+                    chart_id, data = decode_chart_href(anchor)
+                    if chart_id is not None:
+                        editor.main_window.menubar.edit_chart(chart_id, data)
+                else:
+                    QDesktopServices.openUrl(QUrl(anchor))
                 return True
         return False
 
