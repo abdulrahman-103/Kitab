@@ -352,6 +352,7 @@ class ChartPanel(QWidget):
         remove_btn.clicked.connect(self.remove_row)
         apply_btn.clicked.connect(self._on_apply)
         close_btn.clicked.connect(lambda: self.hide())
+        
         row_btn_layout = QHBoxLayout()
         row_btn_layout.setSpacing(6)
         row_btn_layout.addWidget(add_btn)
@@ -360,6 +361,13 @@ class ChartPanel(QWidget):
 
         bottom_layout = QHBoxLayout()
         bottom_layout.setSpacing(6)
+        
+        beta_label = QLineEdit('Feature in beta development !')
+        beta_label.setReadOnly(True)
+        beta_label.setStyleSheet('background: transparent; border: none; color: gray; font-size: 10px;')
+        beta_label.setCursorPosition(0)
+        
+        bottom_layout.addWidget(beta_label)
         bottom_layout.addStretch()
         bottom_layout.addWidget(apply_btn)
         bottom_layout.addWidget(close_btn)
