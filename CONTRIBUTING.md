@@ -15,4 +15,4 @@
 
 - Follow the existing code style (PEP 8, no type hints enforced).
 - No vibecoding. If you can't code yourself then don't contribute.
-- Tested pull requests only. Half baked ones that need double your effort in fixing are better to not be sent.
+- Tested pull requests only. Half baked ones that need double your effort in fixing are better not to be sent.
