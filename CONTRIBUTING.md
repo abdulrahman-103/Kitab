@@ -8,7 +8,7 @@
 
    
    ```
-   git checkout -b feature/export-md
+   git checkout -b feature/feature_name
    ```
 
 ## Coding Style
