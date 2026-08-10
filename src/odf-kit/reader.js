@@ -1046,20 +1046,23 @@ function renderTrackedChange(node, options) {
       return `<span class="odf-format-change"${dataAttrs}>${bodyHtml}</span>`;
   }
 }
+function dirAttr(writingMode) {
+  return writingMode === "rl-tb" || writingMode === "rl" ? ` dir="rtl"` : "";
+}
 function renderBodyNode(node, options, inCell = false) {
   switch (node.kind) {
     case "paragraph": {
       const reset = inCell ? "margin-top:0;margin-bottom:0" : "";
       const sourceCss = node.paragraphStyle !== void 0 ? paragraphStyleToCss(node.paragraphStyle) : "";
       const css = [reset, sourceCss].filter((s) => s).join(";");
-      const attrs = css ? ` style="${css}"` : "";
+      const attrs = (css ? ` style="${css}"` : "") + dirAttr(node.paragraphStyle?.writingMode);
       return `<p${attrs}>${renderSpans(node.spans, options)}</p>`;
     }
     case "heading": {
       const reset = inCell ? "margin-top:0;margin-bottom:0" : "";
       const sourceCss = node.paragraphStyle !== void 0 ? paragraphStyleToCss(node.paragraphStyle) : "";
       const css = [reset, sourceCss].filter((s) => s).join(";");
-      const attrs = css ? ` style="${css}"` : "";
+      const attrs = (css ? ` style="${css}"` : "") + dirAttr(node.paragraphStyle?.writingMode);
       return `<h${node.level}${attrs}>${renderSpans(node.spans, options)}</h${node.level}>`;
     }
     case "list":
@@ -1083,6 +1086,89 @@ function renderHtml(body, options) {
 ${inner}
 </body>
 </html>`;
+}
+
+// node_modules/odf-kit/dist/core/length.js
+var FACTOR_MM = {
+  mm: { n: 1n, d: 1n },
+  cm: { n: 10n, d: 1n },
+  in: { n: 127n, d: 5n },
+  pt: { n: 127n, d: 360n },
+  pc: { n: 127n, d: 30n },
+  px: { n: 127n, d: 480n },
+  twip: { n: 127n, d: 7200n },
+  emu: { n: 127n, d: 4572000n }
+};
+function gcd(a, b) {
+  a = a < 0n ? -a : a;
+  b = b < 0n ? -b : b;
+  while (b) {
+    const t = a % b;
+    a = b;
+    b = t;
+  }
+  return a;
+}
+function rat(n, d) {
+  if (d === 0n)
+    throw new Error("length core: zero denominator");
+  if (d < 0n) {
+    n = -n;
+    d = -d;
+  }
+  const g = gcd(n, d) || 1n;
+  return { n: n / g, d: d / g };
+}
+function mul(a, b) {
+  return rat(a.n * b.n, a.d * b.d);
+}
+function cmpRational(a, b) {
+  const l = a.n * b.d;
+  const r = b.n * a.d;
+  return l < r ? -1 : l > r ? 1 : 0;
+}
+function parseDecimal(raw) {
+  const m = /^([-+]?)(\d+)?(?:\.(\d+))?$/.exec(raw);
+  if (!m || m[2] === void 0 && m[3] === void 0)
+    return void 0;
+  const sign = m[1] === "-" ? -1n : 1n;
+  const int = m[2] ?? "";
+  const frac = m[3] ?? "";
+  const digits = int + frac;
+  const n = sign * BigInt(digits === "" ? "0" : digits);
+  const d = 10n ** BigInt(frac.length);
+  return rat(n, d);
+}
+var UNIT_RE = /^([-+]?(?:\d+\.?\d*|\.\d+))(cm|mm|in|pt|pc|px)$/;
+var PERCENT_RE = /^([-+]?(?:\d+\.?\d*|\.\d+))%$/;
+var KEYWORD_RE = /^[A-Za-z][A-Za-z-]*$/;
+function parseOdfValue(raw) {
+  const trimmed = raw.trim();
+  let m = UNIT_RE.exec(trimmed);
+  if (m) {
+    const value = parseDecimal(m[1]);
+    if (!value)
+      return void 0;
+    const unit = m[2];
+    return { kind: "length", mm: mul(value, FACTOR_MM[unit]), unit, lexical: trimmed };
+  }
+  m = PERCENT_RE.exec(trimmed);
+  if (m) {
+    const value = parseDecimal(m[1]);
+    if (!value)
+      return void 0;
+    return { kind: "percent", value, lexical: trimmed };
+  }
+  if (KEYWORD_RE.test(trimmed))
+    return { kind: "keyword", value: trimmed };
+  return void 0;
+}
+function compareLengths(a, b) {
+  const va = typeof a === "string" ? parseOdfValue(a) : a;
+  const vb = typeof b === "string" ? parseOdfValue(b) : b;
+  if (!va || !vb || va.kind !== "length" || vb.kind !== "length")
+    return void 0;
+  return cmpRational(va.mm, vb.mm);
 }
 
 // node_modules/odf-kit/dist/reader/parser.js
@@ -1386,6 +1472,11 @@ function extractParagraphStyle(paragraphProps) {
   const lineHeight = paragraphProps.get("fo:line-height");
   if (lineHeight) {
     style.lineHeight = lineHeight;
+    hasAny = true;
+  }
+  const writingMode = paragraphProps.get("style:writing-mode");
+  if (writingMode) {
+    style.writingMode = writingMode;
     hasAny = true;
   }
   return hasAny ? style : void 0;
@@ -2009,10 +2100,9 @@ function parsePageLayout(stylesRoot) {
     hasAny = true;
   }
   if (layout.width && layout.height) {
-    const w = parseFloat(layout.width);
-    const h = parseFloat(layout.height);
-    if (!isNaN(w) && !isNaN(h)) {
-      layout.orientation = w > h ? "landscape" : "portrait";
+    const cmp = compareLengths(layout.width, layout.height);
+    if (cmp !== void 0) {
+      layout.orientation = cmp > 0 ? "landscape" : "portrait";
       hasAny = true;
     }
   }
