@@ -1771,7 +1771,7 @@ function normalizeLineHeight(lineHeight) {
 function hasParagraphOptions(opts) {
   if (!opts)
     return false;
-  return !!(opts.align || opts.spaceBefore || opts.spaceAfter || opts.lineHeight !== void 0 || opts.indentLeft || opts.indentFirst || opts.borderBottom || opts.tabStops && opts.tabStops.length > 0);
+  return !!(opts.align || opts.spaceBefore || opts.spaceAfter || opts.lineHeight !== void 0 || opts.writingMode || opts.indentLeft || opts.indentFirst || opts.borderBottom || opts.tabStops && opts.tabStops.length > 0);
 }
 function paragraphOptionsKey(opts) {
   const parts = [];
@@ -1783,6 +1783,8 @@ function paragraphOptionsKey(opts) {
     parts.push(`sa:${opts.spaceAfter}`);
   if (opts.lineHeight !== void 0)
     parts.push(`lh:${opts.lineHeight}`);
+  if (opts.writingMode)
+    parts.push(`wm:${opts.writingMode}`);
   if (opts.indentLeft)
     parts.push(`il:${opts.indentLeft}`);
   if (opts.indentFirst)
@@ -1838,6 +1840,10 @@ function buildParagraphStyle(styleName, opts, parentStyle) {
   }
   if (opts.lineHeight !== void 0) {
     paraProps.attr("fo:line-height", normalizeLineHeight(opts.lineHeight));
+    hasParaProps = true;
+  }
+  if (opts.writingMode) {
+    paraProps.attr("style:writing-mode", opts.writingMode);
     hasParaProps = true;
   }
   if (opts.indentLeft) {
@@ -2191,6 +2197,171 @@ var init_header_footer_builder = __esm({
   }
 });
 
+// node_modules/odf-kit/dist/core/length.js
+function gcd(a, b) {
+  a = a < 0n ? -a : a;
+  b = b < 0n ? -b : b;
+  while (b) {
+    const t = a % b;
+    a = b;
+    b = t;
+  }
+  return a;
+}
+function rat(n, d) {
+  if (d === 0n)
+    throw new Error("length core: zero denominator");
+  if (d < 0n) {
+    n = -n;
+    d = -d;
+  }
+  const g = gcd(n, d) || 1n;
+  return { n: n / g, d: d / g };
+}
+function mul(a, b) {
+  return rat(a.n * b.n, a.d * b.d);
+}
+function div(a, b) {
+  if (b.n === 0n)
+    throw new Error("length core: division by zero");
+  return rat(a.n * b.d, a.d * b.n);
+}
+function sub(a, b) {
+  return rat(a.n * b.d - b.n * a.d, a.d * b.d);
+}
+function cmpRational(a, b) {
+  const l = a.n * b.d;
+  const r = b.n * a.d;
+  return l < r ? -1 : l > r ? 1 : 0;
+}
+function floorDiv(a, b) {
+  const q = a / b;
+  return a % b !== 0n && a < 0n ? q - 1n : q;
+}
+function ceilDiv(a, b) {
+  const q = a / b;
+  return a % b !== 0n && a > 0n ? q + 1n : q;
+}
+function parseDecimal(raw) {
+  const m = /^([-+]?)(\d+)?(?:\.(\d+))?$/.exec(raw);
+  if (!m || m[2] === void 0 && m[3] === void 0)
+    return void 0;
+  const sign = m[1] === "-" ? -1n : 1n;
+  const int = m[2] ?? "";
+  const frac = m[3] ?? "";
+  const digits = int + frac;
+  const n = sign * BigInt(digits === "" ? "0" : digits);
+  const d = 10n ** BigInt(frac.length);
+  return rat(n, d);
+}
+function parseOdfValue(raw) {
+  const trimmed = raw.trim();
+  let m = UNIT_RE.exec(trimmed);
+  if (m) {
+    const value = parseDecimal(m[1]);
+    if (!value)
+      return void 0;
+    const unit = m[2];
+    return { kind: "length", mm: mul(value, FACTOR_MM[unit]), unit, lexical: trimmed };
+  }
+  m = PERCENT_RE.exec(trimmed);
+  if (m) {
+    const value = parseDecimal(m[1]);
+    if (!value)
+      return void 0;
+    return { kind: "percent", value, lexical: trimmed };
+  }
+  if (KEYWORD_RE.test(trimmed))
+    return { kind: "keyword", value: trimmed };
+  return void 0;
+}
+function placeDecimal(m, k) {
+  const neg = m < 0n;
+  let s = (neg ? -m : m).toString();
+  const kk = Number(k);
+  if (kk > 0) {
+    while (s.length <= kk)
+      s = "0" + s;
+    s = s.slice(0, s.length - kk) + "." + s.slice(s.length - kk);
+    s = s.replace(/\.?0+$/, "");
+    if (s === "" || s === "-")
+      s = "0";
+  }
+  return (neg ? "-" : "") + s;
+}
+function compareLengths(a, b) {
+  const va = typeof a === "string" ? parseOdfValue(a) : a;
+  const vb = typeof b === "string" ? parseOdfValue(b) : b;
+  if (!va || !vb || va.kind !== "length" || vb.kind !== "length")
+    return void 0;
+  return cmpRational(va.mm, vb.mm);
+}
+function intervalFromDecimal(raw, source) {
+  const t = parseDecimalOrThrow(raw.trim());
+  const fracLen = raw.includes(".") ? raw.trim().split(".")[1].length : 0;
+  const q = rat(1n, 10n ** BigInt(fracLen));
+  const halfQ = rat(q.n, q.d * 2n);
+  const f = FACTOR_MM[source];
+  return {
+    lo: mul(sub(t, halfQ), f),
+    hi: mul(rat(t.n * (q.d * 2n) + q.n * t.d, t.d * (q.d * 2n)), f),
+    // t + q/2
+    nominal: mul(t, f)
+  };
+}
+function parseDecimalOrThrow(s) {
+  const r = parseDecimal(s);
+  if (!r)
+    throw new Error(`length core: not a decimal value: "${s}"`);
+  return r;
+}
+function shortestInUnit(interval, unit) {
+  const f = FACTOR_MM[unit];
+  const lo = div(interval.lo, f);
+  const hi = div(interval.hi, f);
+  const nom = div(interval.nominal, f);
+  for (let k = 0n; k <= 25n; k += 1n) {
+    const s = 10n ** k;
+    const mMin = ceilDiv(lo.n * s, lo.d);
+    const hiScaledNum = hi.n * s;
+    const mMax = hiScaledNum % hi.d === 0n ? hiScaledNum / hi.d - 1n : floorDiv(hiScaledNum, hi.d);
+    if (mMin > mMax)
+      continue;
+    const nomFloor = floorDiv(nom.n * s, nom.d);
+    const clamp = (m2) => m2 < mMin ? mMin : m2 > mMax ? mMax : m2;
+    const c1 = clamp(nomFloor);
+    const c2 = clamp(nomFloor + 1n);
+    const dist = (m2) => {
+      const diff = m2 * nom.d - nom.n * s;
+      return diff < 0n ? -diff : diff;
+    };
+    const m = dist(c1) <= dist(c2) ? c1 : c2;
+    return `${placeDecimal(m, k)}${unit}`;
+  }
+  throw new Error("length core: no decimal found in interval (degenerate interval?)");
+}
+function convertDecimal(raw, source, target) {
+  return shortestInUnit(intervalFromDecimal(raw, source), target);
+}
+var FACTOR_MM, UNIT_RE, PERCENT_RE, KEYWORD_RE;
+var init_length = __esm({
+  "node_modules/odf-kit/dist/core/length.js"() {
+    FACTOR_MM = {
+      mm: { n: 1n, d: 1n },
+      cm: { n: 10n, d: 1n },
+      in: { n: 127n, d: 5n },
+      pt: { n: 127n, d: 360n },
+      pc: { n: 127n, d: 30n },
+      px: { n: 127n, d: 480n },
+      twip: { n: 127n, d: 7200n },
+      emu: { n: 127n, d: 4572000n }
+    };
+    UNIT_RE = /^([-+]?(?:\d+\.?\d*|\.\d+))(cm|mm|in|pt|pc|px)$/;
+    PERCENT_RE = /^([-+]?(?:\d+\.?\d*|\.\d+))%$/;
+    KEYWORD_RE = /^[A-Za-z][A-Za-z-]*$/;
+  }
+});
+
 // node_modules/odf-kit/dist/odt/table-builder.js
 function hasTextFormatting(opts) {
   return opts.bold !== void 0 || opts.italic !== void 0 || opts.fontWeight !== void 0 || opts.fontStyle !== void 0 || opts.fontSize !== void 0 || opts.fontFamily !== void 0 || opts.color !== void 0;
@@ -2537,6 +2708,7 @@ var init_document = __esm({
     init_content();
     init_paragraph_builder();
     init_header_footer_builder();
+    init_length();
     init_table_builder();
     init_list_builder();
     init_settings();
@@ -2890,9 +3062,8 @@ var init_document = __esm({
           let resolvedWidth = pl.width ?? (isLandscape && !hasExplicitDimensions ? "29.7cm" : "21cm");
           let resolvedHeight = pl.height ?? (isLandscape && !hasExplicitDimensions ? "21cm" : "29.7cm");
           if (isLandscape) {
-            const w = parseFloat(resolvedWidth);
-            const h = parseFloat(resolvedHeight);
-            if (Number.isFinite(w) && Number.isFinite(h) && w < h) {
+            const cmp = compareLengths(resolvedWidth, resolvedHeight);
+            if (cmp !== void 0 && cmp < 0) {
               [resolvedWidth, resolvedHeight] = [resolvedHeight, resolvedWidth];
             }
           }
@@ -5584,6 +5755,7 @@ function base64ToUint8Array(src) {
 }
 
 // node_modules/odf-kit/dist/odt/html-parser.js
+init_length();
 var HR_BORDER = "0.5pt solid #000000";
 var BLOCKQUOTE_INDENT = "1cm";
 var MONOSPACE_FONT = "Courier New";
@@ -5869,7 +6041,7 @@ function applyListItems(l, items) {
       l.addItem("");
     }
     if (item.nested) {
-      l.addNested((sub) => applyListItems(sub, item.nested));
+      l.addNested((sub2) => applyListItems(sub2, item.nested));
     }
   }
 }
@@ -6080,13 +6252,64 @@ function extractCssProperty(style, property) {
   }
   return void 0;
 }
+function cssLengthToOdf(raw) {
+  const value = raw.trim().toLowerCase();
+  const px = /^([-+]?(?:\d+\.?\d*|\.\d+))px$/.exec(value);
+  if (px) {
+    if (px[1].startsWith("-"))
+      return void 0;
+    return convertDecimal(px[1], "px", "pt");
+  }
+  const parsed = parseOdfValue(value);
+  if (!parsed || parsed.kind !== "length")
+    return void 0;
+  if (parsed.lexical !== void 0 && parsed.lexical.startsWith("-"))
+    return void 0;
+  return parsed.lexical;
+}
+function parseCssLineHeight(raw) {
+  const value = raw.trim().toLowerCase();
+  if (value === "normal")
+    return void 0;
+  if (/^\d+\.?\d*$|^\.\d+$/.test(value))
+    return Number(value);
+  const parsed = parseOdfValue(value);
+  if (parsed?.kind === "percent") {
+    return parsed.lexical.startsWith("-") ? void 0 : parsed.lexical;
+  }
+  return cssLengthToOdf(value);
+}
 function parseParagraphOptions(node) {
   const style = node.attrs["style"] ?? "";
+  const opts = {};
   const align = (extractCssProperty(style, "text-align") ?? node.attrs["align"] ?? "").trim().toLowerCase();
-  if (align === "left" || align === "center" || align === "right" || align === "justify") {
-    return { align };
+  if (align === "left" || align === "center" || align === "right" || align === "justify" || align === "start" || align === "end") {
+    opts.align = align;
   }
-  return void 0;
+  const direction = (extractCssProperty(style, "direction") ?? node.attrs["dir"] ?? "").trim().toLowerCase();
+  if (direction === "rtl")
+    opts.writingMode = "rl-tb";
+  else if (direction === "ltr")
+    opts.writingMode = "lr-tb";
+  const marginTop = extractCssProperty(style, "margin-top");
+  if (marginTop !== void 0) {
+    const v = cssLengthToOdf(marginTop);
+    if (v !== void 0)
+      opts.spaceBefore = v;
+  }
+  const marginBottom = extractCssProperty(style, "margin-bottom");
+  if (marginBottom !== void 0) {
+    const v = cssLengthToOdf(marginBottom);
+    if (v !== void 0)
+      opts.spaceAfter = v;
+  }
+  const lineHeight = extractCssProperty(style, "line-height");
+  if (lineHeight !== void 0) {
+    const v = parseCssLineHeight(lineHeight);
+    if (v !== void 0)
+      opts.lineHeight = v;
+  }
+  return Object.keys(opts).length > 0 ? opts : void 0;
 }
 function mergeParagraphOptions(base, override) {
   if (!base && !override)
@@ -6145,8 +6368,8 @@ async function htmlToOdt(html, options) {
   }
   const format = PAGE_FORMATS[options?.pageFormat ?? "A4"];
   const layout = {
-    width: format.width,
-    height: format.height,
+    width: options?.pageWidth ?? format.width,
+    height: options?.pageHeight ?? format.height,
     orientation: options?.orientation,
     marginTop: options?.marginTop ?? format.margin,
     marginBottom: options?.marginBottom ?? format.margin,
