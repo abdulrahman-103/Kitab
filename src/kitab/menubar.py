@@ -334,3 +334,4 @@ class MenuBar(QMenuBar):
         self.main_window.scene.setSceneRect(QRectF(self.editor.rect()))
         self.editor.document().setPageSize(QSize(width, height))
         self.editor.page_count = self.editor.document().pageCount()
+        self.main_window.default_zoom_factor = self.main_window.resolution.height() / self.editor.base_height / 1.25

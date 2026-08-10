@@ -150,6 +150,8 @@ class PageSizeDialog(QDialog):
     def __init__(self, editor, main_window):
         super().__init__(main_window)
         self.dialog = True
+        self.main_window = main_window
+        self.editor = editor
         self.setWindowTitle("Page Size")
         self.setFixedSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
 
@@ -186,22 +188,23 @@ class PageSizeDialog(QDialog):
         layout.addLayout(button_layout)
         self.setLayout(layout)
         
-        apply_button.clicked.connect(lambda: (editor.document().setModified(True), self.apply_page_size(page_size_combo.currentText(), editor, main_window)))
+        apply_button.clicked.connect(lambda: (editor.document().setModified(True), self.apply_page_size(page_size_combo.currentText())))
         cancel_button.clicked.connect(self.reject)
 
-    def apply_page_size(self, size, editor, main_window):
+    def apply_page_size(self, size):
         name = size
-        width, height = editor.PAGE_SIZES[name]
-        editor.page_size = name
-        editor.base_width = width
-        editor.base_height = height
-        editor.document().setPageSize(QSize(width, height))
-        editor.page_count = editor.document().pageCount()
-        editor.setMinimumSize(width, height)
-        editor.setFixedSize(width, editor.page_count * height)
-        main_window.scene.setSceneRect(QRectF(editor.rect()))
-        editor.document().setPageSize(QSize(width, height))
-        editor.page_count = editor.document().pageCount()
+        width, height = self.editor.PAGE_SIZES[name]
+        self.editor.page_size = name
+        self.editor.base_width = width
+        self.editor.base_height = height
+        self.editor.document().setPageSize(QSize(width, height))
+        self.editor.page_count = self.editor.document().pageCount()
+        self.editor.setMinimumSize(width, height)
+        self.editor.setFixedSize(width, self.editor.page_count * height)
+        self.main_window.scene.setSceneRect(QRectF(self.editor.rect()))
+        self.editor.document().setPageSize(QSize(width, height))
+        self.editor.page_count = self.editor.document().pageCount()
+        self.main_window.default_zoom_factor = self.main_window.resolution.height() / self.editor.base_height / 1.25
         if self.dialog:
             self.dialog = False
             self.deleteLater()
