@@ -18,8 +18,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.app = QApplication.instance()
-        resolution = self.app.primaryScreen().availableSize()
-        self.resize(resolution.width()/1.5, resolution.height()/1.5)
+        self.resolution = self.app.primaryScreen().availableSize()
+        self.resize(self.resolution.width()/1.5, self.resolution.height()/1.5)
         self.setWindowTitle("Kitab")
         self.file_path = None
         self.file_name = None
@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
 
         self.scroll_bar = self.view.verticalScrollBar()
         self.add_statusbar()
-        self.default_zoom_factor = resolution.height() / self.editor.base_height
+        self.default_zoom_factor = self.resolution.height() / self.editor.base_height / 1.25
         self.zoom_factor = self.default_zoom_factor
         self.view.scale(self.zoom_factor, self.zoom_factor)
         self.view.viewport().installEventFilter(self)
@@ -166,8 +166,7 @@ class MainWindow(QMainWindow):
 
     def zoom(self, direction: str, gesture_term=0):
         self.editor.was_zooming = True
-        resolution = self.app.primaryScreen().size()
-        resolution_factor = resolution.height() / 720 #my resolution is 1080p with 150% scaling. the factor use is to make the max and min limits equal on all resolutions
+        resolution_factor = self.resolution.height() / 720 #my resolution is 1080p with 150% scaling. the factor use is to make the max and min limits equal on all resolutions
         min = 0.05 * resolution_factor
         max = 5.0 * resolution_factor
         zoom_in_factor = 1.15 - gesture_term

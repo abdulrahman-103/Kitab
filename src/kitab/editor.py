@@ -56,13 +56,14 @@ class Editor(QTextEdit):
         self.document().setModified(False)
     
     def dropEvent(self, event): # drag and drop files
+        print(555)
         if event.mimeData().hasUrls():
             path_list = event.mimeData().urls()
             if len(path_list) == 1:
                 path = path_list[0].toLocalFile()
-                if path.endswith(".txt") or path.endswith(".ktb") or path.endswith(".md") or path.endswith(".odt") or path.endswith(".html"):
+                if path.endswith((".txt", ".ktb", ".md", ".odt", ".html")):
                     self.main_window.file_path = path
-                    self.main_window.menubar._open_file(self.main_window)
+                    self.main_window.menubar._open_file()
             event.acceptProposedAction()
         else:
             super().dropEvent(event)

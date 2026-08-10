@@ -8,9 +8,11 @@
 
    
    ```
-   git checkout -b feature/export-md
+   git checkout -b feature/feature_name
    ```
 
 ## Coding Style
 
 - Follow the existing code style (PEP 8, no type hints enforced).
+- No vibecoding. If you can't code yourself then don't contribute.
+- Tested pull requests only. Half baked ones that need double your effort in fixing are better not to be sent.

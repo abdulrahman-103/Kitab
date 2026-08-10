@@ -186,7 +186,7 @@ class MenuBar(QMenuBar):
 
     def save(self):
         if not self.main_window.file_path:
-            self.main_window.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text (*.txt);;Markdown File  (*.md);;HTML Document (*.html)")
+            self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text (*.txt);;Markdown File  (*.md);;HTML Document (*.html)")
             if not self.main_window.file_path:
                 return "canceled"
             self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
@@ -195,10 +195,10 @@ class MenuBar(QMenuBar):
             self._save_file()
 
     def save_as(self, show_dialog=True):
-        file_path, format_filter = self.main_window.file_path, self.format_filter
-        self.main_window.file_path, self.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text (*.txt);;Markdown File  (*.md);;HTML Document (*.html)")
+        file_path, format_filter = self.main_window.file_path, self.main_window.format_filter
+        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text (*.txt);;Markdown File  (*.md);;HTML Document (*.html)")
         if not self.main_window.file_path:
-            self.main_window.file_path, self.format_filter = file_path, format_filter
+            self.main_window.file_path, self.main_window.format_filter = file_path, format_filter
         else:
             self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
             self._save_file()
@@ -206,7 +206,7 @@ class MenuBar(QMenuBar):
     def new(self):
         self.main_window.setWindowTitle("Kitab")
         self.main_window.file_path = None
-        self.format_filter = None
+        self.main_window.format_filter = None
         self.main_window.file_name = None
         self.editor.clear()
         self.editor.document().setModified(False)
@@ -254,7 +254,7 @@ class MenuBar(QMenuBar):
             pass
 
     def open_file(self):
-        self.main_window.file_path, self.format_filter = QFileDialog.getOpenFileName(self, "Open", self.main_window.last_directory, "Kitab, Text, Markdown, ODF Text Documents and HTML Documents (*.ktb *.odt *.txt *.md *.html);;Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text (*.txt);;Markdown File (*.md);;HTML Document (*.html)")
+        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getOpenFileName(self, "Open", self.main_window.last_directory, "Kitab, Text, Markdown, ODF Text Documents and HTML Documents (*.ktb *.odt *.txt *.md *.html);;Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text (*.txt);;Markdown File (*.md);;HTML Document (*.html)")
         if not self.main_window.file_path:
             return
         self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
@@ -295,9 +295,17 @@ class MenuBar(QMenuBar):
         if not path:
             return
         self.main_window.last_directory = str(Path(path).parent)
+
+        suffix = Path(path).suffix.lower().lstrip('.')
+        mime = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png", "gif": "gif", "bmp": "bmp", "svg": "svg+xml"}.get(suffix, suffix)
+        with open(path, "rb") as f:
+            data = base64.b64encode(f.read()).decode("ascii")
+        image_base64 = f"data:image/{mime};base64,{data}"
+
         image_format = QTextImageFormat()
-        image_format.setName(path)
-        image_format.setWidth(self.editor.base_width - 100)
+        image_format.setName(image_base64)
+        image_format.setWidth(self.editor.base_width * 0.5)
+
         cursor = self.editor.textCursor()
         block_format = cursor.blockFormat()
         char_format = cursor.charFormat()
@@ -441,3 +449,4 @@ class MenuBar(QMenuBar):
         self.main_window.scene.setSceneRect(QRectF(self.editor.rect()))
         self.editor.document().setPageSize(QSize(width, height))
         self.editor.page_count = self.editor.document().pageCount()
+        self.main_window.default_zoom_factor = self.main_window.resolution.height() / self.editor.base_height / 1.25
