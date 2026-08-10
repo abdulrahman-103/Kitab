@@ -13,6 +13,7 @@ import json
 from recent_documents import *
 from dialogs import PageSizeDialog, InsertTableDialog, InsertLinkDialog
 import subprocess
+import base64
 
 class MenuBar(QMenuBar):
     def __init__(self, main_window, parent=None):
@@ -267,9 +268,17 @@ class MenuBar(QMenuBar):
         if not path:
             return
         self.main_window.last_directory = str(Path(path).parent)
+
+        suffix = Path(path).suffix.lower().lstrip('.')
+        mime = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png", "gif": "gif", "bmp": "bmp", "svg": "svg+xml"}.get(suffix, suffix)
+        with open(path, "rb") as f:
+            data = base64.b64encode(f.read()).decode("ascii")
+        image_base64 = f"data:image/{mime};base64,{data}"
+
         image_format = QTextImageFormat()
-        image_format.setName(path)
-        image_format.setWidth(self.editor.base_width - 100)
+        image_format.setName(image_base64)
+        image_format.setWidth(self.editor.base_width * 0.5)
+
         cursor = self.editor.textCursor()
         block_format = cursor.blockFormat()
         char_format = cursor.charFormat()
