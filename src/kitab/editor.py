@@ -218,3 +218,4 @@ class Editor(QTextEdit):
         if event.button() == Qt.MouseButton.RightButton:
             self.was_zooming = False
         super().mousePressEvent(event)
+ 
