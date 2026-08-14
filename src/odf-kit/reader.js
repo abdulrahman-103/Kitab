@@ -472,7 +472,7 @@ function unzipSync(data, opts) {
   return files;
 }
 
-// node_modules/odf-kit/dist/reader/xml-parser.js
+// node_modules/odf-kit/dist/odt/read/xml-parser.js
 function decodeEntities(raw) {
   return raw.replace(/&(?:amp|lt|gt|quot|apos);|&#x([0-9a-fA-F]+);|&#([0-9]+);/g, (entity, hex, dec) => {
     if (hex !== void 0)
@@ -633,7 +633,7 @@ function parseXml(xml) {
   return root;
 }
 
-// node_modules/odf-kit/dist/reader/registry.js
+// node_modules/odf-kit/dist/odt/read/registry.js
 function findChild(node, tag) {
   for (const child of node.children) {
     if (child.type === "element" && child.tag === tag)
@@ -802,7 +802,7 @@ function resolveFontFamily(textProps, fontFaces) {
   return void 0;
 }
 
-// node_modules/odf-kit/dist/reader/html-renderer.js
+// node_modules/odf-kit/dist/odt/to-html/html-renderer.js
 function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
@@ -1075,7 +1075,7 @@ function renderBodyNode(node, options, inCell = false) {
       return renderTrackedChange(node, options);
   }
 }
-function renderHtml(body, options) {
+function renderOdtHtml(body, options) {
   const inner = body.map((n) => renderBodyNode(n, options)).join("\n");
   if (options?.fragment === true)
     return inner;
@@ -1089,6 +1089,9 @@ ${inner}
 }
 
 // node_modules/odf-kit/dist/core/length.js
+var MAX_EMISSION_SEARCH_K = 25;
+var MAX_EMISSION_SEARCH_K_BIG = BigInt(MAX_EMISSION_SEARCH_K);
+var MAX_NUMERIC_LEXICAL = 64;
 var FACTOR_MM = {
   mm: { n: 1n, d: 1n },
   cm: { n: 10n, d: 1n },
@@ -1128,6 +1131,8 @@ function cmpRational(a, b) {
   return l < r ? -1 : l > r ? 1 : 0;
 }
 function parseDecimal(raw) {
+  if (raw.length > MAX_NUMERIC_LEXICAL)
+    return void 0;
   const m = /^([-+]?)(\d+)?(?:\.(\d+))?$/.exec(raw);
   if (!m || m[2] === void 0 && m[3] === void 0)
     return void 0;
@@ -1139,11 +1144,13 @@ function parseDecimal(raw) {
   const d = 10n ** BigInt(frac.length);
   return rat(n, d);
 }
-var UNIT_RE = /^([-+]?(?:\d+\.?\d*|\.\d+))(cm|mm|in|pt|pc|px)$/;
-var PERCENT_RE = /^([-+]?(?:\d+\.?\d*|\.\d+))%$/;
+var UNIT_RE = /^([-+]?(?:\d+(?:\.\d*)?|\.\d+))(cm|mm|in|pt|pc|px)$/;
+var PERCENT_RE = /^([-+]?(?:\d+(?:\.\d*)?|\.\d+))%$/;
 var KEYWORD_RE = /^[A-Za-z][A-Za-z-]*$/;
 function parseOdfValue(raw) {
   const trimmed = raw.trim();
+  if (trimmed.length > MAX_NUMERIC_LEXICAL)
+    return void 0;
   let m = UNIT_RE.exec(trimmed);
   if (m) {
     const value = parseDecimal(m[1]);
@@ -1171,7 +1178,7 @@ function compareLengths(a, b) {
   return cmpRational(va.mm, vb.mm);
 }
 
-// node_modules/odf-kit/dist/reader/parser.js
+// node_modules/odf-kit/dist/odt/read/parser.js
 function findElement(node, tag) {
   for (const child of node.children) {
     if (child.type === "element" && child.tag === tag)
@@ -2226,14 +2233,15 @@ function readOdt(bytes, options) {
       firstPageFooter: masterPageContent.firstPageFooter
     },
     toHtml(htmlOptions) {
-      return renderHtml(body, htmlOptions);
+      return renderOdtHtml(body, htmlOptions);
     }
   };
 }
 
-// node_modules/odf-kit/dist/reader/index.js
+// node_modules/odf-kit/dist/odt/to-html/index.js
 function odtToHtml(bytes, options, readOptions) {
-  return readOdt(bytes, readOptions).toHtml(options);
+  const model = readOdt(bytes, readOptions);
+  return renderOdtHtml(model.body, options);
 }
 export {
   odtToHtml

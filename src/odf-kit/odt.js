@@ -985,7 +985,7 @@ var init_styles = __esm({
   }
 });
 
-// node_modules/odf-kit/dist/odt/formatting.js
+// node_modules/odf-kit/dist/build-or-fill/build-odt/formatting.js
 function normalizeFormatting(fmt) {
   const result = {};
   if (fmt.fontWeight !== void 0) {
@@ -1065,7 +1065,7 @@ function resolveColor(color) {
 }
 var CSS_NAMED_COLORS;
 var init_formatting = __esm({
-  "node_modules/odf-kit/dist/odt/formatting.js"() {
+  "node_modules/odf-kit/dist/build-or-fill/build-odt/formatting.js"() {
     CSS_NAMED_COLORS = {
       black: "#000000",
       white: "#ffffff",
@@ -1106,7 +1106,7 @@ var init_formatting = __esm({
   }
 });
 
-// node_modules/odf-kit/dist/odt/content.js
+// node_modules/odf-kit/dist/build-or-fill/build-odt/content.js
 function rowStyleKey(rs) {
   const parts = [];
   if (rs.backgroundColor)
@@ -2017,7 +2017,7 @@ function buildHeaderFooterContent(runs, styleName, stylePrefix) {
 }
 var BULLET_CHARS;
 var init_content = __esm({
-  "node_modules/odf-kit/dist/odt/content.js"() {
+  "node_modules/odf-kit/dist/build-or-fill/build-odt/content.js"() {
     init_namespaces();
     init_xml();
     init_formatting();
@@ -2025,10 +2025,10 @@ var init_content = __esm({
   }
 });
 
-// node_modules/odf-kit/dist/odt/paragraph-builder.js
+// node_modules/odf-kit/dist/build-or-fill/build-odt/paragraph-builder.js
 var ParagraphBuilder;
 var init_paragraph_builder = __esm({
-  "node_modules/odf-kit/dist/odt/paragraph-builder.js"() {
+  "node_modules/odf-kit/dist/build-or-fill/build-odt/paragraph-builder.js"() {
     ParagraphBuilder = class {
       /** @internal */
       runs = [];
@@ -2158,10 +2158,10 @@ var init_paragraph_builder = __esm({
   }
 });
 
-// node_modules/odf-kit/dist/odt/header-footer-builder.js
+// node_modules/odf-kit/dist/build-or-fill/build-odt/header-footer-builder.js
 var HeaderFooterBuilder;
 var init_header_footer_builder = __esm({
-  "node_modules/odf-kit/dist/odt/header-footer-builder.js"() {
+  "node_modules/odf-kit/dist/build-or-fill/build-odt/header-footer-builder.js"() {
     HeaderFooterBuilder = class {
       /** @internal */
       runs = [];
@@ -2198,6 +2198,9 @@ var init_header_footer_builder = __esm({
 });
 
 // node_modules/odf-kit/dist/core/length.js
+function excerpt(s) {
+  return s.length > MAX_NUMERIC_LEXICAL ? `${s.slice(0, MAX_NUMERIC_LEXICAL)}\u2026` : s;
+}
 function gcd(a, b) {
   a = a < 0n ? -a : a;
   b = b < 0n ? -b : b;
@@ -2243,6 +2246,8 @@ function ceilDiv(a, b) {
   return a % b !== 0n && a > 0n ? q + 1n : q;
 }
 function parseDecimal(raw) {
+  if (raw.length > MAX_NUMERIC_LEXICAL)
+    return void 0;
   const m = /^([-+]?)(\d+)?(?:\.(\d+))?$/.exec(raw);
   if (!m || m[2] === void 0 && m[3] === void 0)
     return void 0;
@@ -2256,6 +2261,8 @@ function parseDecimal(raw) {
 }
 function parseOdfValue(raw) {
   const trimmed = raw.trim();
+  if (trimmed.length > MAX_NUMERIC_LEXICAL)
+    return void 0;
   let m = UNIT_RE.exec(trimmed);
   if (m) {
     const value = parseDecimal(m[1]);
@@ -2283,7 +2290,12 @@ function placeDecimal(m, k) {
     while (s.length <= kk)
       s = "0" + s;
     s = s.slice(0, s.length - kk) + "." + s.slice(s.length - kk);
-    s = s.replace(/\.?0+$/, "");
+    let end = s.length;
+    while (end > 0 && s[end - 1] === "0")
+      end -= 1;
+    if (end > 0 && s[end - 1] === ".")
+      end -= 1;
+    s = s.slice(0, end);
     if (s === "" || s === "-")
       s = "0";
   }
@@ -2312,7 +2324,7 @@ function intervalFromDecimal(raw, source) {
 function parseDecimalOrThrow(s) {
   const r = parseDecimal(s);
   if (!r)
-    throw new Error(`length core: not a decimal value: "${s}"`);
+    throw new Error(`length core: not a decimal value or exceeds ${MAX_NUMERIC_LEXICAL} chars: "${excerpt(s)}"`);
   return r;
 }
 function shortestInUnit(interval, unit) {
@@ -2320,7 +2332,7 @@ function shortestInUnit(interval, unit) {
   const lo = div(interval.lo, f);
   const hi = div(interval.hi, f);
   const nom = div(interval.nominal, f);
-  for (let k = 0n; k <= 25n; k += 1n) {
+  for (let k = 0n; k <= MAX_EMISSION_SEARCH_K_BIG; k += 1n) {
     const s = 10n ** k;
     const mMin = ceilDiv(lo.n * s, lo.d);
     const hiScaledNum = hi.n * s;
@@ -2343,9 +2355,12 @@ function shortestInUnit(interval, unit) {
 function convertDecimal(raw, source, target) {
   return shortestInUnit(intervalFromDecimal(raw, source), target);
 }
-var FACTOR_MM, UNIT_RE, PERCENT_RE, KEYWORD_RE;
+var MAX_EMISSION_SEARCH_K, MAX_EMISSION_SEARCH_K_BIG, MAX_NUMERIC_LEXICAL, FACTOR_MM, UNIT_RE, PERCENT_RE, KEYWORD_RE;
 var init_length = __esm({
   "node_modules/odf-kit/dist/core/length.js"() {
+    MAX_EMISSION_SEARCH_K = 25;
+    MAX_EMISSION_SEARCH_K_BIG = BigInt(MAX_EMISSION_SEARCH_K);
+    MAX_NUMERIC_LEXICAL = 64;
     FACTOR_MM = {
       mm: { n: 1n, d: 1n },
       cm: { n: 10n, d: 1n },
@@ -2356,13 +2371,13 @@ var init_length = __esm({
       twip: { n: 127n, d: 7200n },
       emu: { n: 127n, d: 4572000n }
     };
-    UNIT_RE = /^([-+]?(?:\d+\.?\d*|\.\d+))(cm|mm|in|pt|pc|px)$/;
-    PERCENT_RE = /^([-+]?(?:\d+\.?\d*|\.\d+))%$/;
+    UNIT_RE = /^([-+]?(?:\d+(?:\.\d*)?|\.\d+))(cm|mm|in|pt|pc|px)$/;
+    PERCENT_RE = /^([-+]?(?:\d+(?:\.\d*)?|\.\d+))%$/;
     KEYWORD_RE = /^[A-Za-z][A-Za-z-]*$/;
   }
 });
 
-// node_modules/odf-kit/dist/odt/table-builder.js
+// node_modules/odf-kit/dist/build-or-fill/build-odt/table-builder.js
 function hasTextFormatting(opts) {
   return opts.bold !== void 0 || opts.italic !== void 0 || opts.fontWeight !== void 0 || opts.fontStyle !== void 0 || opts.fontSize !== void 0 || opts.fontFamily !== void 0 || opts.color !== void 0;
 }
@@ -2386,7 +2401,7 @@ function extractTextFormatting(opts) {
 }
 var CellBuilder, RowBuilder, TableBuilder;
 var init_table_builder = __esm({
-  "node_modules/odf-kit/dist/odt/table-builder.js"() {
+  "node_modules/odf-kit/dist/build-or-fill/build-odt/table-builder.js"() {
     CellBuilder = class {
       /** @internal */
       runs = [];
@@ -2533,7 +2548,7 @@ var init_table_builder = __esm({
   }
 });
 
-// node_modules/odf-kit/dist/odt/list-builder.js
+// node_modules/odf-kit/dist/build-or-fill/build-odt/list-builder.js
 function buildItemRuns(content) {
   if (typeof content === "string") {
     return [{ text: content }];
@@ -2544,7 +2559,7 @@ function buildItemRuns(content) {
 }
 var ListBuilder;
 var init_list_builder = __esm({
-  "node_modules/odf-kit/dist/odt/list-builder.js"() {
+  "node_modules/odf-kit/dist/build-or-fill/build-odt/list-builder.js"() {
     init_paragraph_builder();
     ListBuilder = class _ListBuilder {
       /** @internal */
@@ -2589,7 +2604,7 @@ var init_list_builder = __esm({
   }
 });
 
-// node_modules/odf-kit/dist/odt/settings.js
+// node_modules/odf-kit/dist/build-or-fill/build-odt/settings.js
 function generateOdtSettings() {
   const root = el("office:document-settings").attr("xmlns:office", ODF_NS.office).attr("xmlns:config", "urn:oasis:names:tc:opendocument:xmlns:config:1.0").attr("xmlns:ooo", "http://openoffice.org/2004/office").attr("office:version", ODF_VERSION);
   const settings = el("office:settings");
@@ -2615,13 +2630,13 @@ function generateOdtSettings() {
   return xmlDocumentCompact(root);
 }
 var init_settings = __esm({
-  "node_modules/odf-kit/dist/odt/settings.js"() {
+  "node_modules/odf-kit/dist/build-or-fill/build-odt/settings.js"() {
     init_namespaces();
     init_xml();
   }
 });
 
-// node_modules/odf-kit/dist/odt/document.js
+// node_modules/odf-kit/dist/build-or-fill/build-odt/document.js
 function buildRuns(content) {
   if (typeof content === "string") {
     return [{ text: content }];
@@ -2701,7 +2716,7 @@ function mimeToExtension(mimeType) {
 }
 var ODT_MIME_TYPE, OdtDocument;
 var init_document = __esm({
-  "node_modules/odf-kit/dist/odt/document.js"() {
+  "node_modules/odf-kit/dist/build-or-fill/build-odt/document.js"() {
     init_packaging();
     init_metadata();
     init_styles();
@@ -3145,10 +3160,10 @@ var init_document = __esm({
   }
 });
 
-// node_modules/odf-kit/dist/odt/html-to-odt.js
+// node_modules/odf-kit/dist/html/to-odt/html-to-odt.js
 init_document();
 
-// node_modules/odf-kit/dist/reader/xml-parser.js
+// node_modules/odf-kit/dist/odt/read/xml-parser.js
 function decodeEntities(raw) {
   return raw.replace(/&(?:amp|lt|gt|quot|apos);|&#x([0-9a-fA-F]+);|&#([0-9]+);/g, (entity, hex, dec) => {
     if (hex !== void 0)
@@ -3310,7 +3325,7 @@ function parseXml(xml) {
 }
 var odfKitParser = (xml) => parseXml(xml);
 
-// node_modules/odf-kit/dist/html-normalizer/rules/void-elements.js
+// node_modules/odf-kit/dist/html/normalize/rules/void-elements.js
 var VOID_ELEMENT_PATTERN = /<(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)(?=[\s/>])([^>]*)>/g;
 function selfCloseVoidElements(html) {
   return html.replace(VOID_ELEMENT_PATTERN, (match, tag, body) => {
@@ -3322,7 +3337,7 @@ function selfCloseVoidElements(html) {
   });
 }
 
-// node_modules/odf-kit/dist/html-normalizer/data/entities-table.js
+// node_modules/odf-kit/dist/html/normalize/data/entities-table.js
 var ENTITIES = Object.freeze({
   AElig: "\xC6",
   AMP: "&",
@@ -5446,7 +5461,7 @@ var ENTITIES = Object.freeze({
   zwnj: "\u200C"
 });
 
-// node_modules/odf-kit/dist/html-normalizer/rules/entities.js
+// node_modules/odf-kit/dist/html/normalize/rules/entities.js
 var ENTITY_PATTERN = /&([a-zA-Z][a-zA-Z0-9]*);/g;
 function decodeNamedEntities(html) {
   return html.replace(ENTITY_PATTERN, (match, name) => {
@@ -5455,7 +5470,7 @@ function decodeNamedEntities(html) {
   });
 }
 
-// node_modules/odf-kit/dist/html-normalizer/rules/raw-text.js
+// node_modules/odf-kit/dist/html/normalize/rules/raw-text.js
 var RAW_TEXT_PATTERN = /<(script|style)(?=[\s>])([^>]*)>[\s\S]*?<\/\1\s*>/g;
 function emptyRawTextElements(html) {
   return html.replace(RAW_TEXT_PATTERN, (_match, tag, attrs) => {
@@ -5463,13 +5478,13 @@ function emptyRawTextElements(html) {
   });
 }
 
-// node_modules/odf-kit/dist/html-normalizer/rules/doctype.js
+// node_modules/odf-kit/dist/html/normalize/rules/doctype.js
 var DOCTYPE_PATTERN = /<!DOCTYPE\b[^>]*>/i;
 function lowercaseDoctype(html) {
   return html.replace(DOCTYPE_PATTERN, (match) => match.toLowerCase());
 }
 
-// node_modules/odf-kit/dist/html-normalizer/rules/quote-unquoted-boolean-attrs.js
+// node_modules/odf-kit/dist/html/normalize/rules/quote-unquoted-boolean-attrs.js
 var TAG_PATTERN = /<([a-zA-Z][a-zA-Z0-9-]*)(?=[\s>])([^>]*)>/g;
 function rewriteAttrArea(attrArea) {
   if (!attrArea.trim())
@@ -5540,7 +5555,7 @@ function quoteUnquotedBooleanAttributes(html) {
   });
 }
 
-// node_modules/odf-kit/dist/html-normalizer/rules/quote-unquoted-attribute-values.js
+// node_modules/odf-kit/dist/html/normalize/rules/quote-unquoted-attribute-values.js
 var TAG_PATTERN2 = /<([a-zA-Z][a-zA-Z0-9-]*)(?=[\s>])([^>]*)>/g;
 function rewriteAttrArea2(attrArea) {
   if (!attrArea.trim())
@@ -5622,7 +5637,7 @@ function quoteUnquotedAttributeValues(html) {
   });
 }
 
-// node_modules/odf-kit/dist/html-normalizer/rules/escape-attr-ampersands.js
+// node_modules/odf-kit/dist/html/normalize/rules/escape-attr-ampersands.js
 var TAG_PATTERN3 = /<([a-zA-Z][a-zA-Z0-9-]*)(?=[\s>])([^>]*)>/g;
 var ATTR_PATTERN = /([a-zA-Z_:][a-zA-Z0-9_:.-]*)=(?:"([^"]*)"|'([^']*)')/g;
 var VALID_ENTITY = /&(?:amp|lt|gt|quot|apos|#[0-9]+|#x[0-9a-fA-F]+);/y;
@@ -5672,7 +5687,7 @@ function escapeAttributeValueAmpersands(html) {
   });
 }
 
-// node_modules/odf-kit/dist/html-normalizer/index.js
+// node_modules/odf-kit/dist/html/normalize/index.js
 function odfKitNormalizer(html) {
   let s = html;
   s = emptyRawTextElements(s);
@@ -5685,7 +5700,7 @@ function odfKitNormalizer(html) {
   return s;
 }
 
-// node_modules/odf-kit/dist/lexical/util/detect-mime.js
+// node_modules/odf-kit/dist/lexical/to-odt/util/detect-mime.js
 var DATA_URL_MIME = {
   "data:image/png": "image/png",
   "data:image/jpeg": "image/jpeg",
@@ -5754,7 +5769,7 @@ function base64ToUint8Array(src) {
   return bytes;
 }
 
-// node_modules/odf-kit/dist/odt/html-parser.js
+// node_modules/odf-kit/dist/html/to-odt/html-parser.js
 init_length();
 var HR_BORDER = "0.5pt solid #000000";
 var BLOCKQUOTE_INDENT = "1cm";
@@ -6254,9 +6269,14 @@ function extractCssProperty(style, property) {
 }
 function cssLengthToOdf(raw) {
   const value = raw.trim().toLowerCase();
-  const px = /^([-+]?(?:\d+\.?\d*|\.\d+))px$/.exec(value);
+  const px = /^([-+]?(?:\d+(?:\.\d*)?|\.\d+))px$/.exec(value);
   if (px) {
     if (px[1].startsWith("-"))
+      return void 0;
+    if (!parseOdfValue(value))
+      return void 0;
+    const dot = px[1].indexOf(".");
+    if (dot >= 0 && px[1].length - dot - 1 >= MAX_EMISSION_SEARCH_K)
       return void 0;
     return convertDecimal(px[1], "px", "pt");
   }
@@ -6271,7 +6291,7 @@ function parseCssLineHeight(raw) {
   const value = raw.trim().toLowerCase();
   if (value === "normal")
     return void 0;
-  if (/^\d+\.?\d*$|^\.\d+$/.test(value))
+  if (/^\d+(?:\.\d*)?$|^\.\d+$/.test(value))
     return Number(value);
   const parsed = parseOdfValue(value);
   if (parsed?.kind === "percent") {
@@ -6353,7 +6373,7 @@ function applyRunsToBuilder(p, runs) {
   }
 }
 
-// node_modules/odf-kit/dist/odt/html-to-odt.js
+// node_modules/odf-kit/dist/html/to-odt/html-to-odt.js
 var PAGE_FORMATS = {
   A4: { width: "21cm", height: "29.7cm", margin: "2.5cm" },
   letter: { width: "21.59cm", height: "27.94cm", margin: "2.54cm" },
