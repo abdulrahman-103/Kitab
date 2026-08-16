@@ -139,6 +139,8 @@ class InsertTableDialog(QDialog):
                     cell = table.cellAt(r, c)
                     cell_cursor = cell.firstCursorPosition()
                     cell_cursor.setBlockCharFormat(char_format)
+                    cell_cursor.setBlockFormat(block_format)
+
             cursor.movePosition(QTextCursor.MoveOperation.End)
             cursor.insertBlock(block_format, char_format)
             main_window.view.viewport().setFocus()
@@ -215,6 +217,8 @@ class InsertLinkDialog(QDialog):
         self.dialog = True
         self.setWindowTitle("Insert Link")
         self.setFixedSize(main_window.size_unit * 7, main_window.size_unit * 4.5)
+        
+        self.main_window = main_window
 
         layout = QVBoxLayout()
 
@@ -264,6 +268,8 @@ class InsertLinkDialog(QDialog):
         char_format.setFontPointSize(font_size)
         char_format.setFontFamilies(font_family)
         cursor.mergeCharFormat(char_format)
+        self.main_window.toolbar.font_size_menu.setCurrentText(str(font_size))
+        self.main_window.toolbar.font_family_menu.setCurrentFont(font_family)
         if self.dialog:
             self.dialog = False
             self.deleteLater()

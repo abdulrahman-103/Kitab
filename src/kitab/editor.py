@@ -49,7 +49,6 @@ class Editor(QTextEdit):
         self.setFont(font)
         self.DEFAULT_FONT = font
         self.DEFAULT_CHAR_FORMAT = QTextCharFormat()
-        self.DEFAULT_BLOCK_FORMAT = QTextBlockFormat()
         self.textChanged.connect(self.check_page_limit)
         self.textChanged.connect(self.preserve_font_when_empty_page)
         self.was_zooming = False 

@@ -274,14 +274,14 @@ class MenuBar(QMenuBar):
         with open(path, "rb") as f:
             data = base64.b64encode(f.read()).decode("ascii")
         image_base64 = f"data:image/{mime};base64,{data}"
-
-        image_format = QTextImageFormat()
-        image_format.setName(image_base64)
-        image_format.setWidth(self.editor.base_width * 0.5)
-
         cursor = self.editor.textCursor()
         block_format = cursor.blockFormat()
         char_format = cursor.charFormat()
+        image_format = QTextImageFormat()
+        image_format.setName(image_base64)
+        image_format.setWidth(self.editor.base_width * 0.5)
+        image_format.merge(char_format)
+        
         cursor.insertImage(image_format)
         cursor.setBlockFormat(block_format)
         cursor.setCharFormat(char_format)
