@@ -1,6 +1,7 @@
 # Kitab — كتاب
 
-<img width="1920" height="1080" alt="Screenshot_20260723_012355" src="https://github.com/user-attachments/assets/742e3bc6-754f-44ed-a07e-a93125a692b2" />
+<img width="1920" height="1020" alt="Screenshot_20260816_172951" src="https://github.com/user-attachments/assets/20731baf-593c-4d71-8cc6-5b1864ebd7f3" />
+
 
 
 
