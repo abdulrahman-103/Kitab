@@ -82,7 +82,7 @@ class MenuBar(QMenuBar):
         insert_image_icon = QIcon.fromTheme("insert-image-symbolic")
         image_option.setIcon(insert_image_icon)
         image_option.triggered.connect(self.insert_image)
-        image_option.setShortcut("Ctrl+I")
+        image_option.setShortcut("Ctrl+Shift+I")
         
         link_option = insert_menu.addAction("Link")
         link_icon = QIcon.fromTheme("insert-link-symbolic")
