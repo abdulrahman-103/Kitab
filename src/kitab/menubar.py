@@ -145,7 +145,7 @@ class MenuBar(QMenuBar):
 
         self.editor.document().setModified(False)
         self.main_window.file_name = Path(self.main_window.file_path).name
-        self.main_window.setWindowTitle(f"{self.main_window.file_name}  –  Kitab")
+        self.main_window.setWindowTitle(f"{self.main_window.file_name}  –  {self.tr('Kitab')}")
 
         try:
             register_recent_file(self.main_window.file_path)
@@ -180,7 +180,7 @@ class MenuBar(QMenuBar):
             self._save_file()
 
     def new(self):
-        self.main_window.setWindowTitle("Kitab")
+        self.main_window.setWindowTitle(self.tr("Kitab"))
         self.main_window.file_path = None
         self.main_window.format_filter = None
         self.main_window.file_name = None
@@ -219,7 +219,7 @@ class MenuBar(QMenuBar):
         total_pages = self.editor.document().pageCount()
         self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
         self.main_window.file_name = Path(self.main_window.file_path).name
-        self.main_window.setWindowTitle(f"{self.main_window.file_name}  –  Kitab")
+        self.main_window.setWindowTitle(f"{self.main_window.file_name}  –  {self.tr('Kitab')}")
 
         try:
             register_recent_file(self.main_window.file_path)
