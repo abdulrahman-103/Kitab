@@ -20,7 +20,8 @@ class Toolbar(QToolBar):
         self.font_family_menu.setFontFilters(QFontComboBox.FontFilter.ScalableFonts)
         self.font_family_menu.setFixedWidth(self.main_window.size_unit*6)
         self.font_family_menu.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        self.font_family_menu.currentFontChanged.connect(lambda font: (self.font_family(font), self.main_window.view.viewport().setFocus()))
+        self.font_family_menu.currentFontChanged.connect(lambda font: self.font_family(font))
+        self.font_family_menu.activated.connect(lambda: self.main_window.view.viewport().setFocus())
         self.font_family_menu.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.addWidget(self.font_family_menu)
         self.addSeparator()
@@ -330,11 +331,6 @@ class Toolbar(QToolBar):
 
     def font_color(self):
         dialog = QColorDialog()
-        labels = dialog.findChildren(QLabel)
-        for label in labels:
-            if label.text() == "&HTML:":
-                label.setText("&HEX:")
-                label.adjustSize()
         if dialog.exec() == QColorDialog.Accepted:
             color = dialog.selectedColor()
             self.main_window.editor.setTextColor(color)
@@ -343,11 +339,6 @@ class Toolbar(QToolBar):
 
     def highlight_text(self):
         dialog = QColorDialog(self.highlight_color)
-        labels = dialog.findChildren(QLabel)
-        for label in labels:
-            if label.text() == "&HTML:":
-                label.setText("&HEX:")
-                label.adjustSize()
         if dialog.exec() == QColorDialog.Accepted:
             self.highlight_color = dialog.selectedColor()
             char_format = self.main_window.editor.currentCharFormat()
