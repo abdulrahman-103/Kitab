@@ -92,9 +92,9 @@ class MenuBar(QMenuBar):
 
         self.horizontal_line_option = insert_menu.addAction("Horizontal Line")
         if self.main_window.color_scheme == Qt.ColorScheme.Dark:
-            horizontal_line_icon_path = str(Path(__file__).resolve().parent / "images" / "insert_horizontal_line_dark.svg")
+            horizontal_line_icon_path = str(Path(__file__).resolve().parents[2] / "data" / "images" / "insert_horizontal_line_dark.svg")
         elif self.main_window.color_scheme == Qt.ColorScheme.Light:
-            horizontal_line_icon_path = str(Path(__file__).resolve().parent / "images" / "insert_horizontal_line_light.svg")
+            horizontal_line_icon_path = str(Path(__file__).resolve().parents[2] / "data" / "images" / "insert_horizontal_line_light.svg")
         horizontal_line_icon = QIcon(horizontal_line_icon_path)
         self.horizontal_line_option.setIcon(horizontal_line_icon)
         self.horizontal_line_option.triggered.connect(self.insert_horizontal_line)

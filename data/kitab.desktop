@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Kitab
+Name[ar]=كتاب
+Comment=A word processor
+Comment[ar]=معالج نصوص
+Icon=kitab
+Exec=kitab %F
+StartupNotify=false
+Categories=Office;WordProcessor;
+MimeType=application/prs.ktb+zip;

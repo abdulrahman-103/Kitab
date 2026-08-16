@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
         self.format_filter = None
         self.last_directory = None
         
-        icon_path = str(Path(__file__).resolve().parent / "images" / "icon.svg")
+        icon_path = str(Path(__file__).resolve().parents[2] / "data" / "images" / "icon.svg")
         self.setWindowIcon(QIcon(icon_path))
 
         self.showMaximized()
@@ -83,11 +83,11 @@ class MainWindow(QMainWindow):
         self.background_color = self.app.palette().color(QPalette.ColorRole.Dark)
         self.view.setStyleSheet(f"QGraphicsView {{background-color: {self.background_color.name()};}}")
         if self.color_scheme == Qt.ColorScheme.Dark:
-            horizontal_line_icon_path = str(Path(__file__).resolve().parent / "images" / "insert_horizontal_line_dark.svg")
+            horizontal_line_icon_path = str(Path(__file__).resolve().parents[2] / "data" / "images" / "insert_horizontal_line_dark.svg")
             horizontal_line_icon = QIcon(horizontal_line_icon_path)
             self.menubar.horizontal_line_option.setIcon(horizontal_line_icon)
         elif self.color_scheme == Qt.ColorScheme.Light:
-            horizontal_line_icon_path = str(Path(__file__).resolve().parent / "images" / "insert_horizontal_line_light.svg")
+            horizontal_line_icon_path = str(Path(__file__).resolve().parents[2] / "data" / "images" / "insert_horizontal_line_light.svg")
             horizontal_line_icon = QIcon(horizontal_line_icon_path)
             self.menubar.horizontal_line_option.setIcon(horizontal_line_icon)
         

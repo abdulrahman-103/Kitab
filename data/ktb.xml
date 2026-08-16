@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/prs.ktb+zip">
+    <comment>Kitab Document</comment>
+    <comment xml:lang="ar">مستند كتاب</comment>
+    <glob pattern="*.ktb"/>
+    <sub-class-of type="application/zip"/>
+    <icon name="application-prs.ktb+zip"/>
+  </mime-type>
+</mime-info>
