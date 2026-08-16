@@ -9,3 +9,4 @@ Exec=kitab %F
 StartupNotify=false
 Categories=Office;WordProcessor;
 MimeType=application/prs.ktb+zip;
+StartupWMClass=kitab

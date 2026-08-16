@@ -14,6 +14,7 @@ def main():
         print(version)
         sys.exit(0)
     app = QApplication(sys.argv)
+    app.setDesktopFileName("kitab")
     _window = MainWindow()
     app.exec()
 
