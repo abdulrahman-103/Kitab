@@ -7,4 +7,3 @@ venv/
 dist/
 build/
 *.log
-.github/
