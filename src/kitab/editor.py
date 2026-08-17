@@ -75,6 +75,11 @@ class Editor(QTextEdit):
         center_y = self.main_window.view.mapToScene(0, int(self.main_window.view.viewport().rect().center().y()))
         return int(center_y.y() // self.base_height + 1)
 
+    def go_to_page(self, page):
+        page = max(1, min(page, self.page_count))
+        y = (page - 0.5) * self.base_height
+        self.main_window.view.centerOn(self.main_window.view.sceneRect().center().x(), y)
+
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             cursor = self.textCursor()

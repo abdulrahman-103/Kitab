@@ -3,7 +3,7 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QMainWindow, QApplication, QGraphicsScene, QGraphicsView, QStatusBar, QMessageBox, QWidget, QHBoxLayout
+from PySide6.QtWidgets import QMainWindow, QToolButton, QApplication, QGraphicsScene, QGraphicsView, QStatusBar, QMessageBox, QWidget, QHBoxLayout
 from PySide6.QtGui import QAction, QIcon, QShortcut, QPalette
 from PySide6.QtCore import QTimer, Qt
 import sys
@@ -11,7 +11,7 @@ from pathlib import Path
 from editor import Editor
 from toolbar import Toolbar
 from menubar import  MenuBar
-from dialogs import FindReplaceDialog
+from dialogs import FindReplaceDialog, GoToPageDialog
 from minimap import Minimap
 
 class MainWindow(QMainWindow):
@@ -93,6 +93,8 @@ class MainWindow(QMainWindow):
         
         self.minimap.setStyleSheet(f"background-color: {self.background_color.name()};")
 
+        self.statusbar.button.setStyleSheet("color: palette(WindowText); padding-left: 5px;")
+
     def closeEvent(self, event):
         if self.editor.document().isModified():
             msg_box = QMessageBox(self)
@@ -120,11 +122,24 @@ class MainWindow(QMainWindow):
             else:
                 event.ignore()
 
+    def go_to_page(self):
+        if getattr(self, "insert_link_dialog", None) is None:
+            self.go_to_page_dialog = GoToPageDialog(self.editor, self)
+        try:
+            self.go_to_page_dialog.exec()
+        except RuntimeError:
+            self.go_to_page_dialog = GoToPageDialog(self.editor, self)
+            self.go_to_page_dialog.exec()
+
     def add_statusbar(self):
         self.statusbar = QStatusBar()
-        self.statusbar.showMessage(f"Page {self.editor.current_page()} of {self.editor.page_count}")
-        self.editor.textChanged.connect(lambda: self.statusbar.showMessage(f"Page {self.editor.current_page()} of {self.editor.page_count}"))
-        self.scroll_bar.valueChanged.connect(lambda: self.statusbar.showMessage(f"Page {self.editor.current_page()} of {self.editor.page_count}"))
+        self.statusbar.button = QToolButton()
+        self.statusbar.button.clicked.connect(self.go_to_page)
+        self.statusbar.button.setStyleSheet("color: palette(WindowText); padding-left: 5px;")
+        self.statusbar.addWidget(self.statusbar.button)
+        self.statusbar.button.setText(f"Page {self.editor.current_page()} of {self.editor.page_count}")
+        self.editor.textChanged.connect(lambda: self.statusbar.button.setText(f"Page {self.editor.current_page()} of {self.editor.page_count}"))
+        self.scroll_bar.valueChanged.connect(lambda: self.statusbar.button.setText(f"Page {self.editor.current_page()} of {self.editor.page_count}"))
         self.setStatusBar(self.statusbar)
 
     def eventFilter(self, watched, event):
@@ -210,10 +225,4 @@ class MainWindow(QMainWindow):
         # binds Ctrl+1 through Ctrl+9 to quickly jump to specific pages
         for i in range(1, 10):
             shortcut = QShortcut(f"Ctrl+{i}", self)
-            shortcut.activated.connect(lambda page=i: go_to_page(page))
-
-        def go_to_page(page):
-            if page > self.editor.page_count:
-                return
-            target_y = (page - 1) * self.editor.base_height + (self.editor.base_height / 2)
-            self.view.centerOn(self.view.sceneRect().center().x(), target_y)
+            shortcut.activated.connect(lambda page=i: self.editor.go_to_page(page))

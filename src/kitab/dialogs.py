@@ -3,7 +3,7 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox
+from PySide6.QtWidgets import QLabel, QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox
 from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength, QDesktopServices, QTextBlockFormat
 from PySide6.QtCore import QSize, QRectF, Qt, QUrl
 from urllib.parse import urlparse
@@ -282,3 +282,45 @@ class InsertLinkDialog(QDialog):
                 QDesktopServices.openUrl(QUrl(anchor))
                 return True
         return False
+
+
+class GoToPageDialog(QDialog):
+    def __init__(self, editor, main_window):
+        super().__init__(main_window)
+        self.dialog = True
+        self.setWindowTitle("Go to Page")
+        self.setFixedSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
+        self.editor = editor
+
+        layout = QVBoxLayout()
+
+        field_layout = QHBoxLayout()
+        field_layout.addWidget(QLabel("Page:"))
+        self.page_field = QSpinBox()
+        self.page_field.setRange(1, editor.page_count)
+        self.page_field.setFixedWidth(main_window.size_unit * 4)
+        field_layout.addWidget(self.page_field)
+        field_layout.addStretch()
+        layout.addLayout(field_layout)
+
+        button_layout = QHBoxLayout()
+        apply_button = QPushButton("Apply")
+        cancel_button = QPushButton("Cancel")
+        apply_button.setAutoDefault(False)
+        cancel_button.setAutoDefault(False)
+        button_layout.addStretch()
+        button_layout.addWidget(apply_button)
+        button_layout.addWidget(cancel_button)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+        
+        apply_button.clicked.connect(self.go_to_page)
+        self.page_field.returnPressed.connect(self.go_to_page)
+        cancel_button.clicked.connect(self.reject)
+
+    def go_to_page(self):
+        self.editor.go_to_page(self.page_field.value())
+        if self.dialog:
+            self.dialog = False
+            self.deleteLater()
