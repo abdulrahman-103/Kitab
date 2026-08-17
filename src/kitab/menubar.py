@@ -263,12 +263,7 @@ class MenuBar(QMenuBar):
         if dialog.exec() == QDialog.DialogCode.Accepted:
             self.editor.document().print_(printer)
 
-    def insert_image(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Choose image", self.main_window.last_directory, "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.svg);;PNG Image (*.png);;JPEG Image (*.jpg *.jpeg);;SVG Image (*.svg);;BMP Image (*.bmp);;GIF Image (*.gif);;All Files (*)")
-        if not path:
-            return
-        self.main_window.last_directory = str(Path(path).parent)
-
+    def _insert_image(self, path):
         suffix = Path(path).suffix.lower().lstrip('.')
         mime = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png", "gif": "gif", "bmp": "bmp", "svg": "svg+xml"}.get(suffix, suffix)
         with open(path, "rb") as f:
@@ -286,6 +281,13 @@ class MenuBar(QMenuBar):
         cursor.setBlockFormat(block_format)
         cursor.setCharFormat(char_format)
         cursor.insertBlock(block_format, char_format)
+
+    def insert_image(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Choose image", self.main_window.last_directory, "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.svg);;PNG Image (*.png);;JPEG Image (*.jpg *.jpeg);;SVG Image (*.svg);;BMP Image (*.bmp);;GIF Image (*.gif);;All Files (*)")
+        if not path:
+            return
+        self.main_window.last_directory = str(Path(path).parent)
+        self._insert_image(path)
 
     def insert_table(self):
         if getattr(self, "insert_table_dialog", None) is None:

@@ -63,6 +63,11 @@ class Editor(QTextEdit):
                 if path.endswith((".txt", ".ktb", ".md", ".odt", ".html")):
                     self.main_window.file_path = path
                     self.main_window.menubar._open_file()
+                if path.endswith(("jpg", "jpeg", "png", "gif", "bmp", "svg")):
+                    pos = event.position().toPoint()
+                    cursor = self.cursorForPosition(pos)
+                    self.setTextCursor(cursor)
+                    self.main_window.menubar._insert_image(path)
             event.acceptProposedAction()
         else:
             super().dropEvent(event)
