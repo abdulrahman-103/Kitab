@@ -134,6 +134,7 @@ class MainWindow(QMainWindow):
     def add_statusbar(self):
         self.statusbar = QStatusBar()
         self.statusbar.button = QToolButton()
+        self.statusbar.button.setShortcut("Ctrl+G")
         self.statusbar.button.clicked.connect(self.go_to_page)
         self.statusbar.button.setStyleSheet("color: palette(WindowText); padding-left: 5px;")
         self.statusbar.addWidget(self.statusbar.button)
@@ -215,6 +216,11 @@ class MainWindow(QMainWindow):
         fullscreen.setShortcut(Qt.Key.Key_F11)
         fullscreen.triggered.connect(toggle_fullscreen)
         self.addAction(fullscreen)
+
+        go_to_page_shortcut = QAction(self)
+        go_to_page_shortcut.setShortcut("Ctrl+G")
+        go_to_page_shortcut.triggered.connect(self.go_to_page)
+        self.addAction(go_to_page_shortcut)
 
         self.find_action = QAction(self)
         self.find_action.setText("Find")

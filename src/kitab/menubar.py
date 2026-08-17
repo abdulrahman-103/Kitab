@@ -280,7 +280,7 @@ class MenuBar(QMenuBar):
         cursor.insertImage(image_format)
         cursor.setBlockFormat(block_format)
         cursor.setCharFormat(char_format)
-        cursor.insertBlock(block_format, char_format)
+        #cursor.insertBlock(block_format, char_format)
 
     def insert_image(self):
         path, _ = QFileDialog.getOpenFileName(self, "Choose image", self.main_window.last_directory, "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.svg);;PNG Image (*.png);;JPEG Image (*.jpg *.jpeg);;SVG Image (*.svg);;BMP Image (*.bmp);;GIF Image (*.gif);;All Files (*)")
