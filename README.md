@@ -10,10 +10,11 @@
 
 A lightweight word processor built with **PySide6 (Qt6)**.  
 A simple alternative to LibreOffice Writer and Microsoft Word.  
-Saves documents in `.ktb`, `odt`, `html`, `md` and `txt` formats and exports to PDF.
+Saves documents in `ktb`, `odt`, `html`, `md` and `txt` formats and exports to PDF.
 
+---
 
-## Installation
+## Dependencies
 
 ### Debian/Ubuntu Linux
 
@@ -51,6 +52,12 @@ python main.py
 ```
 ---
 
+## Installation
+
+```bash
+./install.sh
+```
+
 ### Hidden shortcuts
 
 **ctrl+1 to ctrl+9:** go to pages 1 to 9.
@@ -68,8 +75,10 @@ python main.py
 
 معالج نصوص خفيف مبني على **PySide6 (Qt6)**.  
 بديل بسيط لـ LibreOffice Writer و Microsoft Word.  
-يحفظ المستندات بصيغة `.ktb` ويُصدّرها إلى PDF.
+يحفظ المستندات بصيغة `ktb`, `odt`, `html`, `md` ,`txt` ويُصدّرها إلى PDF.
 
+
+---
 
 ### التنصيب
 
@@ -109,4 +118,10 @@ git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
 ```
+
+---
+### التثبيت
+
+```bash
+./install.sh
 ```
