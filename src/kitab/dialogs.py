@@ -40,8 +40,8 @@ class FindReplaceDialog(QDialog):
         replace_all.clicked.connect(self.replace_all)
 
         buttons = QHBoxLayout()
-        buttons.addWidget(find_next)
         buttons.addWidget(find_previous)
+        buttons.addWidget(find_next)
         buttons.addWidget(replace)
         buttons.addWidget(replace_all)
 
