@@ -6,7 +6,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v6
-      - run: ./build.sh
+      - run: ./src/odf-kit/build.sh
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions[bot]"
