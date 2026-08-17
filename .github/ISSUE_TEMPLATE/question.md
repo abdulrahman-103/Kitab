@@ -1,9 +1,9 @@
 ---
 name: Question
-about: Describe this issue template's purpose here.
-title: ''
+about: Ask a question about kitab
+title: "[QUESTION] "
 labels: ''
-assignees: ''
+assignees: abdulrahman-103
 
 ---
 
