@@ -125,13 +125,13 @@ class Toolbar(QToolBar):
         self.numbered_list_button.clicked.connect(self.toggle_numbered_list)
         self.addWidget(self.numbered_list_button)
 
-        self.bullet_list_button = QPushButton()
-        self.bullet_list_button.setIcon(QIcon.fromTheme("format-list-unordered-symbolic"))
-        self.bullet_list_button.setToolTip("Bullet List")
-        self.bullet_list_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
-        self.bullet_list_button.setCheckable(True)
-        self.bullet_list_button.clicked.connect(self.toggle_bullet_list)
-        self.addWidget(self.bullet_list_button)
+        self.bulleted_list_button = QPushButton()
+        self.bulleted_list_button.setIcon(QIcon.fromTheme("format-list-unordered-symbolic"))
+        self.bulleted_list_button.setToolTip("Bulleted List")
+        self.bulleted_list_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
+        self.bulleted_list_button.setCheckable(True)
+        self.bulleted_list_button.clicked.connect(self.toggle_bulleted_list)
+        self.addWidget(self.bulleted_list_button)
         self.addSeparator()
 
         self.align_left_button = QPushButton()
@@ -260,7 +260,7 @@ class Toolbar(QToolBar):
     def toggle_numbered_list(self):
         self.toggle_list(QTextListFormat.Style.ListDecimal)
 
-    def toggle_bullet_list(self):
+    def toggle_bulleted_list(self):
         self.toggle_list(QTextListFormat.Style.ListDisc)
         
     def toggle_minimap(self):
@@ -311,10 +311,10 @@ class Toolbar(QToolBar):
             if current_list:
                 style = current_list.format().style()
                 self.numbered_list_button.setChecked(style == QTextListFormat.Style.ListDecimal)
-                self.bullet_list_button.setChecked(style == QTextListFormat.Style.ListDisc)
+                self.bulleted_list_button.setChecked(style == QTextListFormat.Style.ListDisc)
             else:
                 self.numbered_list_button.setChecked(False)
-                self.bullet_list_button.setChecked(False)
+                self.bulleted_list_button.setChecked(False)
 
             char_format = self.main_window.editor.textCursor().charFormat()
             bg_color = char_format.background()
