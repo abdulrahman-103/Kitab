@@ -11,9 +11,10 @@ from urllib.parse import urlparse
 class FindReplaceDialog(QDialog):
     def __init__(self, editor, main_window):
         super().__init__(main_window)
+        self.main_window = main_window
         self.editor = editor
-        self.setWindowTitle("Find and replace")
-        self.setFixedSize(main_window.size_unit*10, main_window.size_unit*5)
+        self.setWindowTitle("Find and Replace")
+        self.setMinimumSize(main_window.size_unit*12, main_window.size_unit*5)
 
         self.find_field = QLineEdit()
         self.replace_field = QLineEdit()
@@ -23,20 +24,24 @@ class FindReplaceDialog(QDialog):
         fields.addRow("Find:", self.find_field)
         fields.addRow("Replace:", self.replace_field)
 
-        find_next = QPushButton("Find next")
+        find_next = QPushButton("Find Next")
+        find_previous = QPushButton("Find Previous")
         replace = QPushButton("Replace")
-        replace_all = QPushButton("Replace all")
+        replace_all = QPushButton("Replace All")
 
         find_next.setAutoDefault(False)
+        find_previous.setAutoDefault(False)
         replace.setAutoDefault(False)
         replace_all.setAutoDefault(False)
 
         find_next.clicked.connect(self.find_next)
+        find_previous.clicked.connect(self.find_previous)
         replace.clicked.connect(self.replace_one)
         replace_all.clicked.connect(self.replace_all)
 
         buttons = QHBoxLayout()
         buttons.addWidget(find_next)
+        buttons.addWidget(find_previous)
         buttons.addWidget(replace)
         buttons.addWidget(replace_all)
 
@@ -46,6 +51,7 @@ class FindReplaceDialog(QDialog):
         layout.addLayout(buttons)
 
         self.find_field.returnPressed.connect(self.find_next)
+        self.replace_field.returnPressed.connect(self.replace_one)
 
     def flags(self):
         flags = QTextDocument.FindFlag(0)
@@ -53,18 +59,40 @@ class FindReplaceDialog(QDialog):
             flags |= QTextDocument.FindFlag.FindCaseSensitively
         return flags
 
+    def follow_cursor(self):
+        x = self.main_window.view.sceneRect().center().x()
+        y = self.editor.cursorRect().center().y()
+        self.main_window.view.centerOn(x, y)
+
     def find_next(self):
         text = self.find_field.text()
         if not text:
             return False
         found = self.editor.find(text, self.flags())
+        self.follow_cursor()
         if not found:
             #wrap around to the top and try once more
             cursor = self.editor.textCursor()
             cursor.movePosition(QTextCursor.MoveOperation.Start)
             self.editor.setTextCursor(cursor)
             found = self.editor.find(text, self.flags())
-            
+            self.follow_cursor()
+        return found
+
+    def find_previous(self):
+        text = self.find_field.text()
+        if not text:
+            return False
+        flags = self.flags() | QTextDocument.FindFlag.FindBackward
+        found = self.editor.find(text, flags)
+        self.follow_cursor()
+        if not found:
+            # Wrap around to the bottom and try once more
+            cursor = self.editor.textCursor()
+            cursor.movePosition(QTextCursor.MoveOperation.End)
+            self.editor.setTextCursor(cursor)
+            found = self.editor.find(text, flags)
+            self.follow_cursor()
         return found
 
     def replace_one(self):
@@ -92,7 +120,7 @@ class InsertTableDialog(QDialog):
         super().__init__(main_window)
         self.dialog = True
         self.setWindowTitle("Insert Table")
-        self.setFixedSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
+        self.setMinimumSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
 
         layout = QVBoxLayout()
 
@@ -155,7 +183,7 @@ class PageSizeDialog(QDialog):
         self.main_window = main_window
         self.editor = editor
         self.setWindowTitle("Page Size")
-        self.setFixedSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
+        self.setMinimumSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
 
         layout = QVBoxLayout()
 
@@ -216,7 +244,7 @@ class InsertLinkDialog(QDialog):
         super().__init__(main_window)
         self.dialog = True
         self.setWindowTitle("Insert Link")
-        self.setFixedSize(main_window.size_unit * 7, main_window.size_unit * 4.5)
+        self.setMinimumSize(main_window.size_unit * 7, main_window.size_unit * 4.5)
         
         self.main_window = main_window
 
@@ -289,7 +317,7 @@ class GoToPageDialog(QDialog):
         super().__init__(main_window)
         self.dialog = True
         self.setWindowTitle("Go to Page")
-        self.setFixedSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
+        self.setMinimumSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
         self.editor = editor
 
         layout = QVBoxLayout()
@@ -298,7 +326,7 @@ class GoToPageDialog(QDialog):
         field_layout.addWidget(QLabel("Page:"))
         self.page_field = QSpinBox()
         self.page_field.setRange(1, editor.page_count)
-        self.page_field.setFixedWidth(main_window.size_unit * 4)
+        self.page_field.setMinimumWidth(main_window.size_unit * 4)
         field_layout.addWidget(self.page_field)
         field_layout.addStretch()
         layout.addLayout(field_layout)

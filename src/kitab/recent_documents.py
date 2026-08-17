@@ -70,7 +70,7 @@ class RecentFilesDialog(QDialog):
         self.main_window = main_window
         self.selected_file = None
         self.setWindowTitle("Recent Documents")
-        self.setFixedSize(self.main_window.size_unit * 15, self.main_window.size_unit * 10)
+        self.setMinimumSize(self.main_window.size_unit * 15, self.main_window.size_unit * 10)
         
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -85,7 +85,7 @@ class RecentFilesDialog(QDialog):
             QListWidget {{
                 background-color: {self.background_color.name()};
                 color: #ffffff;
-                font-size: 12pt;
+                font-size: {self.main_window.size_unit / 3}pt;
                 padding: 5px;
             }}
             QListWidget::item {{

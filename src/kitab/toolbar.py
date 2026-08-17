@@ -14,8 +14,17 @@ class Toolbar(QToolBar):
         self.layout().setSpacing(5)
         self.setContentsMargins(3, 3, 3, 3)
         self.setMovable(False)
+
+        self.color_button = QPushButton()
+        self.main_window.size_unit = self.color_button.sizeHint().height()
+        color_icon = QIcon.fromTheme("format-text-color-symbolic")
+        self.color_button.setIcon(color_icon)
+        self.color_button.setToolTip("Font Color")
+        self.color_button.setFixedSize(self.main_window.size_unit * 1.5, self.main_window.size_unit)
+        self.color_button.setStyleSheet(f"QPushButton {{background-color: {self.main_window.editor.DEFAULT_FONT_COLOR};}}")
+        self.color_button.clicked.connect(self.font_color)
+
         self.font_family_menu = QFontComboBox()
-        self.main_window.size_unit = self.font_family_menu.sizeHint().height()
         self.font_family_menu.setToolTip("Font Family")
         self.font_family_menu.setFontFilters(QFontComboBox.FontFilter.ScalableFonts)
         self.font_family_menu.setFixedWidth(self.main_window.size_unit*6)
@@ -49,13 +58,6 @@ class Toolbar(QToolBar):
         self.addWidget(self.font_size_menu)
         self.addSeparator()
 
-        self.color_button = QPushButton()
-        color_icon = QIcon.fromTheme("format-text-color-symbolic")
-        self.color_button.setIcon(color_icon)
-        self.color_button.setToolTip("Font Color")
-        self.color_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
-        self.color_button.setStyleSheet(f"QPushButton {{background-color: {self.main_window.editor.DEFAULT_FONT_COLOR};}}")
-        self.color_button.clicked.connect(self.font_color)
         self.addWidget(self.color_button)
         self.addSeparator()
 
