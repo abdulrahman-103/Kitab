@@ -2,7 +2,7 @@
 name: Bug report
 about: File a bug report
 title: "[BUG] "
-labels: bug, feature
+labels: bug
 assignees: abdulrahman-103
 
 ---
