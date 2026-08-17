@@ -9,8 +9,8 @@ jobs:
       - run: ./src/odf-kit/build.sh
       - name: Commit and push changes
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "Abdulrahman"
+          git config --global user.email "176532798+abdulrahman-103@users.noreply.github.com"
           git add .
           git commit -m "Update odf-kit" || echo "No changes to commit"
           git push
