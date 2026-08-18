@@ -3,7 +3,7 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QLabel, QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox
+from PySide6.QtWidgets import QSizePolicy, QLabel, QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox
 from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength, QDesktopServices, QTextBlockFormat
 from PySide6.QtCore import QSize, QRectF, Qt, QUrl
 from urllib.parse import urlparse
@@ -323,12 +323,14 @@ class GoToPageDialog(QDialog):
         layout = QVBoxLayout()
 
         field_layout = QHBoxLayout()
-        field_layout.addWidget(QLabel("Page:"))
+        label = QLabel("Page:")
+        field_layout.addWidget(label)
+        label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.page_field = QSpinBox()
         self.page_field.setRange(1, editor.page_count)
         self.page_field.setMinimumWidth(main_window.size_unit * 4)
         field_layout.addWidget(self.page_field)
-        field_layout.addStretch()
+        
         layout.addLayout(field_layout)
 
         button_layout = QHBoxLayout()
@@ -336,7 +338,6 @@ class GoToPageDialog(QDialog):
         cancel_button = QPushButton("Cancel")
         apply_button.setAutoDefault(False)
         cancel_button.setAutoDefault(False)
-        button_layout.addStretch()
         button_layout.addWidget(apply_button)
         button_layout.addWidget(cancel_button)
         layout.addLayout(button_layout)
