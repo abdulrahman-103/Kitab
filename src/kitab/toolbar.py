@@ -109,7 +109,8 @@ class Toolbar(QToolBar):
         self.italic_button.setCheckable(True)
         self.italic_button.clicked.connect(self.toggle_italic)
         self.addWidget(self.italic_button)
-
+        self.addSeparator()
+        
         self.clear_formatting_button = QPushButton()
         clear_formatting_icon = QIcon.fromTheme("edit-clear-symbolic")
         self.clear_formatting_button.setIcon(clear_formatting_icon)
