@@ -162,7 +162,7 @@ class MenuBar(QMenuBar):
 
     def save(self):
         if not self.main_window.file_path:
-            self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text (*.txt);;Markdown File  (*.md);;HTML Document (*.html)")
+            self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
             if not self.main_window.file_path:
                 return "canceled"
             self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
@@ -172,7 +172,7 @@ class MenuBar(QMenuBar):
 
     def save_as(self, show_dialog=True):
         file_path, format_filter = self.main_window.file_path, self.main_window.format_filter
-        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text (*.txt);;Markdown File  (*.md);;HTML Document (*.html)")
+        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
         if not self.main_window.file_path:
             self.main_window.file_path, self.main_window.format_filter = file_path, format_filter
         else:
@@ -211,8 +211,19 @@ class MenuBar(QMenuBar):
         elif self.main_window.file_path.endswith(".odt"):
             odf_kit = Path(__file__).resolve().parent / "odf-kit"
             js = odf_kit / "odt_to_html.js"
-            data = subprocess.run(["node", js, self.main_window.file_path], cwd=odf_kit, capture_output=True, text=True)
-            self.editor.setHtml(data.stdout)
+            odt = Path(self.main_window.file_path).read_bytes()
+            data = subprocess.run(["node", js], input=odt, cwd=odf_kit, capture_output=True)
+            html = data.stdout.decode("utf-8")
+            self.editor.setHtml(html)
+        elif self.main_window.file_path.endswith(".docx"):
+            odf_kit = Path(__file__).resolve().parent / "odf-kit"
+            js_odt = odf_kit / "docx_to_odt.js"
+            js_html = odf_kit / "odt_to_html.js"
+            odt = subprocess.run(["node", js_odt, self.main_window.file_path], cwd=odf_kit, capture_output=True)
+            html = subprocess.run(["node", js_html], input=odt.stdout, cwd=odf_kit, capture_output=True)
+            html = html.stdout.decode("utf-8")
+            self.editor.setHtml(html)
+        
 
         self.editor.document().setModified(False)
         self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
@@ -227,14 +238,14 @@ class MenuBar(QMenuBar):
             pass
 
     def open_file(self):
-        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getOpenFileName(self, "Open", self.main_window.last_directory, "Kitab, Text, Markdown, ODF Text Documents and HTML Documents (*.ktb *.odt *.txt *.md *.html);;Kitab Document (*.ktb);;ODF Text Document (*.odt);;Text (*.txt);;Markdown File (*.md);;HTML Document (*.html)")
+        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getOpenFileName(self, "Open", self.main_window.last_directory, "(*.ktb *.odt *.docx *.txt *.md *.html);;Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Microsoft Word Document (*.docx);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
         if not self.main_window.file_path:
             return
         self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
         self._open_file()
 
     def export_file(self):
-        file_path, format_filter = QFileDialog.getSaveFileName(self, "Export file", self.main_window.last_directory, "PDF File (*.pdf)")
+        file_path, format_filter = QFileDialog.getSaveFileName(self, "Export file", self.main_window.last_directory, "PDF Document (*.pdf)")
         if not file_path:
             return
         self.main_window.last_directory = str(Path(file_path).parent)
