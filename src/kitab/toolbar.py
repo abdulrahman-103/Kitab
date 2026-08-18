@@ -33,7 +33,6 @@ class Toolbar(QToolBar):
         self.font_family_menu.activated.connect(lambda: self.main_window.view.viewport().setFocus())
         self.font_family_menu.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.addWidget(self.font_family_menu)
-        self.addSeparator()
 
         self.font_size_menu = QComboBox()
         self.font_size_menu.setToolTip("Font Size")
@@ -59,7 +58,6 @@ class Toolbar(QToolBar):
         self.addSeparator()
 
         self.addWidget(self.color_button)
-        self.addSeparator()
 
         self.highlight_color = QColor("yellow")
         self.highlight_button = QPushButton()
