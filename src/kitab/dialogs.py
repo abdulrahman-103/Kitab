@@ -127,18 +127,23 @@ class InsertTableDialog(QDialog):
         columns_field = QSpinBox()
         rows_field = QSpinBox()
         width_field = QSpinBox()
+
         fields = QFormLayout()
         fields.addRow("Columns:", columns_field)
         fields.addRow("Rows:", rows_field)
         fields.addRow("Width:", width_field)
-        layout.addLayout(fields)
+
+        fields_layout = QHBoxLayout()
+        fields_layout.addStretch()
+        fields_layout.addLayout(fields)
+        fields_layout.addStretch()
+        layout.addLayout(fields_layout)
 
         button_layout = QHBoxLayout()
         apply_button = QPushButton("Apply")
         cancel_button = QPushButton("Cancel")
         apply_button.setAutoDefault(False)
         cancel_button.setAutoDefault(False)
-        button_layout.addStretch()
         button_layout.addWidget(apply_button)
         button_layout.addWidget(cancel_button)
 
