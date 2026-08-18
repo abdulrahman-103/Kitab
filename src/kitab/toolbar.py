@@ -356,6 +356,16 @@ class Toolbar(QToolBar):
             elif alignment_status == (Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignAbsolute) or alignment_status == (Qt.AlignmentFlag.AlignRight):
                 self.align_right_button.setChecked(True)
 
+            if char_format.verticalAlignment() == QTextCharFormat.VerticalAlignment.AlignSuperScript:
+                self.superscript_button.setChecked(True)
+                self.subscript_button.setChecked(False)
+            elif char_format.verticalAlignment() == QTextCharFormat.VerticalAlignment.AlignSubScript:
+                self.superscript_button.setChecked(False)
+                self.subscript_button.setChecked(True)
+            else:
+                self.superscript_button.setChecked(False)
+                self.subscript_button.setChecked(False)
+            
     def font_family(self, font):
         self.main_window.editor.setFontFamily(font.family())
 
