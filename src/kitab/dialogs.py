@@ -183,13 +183,8 @@ class InsertTableDialog(QDialog):
                 self.deleteLater()
 
 class PageSizeDialog(QDialog):
-    @classmethod
-    def inch_to_mm(cls, inch):
-        return inch * 25.4
-
     def __init__(self, editor, main_window):
         super().__init__(main_window)
-        self.dialog = True
         self.main_window = main_window
         self.editor = editor
         self.setWindowTitle("Page Size")
@@ -286,7 +281,6 @@ class PageSizeDialog(QDialog):
             self.height_field.setValue(height / 25.4)
             self.width_field.blockSignals(False)
             self.height_field.blockSignals(False)
-            self.editor.unit = "inch"
         else:
             width = self.width_field.value()
             height = self.height_field.value()
@@ -296,11 +290,10 @@ class PageSizeDialog(QDialog):
             self.height_field.setValue(height * 25.4)
             self.width_field.blockSignals(False)
             self.height_field.blockSignals(False)
-            self.editor.unit = "millimeter"
 
     def page_size_combo_sync(self, preset):
         if preset != "Custom":
-            if self.editor.unit == "inch":
+            if self.inch.isChecked():
                 size = self.editor.PAGE_SIZES[preset].mm_to_inches()
             else:
                 size = self.editor.PAGE_SIZES[preset]
@@ -313,10 +306,12 @@ class PageSizeDialog(QDialog):
 
     def apply_page_size(self, preset):
         size = Vector2(float(self.width_field.value()), float(self.height_field.value()))
+        if self.inch.isChecked():
+            self.editor.unit = "inch"
+        else:
+            self.editor.unit = "millimeter"
         self.editor.apply_page_size(size)
-        if self.dialog:
-            self.dialog = False
-            self.deleteLater()
+        self.accept()
 
 class InsertLinkDialog(QDialog):
     def __init__(self, editor, main_window):

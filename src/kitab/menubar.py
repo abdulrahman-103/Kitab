@@ -160,10 +160,6 @@ class MenuBar(QMenuBar):
         cursor.insertBlock(block_format, char_format)
 
     def page_size(self):
-        if getattr(self, "page_size_dialog", None) is None:
-            self.page_size_dialog = PageSizeDialog(self.editor, self.main_window)
-        try:
-            self.page_size_dialog.exec()
-        except RuntimeError:
-            self.page_size_dialog = PageSizeDialog(self.editor, self.main_window)
-            self.page_size_dialog.exec()
+        page_size_dialog = PageSizeDialog(self.editor, self.main_window)
+        page_size_dialog.exec()
+        page_size_dialog.deleteLater()
