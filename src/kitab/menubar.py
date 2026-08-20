@@ -100,6 +100,7 @@ class MenuBar(QMenuBar):
         page_menu = self.addMenu("Page")
 
         page_size_option = page_menu.addAction("Page Size")
+        page_size_option.setIcon(QIcon.fromTheme("document-page-setup-symbolic"))
         page_size_option.triggered.connect(self.page_size)
 
         #page_margins_option = page_menu.addAction("Page Margins")
