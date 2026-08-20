@@ -58,6 +58,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
         self.toolbar.align(Qt.AlignmentFlag.AlignHCenter)
+        self.editor.document().clearUndoRedoStacks()
 
         self.editor.cursorPositionChanged.connect(self.toolbar.sync_font)
 
@@ -66,7 +67,7 @@ class MainWindow(QMainWindow):
         #opening file with commandline
         if len(sys.argv) == 2:
             self.file_path = sys.argv[1]
-            self.menubar._open_file()
+            self.editor._open_file()
 
         self.scroll_bar = self.view.verticalScrollBar()
         self.add_statusbar()
@@ -183,8 +184,9 @@ class MainWindow(QMainWindow):
     def zoom(self, direction: str, gesture_term=0):
         self.editor.was_zooming = True
         resolution_factor = self.resolution.height() / 720 #my resolution is 1080p with 150% scaling. the factor use is to make the max and min limits equal on all resolutions
-        min = 0.05 * resolution_factor
-        max = 5.0 * resolution_factor
+        page_size_factor = self.editor.PAGE_SIZES["A4"].mm_to_pixels().y / self.editor.base_height
+        min = 0.05 * resolution_factor * page_size_factor
+        max = 5.0 * resolution_factor * page_size_factor
         zoom_in_factor = 1.15 - gesture_term
         zoom_out_factor = 0.85 + gesture_term
         if direction == "in" and self.zoom_factor < max:

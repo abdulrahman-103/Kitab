@@ -371,9 +371,7 @@ class Toolbar(QToolBar):
 
     def change_font_size(self):
         self.font_size = int(self.font_size_menu.currentText())
-        font = self.main_window.editor.currentFont()
-        font.setPointSize(self.font_size)
-        self.main_window.editor.setFontPointSize(font.pointSize())
+        self.main_window.editor.setFontPointSize(self.font_size)
         self.main_window.view.viewport().setFocus()
 
     def change_font_color(self):

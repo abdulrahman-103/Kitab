@@ -62,7 +62,7 @@ def show_recent_dialog(main_window):
     dialog = RecentFilesDialog(files, main_window)
     if dialog.exec() == QDialog.DialogCode.Accepted and dialog.selected_file:
         main_window.file_path = dialog.selected_file
-        main_window.menubar._open_file()
+        main_window.editor._open_file()
 
 class RecentFilesDialog(QDialog):
     def __init__(self, files, main_window):

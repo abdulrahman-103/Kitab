@@ -3,10 +3,11 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QSizePolicy, QLabel, QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox
+from PySide6.QtWidgets import QSizePolicy, QLabel, QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox, QRadioButton, QButtonGroup
 from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength, QDesktopServices, QTextBlockFormat
-from PySide6.QtCore import QSize, QRectF, Qt, QUrl
+from PySide6.QtCore import Qt, QUrl
 from urllib.parse import urlparse
+from vector2 import Vector2
 
 class FindReplaceDialog(QDialog):
     def __init__(self, editor, main_window):
@@ -126,12 +127,12 @@ class InsertTableDialog(QDialog):
 
         columns_field = QSpinBox()
         rows_field = QSpinBox()
-        width_field = QSpinBox()
+        self.width_field = QSpinBox()
 
         fields = QFormLayout()
         fields.addRow("Columns:", columns_field)
         fields.addRow("Rows:", rows_field)
-        fields.addRow("Width:", width_field)
+        fields.addRow("Width:", self.width_field)
 
         fields_layout = QHBoxLayout()
         fields_layout.addStretch()
@@ -150,7 +151,7 @@ class InsertTableDialog(QDialog):
         layout.addLayout(button_layout)
         self.setLayout(layout)
         
-        apply_button.clicked.connect(lambda: self.insert_table(main_window, editor, columns_field.value(), rows_field.value(), width_field.value()))
+        apply_button.clicked.connect(lambda: self.insert_table(main_window, editor, columns_field.value(), rows_field.value(), self.width_field.value()))
         cancel_button.clicked.connect(self.reject)
 
     def insert_table(self, main_window, editor, columns, rows, width_percentage):
@@ -182,64 +183,137 @@ class InsertTableDialog(QDialog):
                 self.deleteLater()
 
 class PageSizeDialog(QDialog):
+    @classmethod
+    def inch_to_mm(cls, inch):
+        return inch * 25.4
+
     def __init__(self, editor, main_window):
         super().__init__(main_window)
         self.dialog = True
         self.main_window = main_window
         self.editor = editor
         self.setWindowTitle("Page Size")
-        self.setMinimumSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
+        self.setMinimumSize(main_window.size_unit * 7, main_window.size_unit * 6)
 
         layout = QVBoxLayout()
 
         page_size_combo = QComboBox()
-        size_names = list(editor.PAGE_SIZES.keys())
-        page_size_combo.addItems(size_names)
-
-        current = (editor.base_width, editor.base_height)
-        for i, name in enumerate(size_names):
-            if editor.PAGE_SIZES[name] == current:
-                page_size_combo.setCurrentIndex(i)
-                break
+        sizes = list(editor.PAGE_SIZES.keys())
+        page_size_combo.addItems(sizes)
+        page_size_combo.addItem("Custom")
+        custom_index = page_size_combo.count() - 1
+        current_size = Vector2(editor.base_width, editor.base_height).pixels_to_mm()
+        for i, name in enumerate(sizes):
+            if self.editor.unit == "inch":
+                if round(editor.PAGE_SIZES[name].mm_to_inches(), 2) == round(current_size.mm_to_inches(), 2):
+                    page_size_combo.setCurrentIndex(i)
+                    break
+            else:
+                if editor.PAGE_SIZES[name] == current_size:
+                    page_size_combo.setCurrentIndex(i)
+                    break
+        else:
+            page_size_combo.setCurrentIndex(custom_index)
 
         layout.addWidget(page_size_combo)
 
-        width_field = QDoubleSpinBox()
-        height_field = QDoubleSpinBox()
+        units_layout = QHBoxLayout()
+        units_layout.addStretch()
+
+        units_layout.addWidget(QLabel("Unit:"))
+
+        self.units_group = QButtonGroup(self)
+        self.millimeter = QRadioButton("Millimeter")
+        self.inch = QRadioButton("Inch")
+        if self.editor.unit == "millimeter":
+            self.millimeter.setChecked(True)
+        else:
+            self.inch.setChecked(True)
+        self.units_group.addButton(self.millimeter)
+        self.units_group.addButton(self.inch)
+        
+        units_layout.addWidget(self.millimeter)
+        units_layout.addWidget(self.inch)
+        units_layout.addStretch()
+        layout.addLayout(units_layout)
+
+        x = self.editor.page_size.x
+        y = self.editor.page_size.y
+
+        self.width_field = QDoubleSpinBox()
+        self.width_field.setMaximum(100000)
+        self.width_field.setValue(x)
+        self.height_field = QDoubleSpinBox()
+        self.height_field.setMaximum(100000)
+        self.height_field.setValue(y)
+
         fields = QFormLayout()
-        fields.addRow("Width:", width_field)
-        fields.addRow("Height:", height_field)
-        layout.addLayout(fields)
+        fields.addRow("Width:", self.width_field)
+        fields.addRow("Height:", self.height_field)
+
+        fields_layout = QHBoxLayout()
+        fields_layout.addStretch()
+        fields_layout.addLayout(fields)
+        fields_layout.addStretch()
+
+        layout.addLayout(fields_layout)
 
         button_layout = QHBoxLayout()
         apply_button = QPushButton("Apply")
         cancel_button = QPushButton("Cancel")
         apply_button.setAutoDefault(False)
         cancel_button.setAutoDefault(False)
-        button_layout.addStretch()
         button_layout.addWidget(apply_button)
         button_layout.addWidget(cancel_button)
 
         layout.addLayout(button_layout)
         self.setLayout(layout)
         
+        page_size_combo.currentTextChanged.connect(lambda: self.page_size_combo_sync(page_size_combo.currentText()))
+        self.inch.toggled.connect(lambda: self.unit_change_sync())
+        self.width_field.textChanged.connect(lambda: page_size_combo.setCurrentIndex(custom_index))
+        self.height_field.textChanged.connect(lambda: page_size_combo.setCurrentIndex(custom_index))
         apply_button.clicked.connect(lambda: (editor.document().setModified(True), self.apply_page_size(page_size_combo.currentText())))
         cancel_button.clicked.connect(self.reject)
 
-    def apply_page_size(self, size):
-        name = size
-        width, height = self.editor.PAGE_SIZES[name]
-        self.editor.page_size = name
-        self.editor.base_width = width
-        self.editor.base_height = height
-        self.editor.document().setPageSize(QSize(width, height))
-        self.editor.page_count = self.editor.document().pageCount()
-        self.editor.setMinimumSize(width, height)
-        self.editor.setFixedSize(width, self.editor.page_count * height)
-        self.main_window.scene.setSceneRect(QRectF(self.editor.rect()))
-        self.editor.document().setPageSize(QSize(width, height))
-        self.editor.page_count = self.editor.document().pageCount()
-        self.main_window.default_zoom_factor = self.main_window.resolution.height() / self.editor.base_height / 1.25
+    def unit_change_sync(self):
+        if self.inch.isChecked():
+            width = self.width_field.value()
+            height = self.height_field.value()
+            self.width_field.blockSignals(True)
+            self.height_field.blockSignals(True)
+            self.width_field.setValue(width / 25.4)
+            self.height_field.setValue(height / 25.4)
+            self.width_field.blockSignals(False)
+            self.height_field.blockSignals(False)
+            self.editor.unit = "inch"
+        else:
+            width = self.width_field.value()
+            height = self.height_field.value()
+            self.width_field.blockSignals(True)
+            self.height_field.blockSignals(True)
+            self.width_field.setValue(width * 25.4)
+            self.height_field.setValue(height * 25.4)
+            self.width_field.blockSignals(False)
+            self.height_field.blockSignals(False)
+            self.editor.unit = "millimeter"
+
+    def page_size_combo_sync(self, preset):
+        if preset != "Custom":
+            if self.editor.unit == "inch":
+                size = self.editor.PAGE_SIZES[preset].mm_to_inches()
+            else:
+                size = self.editor.PAGE_SIZES[preset]
+            self.width_field.blockSignals(True)
+            self.height_field.blockSignals(True)
+            self.width_field.setValue(size.x)
+            self.height_field.setValue(size.y)
+            self.width_field.blockSignals(False)
+            self.height_field.blockSignals(False)
+
+    def apply_page_size(self, preset):
+        size = Vector2(float(self.width_field.value()), float(self.height_field.value()))
+        self.editor.apply_page_size(size)
         if self.dialog:
             self.dialog = False
             self.deleteLater()
@@ -267,7 +341,6 @@ class InsertLinkDialog(QDialog):
         cancel_button = QPushButton("Cancel")
         apply_button.setAutoDefault(False)
         cancel_button.setAutoDefault(False)
-        button_layout.addStretch()
         button_layout.addWidget(apply_button)
         button_layout.addWidget(cancel_button)
 

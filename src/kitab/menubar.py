@@ -3,17 +3,14 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QFileDialog, QProgressDialog, QDialog, QMenuBar
-from PySide6.QtGui import QIcon, QPageSize, QPdfWriter, QTextImageFormat
-from PySide6.QtPrintSupport import QPrinter, QPrintDialog
-from PySide6.QtCore import QTimer, Qt, QSize, QElapsedTimer, QRectF
+from PySide6.QtWidgets import QFileDialog, QProgressDialog, QMenuBar
+from PySide6.QtGui import QIcon, QTextImageFormat
+from PySide6.QtCore import QTimer, Qt, QSizeF, QElapsedTimer
 from pathlib import Path
-import zipfile
-import json
 from recent_documents import *
 from dialogs import PageSizeDialog, InsertTableDialog, InsertLinkDialog
-import subprocess
 import base64
+import subprocess
 
 class MenuBar(QMenuBar):
     def __init__(self, main_window, parent=None):
@@ -25,13 +22,13 @@ class MenuBar(QMenuBar):
         new_option = file_menu.addAction("New")
         new_icon = QIcon.fromTheme("document-new-symbolic")
         new_option.setIcon(new_icon)
-        new_option.triggered.connect(self.new)
+        new_option.triggered.connect(self.editor.new)
         new_option.setShortcut("Ctrl+N")
 
         open_option = file_menu.addAction("Open")
         open_icon = QIcon.fromTheme("document-open-symbolic")
         open_option.setIcon(open_icon)
-        open_option.triggered.connect(self.open_file)
+        open_option.triggered.connect(self.editor.open_file)
         open_option.setShortcut("Ctrl+O")
 
         recent_option = file_menu.addAction("Recent Documents")
@@ -43,25 +40,25 @@ class MenuBar(QMenuBar):
         save_option = file_menu.addAction("Save")
         save_icon = QIcon.fromTheme("document-save-symbolic")
         save_option.setIcon(save_icon)
-        save_option.triggered.connect(self.save)
+        save_option.triggered.connect(self.editor.save)
         save_option.setShortcut("Ctrl+S")
 
         save_as_option = file_menu.addAction("Save As")
         save_as_icon = QIcon.fromTheme("document-save-as-symbolic")
         save_as_option.setIcon(save_as_icon)
-        save_as_option.triggered.connect(self.save_as)
+        save_as_option.triggered.connect(self.editor.save_as)
         save_as_option.setShortcut("Ctrl+Shift+S")
 
         export_option = file_menu.addAction("Export")
         export_icon = QIcon.fromTheme("document-export-symbolic")
         export_option.setIcon(export_icon)
-        export_option.triggered.connect(self.export_file)
+        export_option.triggered.connect(self.editor.export_file)
         export_option.setShortcut("Ctrl+Shift+E")
 
         print_option = file_menu.addAction("Print")
         print_icon = QIcon.fromTheme("document-print-symbolic")
         print_option.setIcon(print_icon)
-        print_option.triggered.connect(self.print_document)
+        print_option.triggered.connect(self.editor.print_document)
         print_option.setShortcut("Ctrl+P")
 
         exit_option = file_menu.addAction("Exit")
@@ -109,170 +106,6 @@ class MenuBar(QMenuBar):
         #page_margins_option.triggered.connect(self.page_margins)
 
         self.main_window.setMenuBar(self)
-
-    def _save_file(self):
-        saving = QProgressDialog("Saving...", None, 0, 0, self)
-        saving.setWindowTitle("Saving...")
-        saving.setWindowModality(Qt.WindowModality.WindowModal)
-        save_timer = QElapsedTimer()
-        save_timer.start()
-        saving.show()
-
-        if self.main_window.file_path.endswith(".txt"):
-            data = self.editor.toPlainText()
-            with open(self.main_window.file_path, "w", encoding="utf-8") as file:
-                file.write(data)
-        elif self.main_window.file_path.endswith(".html"):
-            data = self.editor.toHtml()
-            with open(self.main_window.file_path, "w", encoding="utf-8") as file:
-                file.write(data)
-        elif self.main_window.file_path.endswith(".md"):
-            data = self.editor.toMarkdown()
-            with open(self.main_window.file_path, "w", encoding="utf-8") as file:
-                file.write(data)
-        elif self.main_window.file_path.endswith(".ktb"):
-            html_data = self.editor.toHtml()
-            json_data = {"page size": self.editor.page_size}
-            with zipfile.ZipFile(self.main_window.file_path, mode="w") as zip:
-                zip.writestr("mimetype", "application/prs.ktb+zip", compress_type=zipfile.ZIP_STORED)
-                zip.writestr("document.html", html_data, compress_type=zipfile.ZIP_DEFLATED)
-                zip.writestr("info.json", json.dumps(json_data), compress_type=zipfile.ZIP_DEFLATED)
-        elif self.main_window.file_path.endswith(".odt"):
-            odf_kit = Path(__file__).resolve().parent / "odf-kit"
-            js = odf_kit / "html_to_odt.js"
-            html = self.editor.toHtml()
-            data = subprocess.run(["node", js, self.main_window.file_path], cwd=odf_kit, capture_output=True, text=True, input=html)
-
-        self.editor.document().setModified(False)
-        self.main_window.file_name = Path(self.main_window.file_path).name
-        self.main_window.setWindowTitle(f"{self.main_window.file_name}  –  {self.tr('Kitab')}")
-
-        try:
-            register_recent_file(self.main_window.file_path)
-        except ImportError:
-            pass
-
-        time_taken = save_timer.elapsed()
-        minimum_time = 500
-        if time_taken >= minimum_time:
-            saving.close()
-        else:
-            remaining_time = minimum_time - time_taken
-            QTimer.singleShot(remaining_time, saving.close)
-
-    def save(self):
-        if not self.main_window.file_path:
-            self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
-            if not self.main_window.file_path:
-                return "canceled"
-            self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
-            self._save_file()
-        else:
-            self._save_file()
-
-    def save_as(self, show_dialog=True):
-        file_path, format_filter = self.main_window.file_path, self.main_window.format_filter
-        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
-        if not self.main_window.file_path:
-            self.main_window.file_path, self.main_window.format_filter = file_path, format_filter
-        else:
-            self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
-            self._save_file()
-
-    def new(self):
-        self.main_window.setWindowTitle(self.tr("Kitab"))
-        self.main_window.file_path = None
-        self.main_window.format_filter = None
-        self.main_window.file_name = None
-        self.editor.clear()
-        self.editor.document().setModified(False)
-        self.main_window.view.viewport().setFocus()
-        self.editor.setFocus()
-
-    def _open_file(self):
-        if self.main_window.file_path.endswith(".ktb"):
-            with zipfile.ZipFile(self.main_window.file_path, "r") as zip:
-                html_data = zip.read("document.html").decode("utf-8")
-                json_data = json.loads(zip.read("info.json").decode("utf-8"))
-            self.editor.setHtml(html_data)
-            self.apply_page_size(json_data["page size"])
-        elif self.main_window.file_path.endswith(".html"):
-            with open(self.main_window.file_path, "r", encoding="utf-8") as file:
-                html_data = file.read()
-            self.editor.setHtml(html_data)
-        elif self.main_window.file_path.endswith(".txt"):
-            with open(self.main_window.file_path, "r", encoding="utf-8") as file:
-                data = file.read()
-                self.editor.setPlainText(data)
-        elif self.main_window.file_path.endswith(".md"):
-            with open(self.main_window.file_path, "r", encoding="utf-8") as file:
-                data = file.read()
-                self.editor.setMarkdown(data)
-        elif self.main_window.file_path.endswith(".odt"):
-            odf_kit = Path(__file__).resolve().parent / "odf-kit"
-            js = odf_kit / "odt_to_html.js"
-            odt = Path(self.main_window.file_path).read_bytes()
-            data = subprocess.run(["node", js], input=odt, cwd=odf_kit, capture_output=True)
-            html = data.stdout.decode("utf-8")
-            self.editor.setHtml(html)
-        elif self.main_window.file_path.endswith(".docx"):
-            odf_kit = Path(__file__).resolve().parent / "odf-kit"
-            js_odt = odf_kit / "docx_to_odt.js"
-            js_html = odf_kit / "odt_to_html.js"
-            odt = subprocess.run(["node", js_odt, self.main_window.file_path], cwd=odf_kit, capture_output=True)
-            html = subprocess.run(["node", js_html], input=odt.stdout, cwd=odf_kit, capture_output=True)
-            html = html.stdout.decode("utf-8")
-            self.editor.setHtml(html)
-        
-
-        self.editor.document().setModified(False)
-        self.editor.document().setPageSize(QSize(self.editor.base_width, self.editor.base_height))
-        total_pages = self.editor.document().pageCount()
-        self.editor.setFixedSize(self.editor.width(), total_pages * self.editor.base_height)
-        self.main_window.file_name = Path(self.main_window.file_path).name
-        self.main_window.setWindowTitle(f"{self.main_window.file_name}  –  {self.tr('Kitab')}")
-
-        try:
-            register_recent_file(self.main_window.file_path)
-        except ImportError:
-            pass
-
-    def open_file(self):
-        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getOpenFileName(self, "Open", self.main_window.last_directory, "(*.ktb *.odt *.docx *.txt *.md *.html);;Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Microsoft Word Document (*.docx);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
-        if not self.main_window.file_path:
-            return
-        self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
-        self._open_file()
-
-    def export_file(self):
-        file_path, format_filter = QFileDialog.getSaveFileName(self, "Export file", self.main_window.last_directory, "PDF Document (*.pdf)")
-        if not file_path:
-            return
-        self.main_window.last_directory = str(Path(file_path).parent)
-        exporting = QProgressDialog("Exporting...", None, 0, 0, self)
-        exporting.setWindowTitle("Exporting...")
-        exporting.setWindowModality(Qt.WindowModality.WindowModal)
-        export_timer = QElapsedTimer()
-        export_timer.start()
-        exporting.show()
-        pdf_writer = QPdfWriter(file_path)
-        pdf_writer.setPageSize(QPageSize(QSize(self.editor.base_width, self.editor.base_height)))
-        document = self.editor.document()
-        document.print_(pdf_writer)
-        time_taken = export_timer.elapsed()
-        minimum_time = 500
-        if time_taken >= minimum_time:
-            exporting.close()
-        else:
-            remaining_time = minimum_time - time_taken
-            QTimer.singleShot(remaining_time, exporting.close)
-
-    def print_document(self):
-        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-        printer.setPageSize(QPageSize(QSize(self.editor.base_width, self.editor.base_height)))
-        dialog = QPrintDialog(printer, self)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            self.editor.document().print_(printer)
 
     def _insert_image(self, path):
         suffix = Path(path).suffix.lower().lstrip('.')
@@ -333,18 +166,3 @@ class MenuBar(QMenuBar):
         except RuntimeError:
             self.page_size_dialog = PageSizeDialog(self.editor, self.main_window)
             self.page_size_dialog.exec()
-
-    def apply_page_size(self, size):
-        name = size
-        width, height = self.editor.PAGE_SIZES[name]
-        self.editor.page_size = name
-        self.editor.base_width = width
-        self.editor.base_height = height
-        self.editor.document().setPageSize(QSize(width, height))
-        self.editor.page_count = self.editor.document().pageCount()
-        self.editor.setMinimumSize(width, height)
-        self.editor.setFixedSize(width, self.editor.page_count * height)
-        self.main_window.scene.setSceneRect(QRectF(self.editor.rect()))
-        self.editor.document().setPageSize(QSize(width, height))
-        self.editor.page_count = self.editor.document().pageCount()
-        self.main_window.default_zoom_factor = self.main_window.resolution.height() / self.editor.base_height / 1.25
