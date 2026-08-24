@@ -259,14 +259,11 @@ class PageSetupDialog(QDialog):
         layout.addWidget(page_size_group)
 
 
-
         spacing_layout = QVBoxLayout()
         spacing_group = QGroupBox("Spacing")
         spacing_group.setLayout(spacing_layout)
 
-        x = self.editor.page_size.x
-        y = self.editor.page_size.y
-
+        self.editor.line_spacing = self.editor.textCursor().blockFormat().lineHeight()
         self.line_spacing_field = QSpinBox()
         self.line_spacing_field.setMinimum(100)
         self.line_spacing_field.setMaximum(300)
