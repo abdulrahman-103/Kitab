@@ -230,6 +230,12 @@ class MainWindow(QMainWindow):
         self.find_action.triggered.connect(self.find_replace)
         self.addAction(self.find_action)
 
+        self.redo_action = QAction(self)
+        self.redo_action.setText("Redo")
+        self.redo_action.setShortcut("Ctrl+Y")
+        self.redo_action.triggered.connect(lambda: self.editor.redo())
+        self.addAction(self.redo_action)
+
         # binds Ctrl+1 through Ctrl+9 to quickly jump to specific pages
         for i in range(1, 10):
             shortcut = QShortcut(f"Ctrl+{i}", self)

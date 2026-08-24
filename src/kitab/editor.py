@@ -380,11 +380,10 @@ class Editor(QTextEdit):
             undo.setEnabled(self.document().isUndoAvailable())
             undo.triggered.connect(self.undo)
             
-            redo = menu.addAction("Redo")
-            redo.setShortcut("Ctrl+Shift+Z")
+            redo = self.main_window.redo_action
+            menu.addAction(redo)
             redo.setIcon(redo_icon)
             redo.setEnabled(self.document().isRedoAvailable())
-            redo.triggered.connect(self.redo)
             
             menu.addSeparator()
             
