@@ -1,4 +1,4 @@
-#Copyright (C) 2026 Abdulrahman
+#Copyright (C) 2026 Abdulrahman 103 and Kitab contributors
 #This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
@@ -303,7 +303,7 @@ class PageSetupDialog(QDialog):
         self.inch.toggled.connect(lambda: self.unit_change_sync())
         self.width_field.textChanged.connect(lambda: page_size_combo.setCurrentIndex(custom_index))
         self.height_field.textChanged.connect(lambda: page_size_combo.setCurrentIndex(custom_index))
-        apply_button.clicked.connect(lambda: (editor.document().setModified(True), self.apply_page_size(page_size_combo.currentText()), self.editor.set_line_spacing(self.line_spacing_field.value())))
+        apply_button.clicked.connect(lambda: (editor.document().setModified(True), self.set_page_size(page_size_combo.currentText()), self.editor.set_line_spacing(self.line_spacing_field.value())))
         cancel_button.clicked.connect(self.reject)
 
         
@@ -340,13 +340,13 @@ class PageSetupDialog(QDialog):
             self.width_field.blockSignals(False)
             self.height_field.blockSignals(False)
 
-    def apply_page_size(self, preset):
+    def set_page_size(self, preset):
         size = Vector2(float(self.width_field.value()), float(self.height_field.value()))
         if self.inch.isChecked():
             self.editor.unit = "inch"
         else:
             self.editor.unit = "millimeter"
-        self.editor.apply_page_size(size)
+        self.editor.set_page_size(size)
         self.accept()
 
 class InsertLinkDialog(QDialog):
@@ -411,6 +411,7 @@ class InsertLinkDialog(QDialog):
             self.dialog = False
             self.deleteLater()
     
+    # Opening links with Ctrl + Right click
     @staticmethod
     def handle_link_click(editor, event):
         if event.button() == Qt.MouseButton.LeftButton and event.modifiers() == Qt.KeyboardModifier.ControlModifier:

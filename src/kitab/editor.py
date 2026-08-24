@@ -1,10 +1,10 @@
-#Copyright (C) 2026 Abdulrahman
+#Copyright (C) 2026 Abdulrahman 103 and Kitab contributors
 #This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy, QDialog, QProgressDialog, QFileDialog
-from PySide6.QtGui import QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter
+from PySide6.QtGui import QTextDocument, QTextDocumentFragment, QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter
 from PySide6.QtCore import Qt, QRectF, QSizeF, QTimer, QElapsedTimer
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 import zipfile
@@ -25,7 +25,7 @@ class Editor(QTextEdit):
         "Letter": Vector2(215.9, 279.4),
         "Legal": Vector2(215.9, 355.6),
         }
-        self.DEFAULT_FONT_SIZE = 12
+        self.DEFAULT_FONT_SIZE = 14
         self.DEFAULT_PAPER_COLOR = "white"
         self.DEFAULT_FONT_COLOR = "black"
         self.DEFAULT_PAGE_SIZE = self.PAGE_SIZES["A4"]
@@ -67,7 +67,8 @@ class Editor(QTextEdit):
         self.was_zooming = False 
         self.document().setModified(False)
     
-    def dropEvent(self, event): # drag and drop files
+    # Drag and drop files.
+    def dropEvent(self, event):
         print(555)
         if event.mimeData().hasUrls():
             path_list = event.mimeData().urls()
@@ -85,7 +86,7 @@ class Editor(QTextEdit):
         else:
             super().dropEvent(event)
 
-    def apply_page_size(self, size):
+    def set_page_size(self, size):
         if self.unit == "inch":
             width, height = size.inches_to_pixels().x, size.inches_to_pixels().y
         else:
@@ -138,6 +139,7 @@ class Editor(QTextEdit):
             remaining_time = minimum_time - time_taken
             QTimer.singleShot(remaining_time, exporting.close)
 
+    # Base of self.save and self.save_as, saves documents without a dialog.
     def _save_file(self):
         saving = QProgressDialog("Saving...", None, 0, 0, self.main_window)
         saving.setWindowTitle("Saving...")
@@ -160,6 +162,7 @@ class Editor(QTextEdit):
                 file.write(data)
         elif self.main_window.file_path.endswith(".ktb"):
             html_data = self.toHtml()
+            self.line_spacing = self.textCursor().blockFormat().lineHeight()
             json_data = {
                         "page size": self.page_size.to_tuple(),
                         "unit": self.unit,
@@ -218,7 +221,7 @@ class Editor(QTextEdit):
         self.main_window.file_name = None
         self.clear()
         self.set_line_spacing(self.DEFAULT_LINE_SPACING)
-        self.apply_page_size(self.DEFAULT_PAGE_SIZE)
+        self.set_page_size(self.DEFAULT_PAGE_SIZE)
         self.document().setModified(False)
         self.main_window.toolbar.clear_formatting()
         self.main_window.toolbar.align(Qt.AlignmentFlag.AlignHCenter)
@@ -226,6 +229,7 @@ class Editor(QTextEdit):
         self.main_window.view.viewport().setFocus()
         self.setFocus()
 
+    # # Base of self.open_file and recent_documents.py, opens documents without a dialog, also used for opening files in the terminal (kitab path_to_file).
     def _open_file(self):
         if self.main_window.file_path.endswith(".ktb"):
             with zipfile.ZipFile(self.main_window.file_path, "r") as zip:
@@ -233,7 +237,7 @@ class Editor(QTextEdit):
                 json_data = json.loads(zip.read("info.json").decode("utf-8"))
             self.setHtml(html_data)
             self.unit = json_data["unit"]
-            self.apply_page_size(Vector2.tuple_to_vector2(json_data["page size"]))
+            self.set_page_size(Vector2.tuple_to_vector2(json_data["page size"]))
             self.set_line_spacing(json_data["line spacing"])
         elif self.main_window.file_path.endswith(".html"):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
@@ -293,15 +297,16 @@ class Editor(QTextEdit):
         y = (page - 0.5) * self.base_height
         self.main_window.view.centerOn(self.main_window.view.sceneRect().center().x(), y)
 
+    # Normal enter key behaviour is weird and buggy so this overrides it with cursor.insertBlock().
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             cursor = self.textCursor()
             alignment = cursor.blockFormat().alignment()
-            line_spacing = self.line_spacing
+            self.line_spacing = self.textCursor().blockFormat().lineHeight()
             block_format = QTextBlockFormat()
             block_format.setObjectIndex(cursor.blockFormat().objectIndex())
             block_format.setAlignment(alignment)
-            block_format.setLineHeight(line_spacing, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+            block_format.setLineHeight(self.line_spacing, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
             char_format = self.currentCharFormat()
 
             # insert horizontal rule by ---
@@ -328,6 +333,7 @@ class Editor(QTextEdit):
         else:
             super().keyPressEvent(event)
 
+    # Generates a new page when the page is overflowing
     def check_page_limit(self):
         self.page_count = self.document().pageCount()
         self.setFixedSize(self.width(), self.page_count * self.base_height)
@@ -335,6 +341,7 @@ class Editor(QTextEdit):
         self.document().setPageSize(QSizeF(self.base_width, self.base_height))
         self.page_count = self.document().pageCount()
 
+    # Prevents font properties reseting when document is empty, this resets the line spacing to the actual qTextDocument default (100%) so it is reapplied, setFont preserves the cursor's size and prevents the cursor size to reset.
     def preserve_font_when_empty_page(self):
         if not self.document().isEmpty():
             captured_font = self.currentFont()
@@ -347,6 +354,11 @@ class Editor(QTextEdit):
             self.setFont(self.last_font)
             self.setCurrentCharFormat(self.last_char_format)
             self.main_window.toolbar.sync_font()
+            cursor = self.textCursor()
+            block_format = self.textCursor().blockFormat()
+            if block_format.lineHeight() != self.line_spacing:
+                block_format.setLineHeight(float(self.line_spacing), QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+                cursor.setBlockFormat(block_format)
 
     def set_line_spacing(self, value):
         self.line_spacing = value
@@ -355,9 +367,29 @@ class Editor(QTextEdit):
         block_format = cursor.blockFormat()
         block_format.setLineHeight(float(value), QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
         cursor.mergeBlockFormat(block_format)
-        
-        
+    
+    # Applies self.line_spacing to pasted text/html.
+    def insertFromMimeData(self, data):
+        temporary_document = QTextDocument()
+        temporary_cursor = QTextCursor(temporary_document)
+        if data.hasHtml():
+            temporary_cursor.insertHtml(data.html())
+        elif data.hasText():
+            temporary_cursor.insertText(data.text())
+        else:
+            return
+        block = temporary_document.firstBlock()
+        while block.isValid():
+            block_cursor = QTextCursor(block)
+            fmt = block_cursor.blockFormat()
+            fmt.setLineHeight(self.line_spacing, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+            block_cursor.setBlockFormat(fmt)
+            block = block.next()
+        cursor = self.textCursor()
+        self.textCursor().insertFragment(QTextDocumentFragment(temporary_document))
+        self.setTextCursor(cursor)
 
+    # Paints the page seperators, contains a bug (github issue #2).
     def paintEvent(self, event):
         painter = QPainter(self.viewport())
         gap_height = self.base_height / 100
@@ -375,6 +407,7 @@ class Editor(QTextEdit):
                 self.was_zooming = False
                 event.accept()
                 return
+
             menu = QMenu()
 
             undo_icon = QIcon.fromTheme("edit-undo-symbolic")
