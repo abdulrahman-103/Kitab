@@ -3,14 +3,13 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QFileDialog, QProgressDialog, QMenuBar
+from PySide6.QtWidgets import QFileDialog, QMenuBar, QPushButton
 from PySide6.QtGui import QIcon, QTextImageFormat
-from PySide6.QtCore import QTimer, Qt, QSizeF, QElapsedTimer
+from PySide6.QtCore import Qt
 from pathlib import Path
 from recent_documents import *
-from dialogs import PageSizeDialog, InsertTableDialog, InsertLinkDialog
+from dialogs import PageSetupDialog, InsertTableDialog, InsertLinkDialog
 import base64
-import subprocess
 
 class MenuBar(QMenuBar):
     def __init__(self, main_window, parent=None):
@@ -97,12 +96,8 @@ class MenuBar(QMenuBar):
         self.horizontal_line_option.triggered.connect(self.insert_horizontal_line)
         self.horizontal_line_option.setShortcut("Ctrl+K")
 
-        page_menu = self.addMenu("Page")
-
-        page_size_option = page_menu.addAction("Page Size")
-        page_size_option.setIcon(QIcon.fromTheme("document-page-setup-symbolic"))
-        page_size_option.triggered.connect(self.page_size)
-
+        page = self.addAction("Page")
+        page.triggered.connect(self.page_setup)
         #page_margins_option = page_menu.addAction("Page Margins")
         #page_margins_option.triggered.connect(self.page_margins)
 
@@ -159,7 +154,7 @@ class MenuBar(QMenuBar):
         cursor.insertHtml("<hr>")
         cursor.insertBlock(block_format, char_format)
 
-    def page_size(self):
-        page_size_dialog = PageSizeDialog(self.editor, self.main_window)
-        page_size_dialog.exec()
-        page_size_dialog.deleteLater()
+    def page_setup(self):
+        page_setup_dialog = PageSetupDialog(self.editor, self.main_window)
+        page_setup_dialog.exec()
+        page_setup_dialog.deleteLater()

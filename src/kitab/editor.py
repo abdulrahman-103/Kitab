@@ -29,6 +29,8 @@ class Editor(QTextEdit):
         self.DEFAULT_PAPER_COLOR = "white"
         self.DEFAULT_FONT_COLOR = "black"
         self.DEFAULT_PAGE_SIZE = self.PAGE_SIZES["A4"]
+        self.DEFAULT_LINE_SPACING = 120
+        self.set_line_spacing(self.DEFAULT_LINE_SPACING)
 
         self.last_char_format = None
         self.last_font = None
@@ -160,7 +162,8 @@ class Editor(QTextEdit):
             html_data = self.toHtml()
             json_data = {
                         "page size": self.page_size.to_tuple(),
-                        "unit": self.unit
+                        "unit": self.unit,
+                        "line spacing": self.line_spacing
                         }
             with zipfile.ZipFile(self.main_window.file_path, mode="w") as zip:
                 zip.writestr("mimetype", "application/prs.ktb+zip", compress_type=zipfile.ZIP_STORED)
@@ -214,6 +217,7 @@ class Editor(QTextEdit):
         self.main_window.format_filter = None
         self.main_window.file_name = None
         self.clear()
+        self.set_line_spacing(self.DEFAULT_LINE_SPACING)
         self.apply_page_size(self.DEFAULT_PAGE_SIZE)
         self.document().setModified(False)
         self.main_window.toolbar.clear_formatting()
@@ -230,10 +234,12 @@ class Editor(QTextEdit):
             self.setHtml(html_data)
             self.unit = json_data["unit"]
             self.apply_page_size(Vector2.tuple_to_vector2(json_data["page size"]))
+            self.set_line_spacing(json_data["line spacing"])
         elif self.main_window.file_path.endswith(".html"):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
                 html_data = file.read()
             self.setHtml(html_data)
+            self.line_spacing = self.textCursor().blockFormat().lineHeight()
         elif self.main_window.file_path.endswith(".txt"):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
                 data = file.read()
@@ -291,9 +297,11 @@ class Editor(QTextEdit):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             cursor = self.textCursor()
             alignment = cursor.blockFormat().alignment()
+            line_spacing = self.line_spacing
             block_format = QTextBlockFormat()
             block_format.setObjectIndex(cursor.blockFormat().objectIndex())
             block_format.setAlignment(alignment)
+            block_format.setLineHeight(line_spacing, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
             char_format = self.currentCharFormat()
 
             # insert horizontal rule by ---
@@ -340,12 +348,14 @@ class Editor(QTextEdit):
             self.setCurrentCharFormat(self.last_char_format)
             self.main_window.toolbar.sync_font()
 
-    def set_line_height(self, value):
+    def set_line_spacing(self, value):
         cursor = self.textCursor()
         cursor.select(QTextCursor.SelectionType.Document)
         block_format = cursor.blockFormat()
         block_format.setLineHeight(float(value), QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
-        cursor.setBlockFormat(block_format)
+        cursor.mergeBlockFormat(block_format)
+        self.line_spacing = value
+        
 
     def paintEvent(self, event):
         painter = QPainter(self.viewport())

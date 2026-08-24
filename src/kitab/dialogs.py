@@ -3,7 +3,7 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QSizePolicy, QLabel, QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox, QRadioButton, QButtonGroup
+from PySide6.QtWidgets import QSizePolicy, QLabel, QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox, QRadioButton, QButtonGroup, QGroupBox
 from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength, QDesktopServices, QTextBlockFormat
 from PySide6.QtCore import Qt, QUrl
 from urllib.parse import urlparse
@@ -182,15 +182,19 @@ class InsertTableDialog(QDialog):
                 self.dialog = False
                 self.deleteLater()
 
-class PageSizeDialog(QDialog):
+class PageSetupDialog(QDialog):
     def __init__(self, editor, main_window):
         super().__init__(main_window)
         self.main_window = main_window
         self.editor = editor
-        self.setWindowTitle("Page Size")
+        self.setWindowTitle("Page Setup")
         self.setMinimumSize(main_window.size_unit * 7, main_window.size_unit * 6)
 
         layout = QVBoxLayout()
+
+        page_size_layout = QVBoxLayout()
+        page_size_group = QGroupBox("Page Size")
+        page_size_group.setLayout(page_size_layout)
 
         page_size_combo = QComboBox()
         sizes = list(editor.PAGE_SIZES.keys())
@@ -210,7 +214,7 @@ class PageSizeDialog(QDialog):
         else:
             page_size_combo.setCurrentIndex(custom_index)
 
-        layout.addWidget(page_size_combo)
+        page_size_layout.addWidget(page_size_combo)
 
         units_layout = QHBoxLayout()
         units_layout.addStretch()
@@ -230,7 +234,7 @@ class PageSizeDialog(QDialog):
         units_layout.addWidget(self.millimeter)
         units_layout.addWidget(self.inch)
         units_layout.addStretch()
-        layout.addLayout(units_layout)
+        page_size_layout.addLayout(units_layout)
 
         x = self.editor.page_size.x
         y = self.editor.page_size.y
@@ -242,16 +246,47 @@ class PageSizeDialog(QDialog):
         self.height_field.setMaximum(100000)
         self.height_field.setValue(y)
 
-        fields = QFormLayout()
-        fields.addRow("Width:", self.width_field)
-        fields.addRow("Height:", self.height_field)
+        size_fields = QFormLayout()
+        size_fields.addRow("Width:", self.width_field)
+        size_fields.addRow("Height:", self.height_field)
 
-        fields_layout = QHBoxLayout()
-        fields_layout.addStretch()
-        fields_layout.addLayout(fields)
-        fields_layout.addStretch()
+        size_fields_layout = QHBoxLayout()
+        size_fields_layout.addStretch()
+        size_fields_layout.addLayout(size_fields)
+        size_fields_layout.addStretch()
 
-        layout.addLayout(fields_layout)
+        page_size_layout.addLayout(size_fields_layout)
+        layout.addWidget(page_size_group)
+
+
+
+        spacing_layout = QVBoxLayout()
+        spacing_group = QGroupBox("Spacing")
+        spacing_group.setLayout(spacing_layout)
+
+        x = self.editor.page_size.x
+        y = self.editor.page_size.y
+
+        self.line_spacing_field = QSpinBox()
+        self.line_spacing_field.setMinimum(100)
+        self.line_spacing_field.setMaximum(300)
+        self.line_spacing_field.setValue(self.editor.line_spacing)
+        self.paragraph_spacing_field = QSpinBox()
+        self.paragraph_spacing_field.setMaximum(100000)
+
+        spacing_fields = QFormLayout()
+        spacing_fields.addRow("Line Spacing:", self.line_spacing_field)
+        spacing_fields.addRow("Paragraph Spacing:", self.paragraph_spacing_field)
+
+        spacing_fields_layout = QHBoxLayout()
+        spacing_fields_layout.addStretch()
+        spacing_fields_layout.addLayout(spacing_fields)
+        spacing_fields_layout.addStretch()
+
+        spacing_layout.addLayout(spacing_fields_layout)
+        layout.addWidget(spacing_group)
+
+
 
         button_layout = QHBoxLayout()
         apply_button = QPushButton("Apply")
@@ -268,9 +303,10 @@ class PageSizeDialog(QDialog):
         self.inch.toggled.connect(lambda: self.unit_change_sync())
         self.width_field.textChanged.connect(lambda: page_size_combo.setCurrentIndex(custom_index))
         self.height_field.textChanged.connect(lambda: page_size_combo.setCurrentIndex(custom_index))
-        apply_button.clicked.connect(lambda: (editor.document().setModified(True), self.apply_page_size(page_size_combo.currentText())))
+        apply_button.clicked.connect(lambda: (editor.document().setModified(True), self.apply_page_size(page_size_combo.currentText()), self.editor.set_line_spacing(self.line_spacing_field.value())))
         cancel_button.clicked.connect(self.reject)
 
+        
     def unit_change_sync(self):
         if self.inch.isChecked():
             width = self.width_field.value()
