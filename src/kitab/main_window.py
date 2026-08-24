@@ -232,7 +232,7 @@ class MainWindow(QMainWindow):
 
         self.redo_action = QAction(self)
         self.redo_action.setText("Redo")
-        self.redo_action.setShortcut("Ctrl+Y")
+        self.redo_action.setShortcuts(["Ctrl+Shift+Z","Ctrl+Y"])
         self.redo_action.triggered.connect(lambda: self.editor.redo())
         self.addAction(self.redo_action)
 
