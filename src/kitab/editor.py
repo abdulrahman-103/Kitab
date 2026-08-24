@@ -25,11 +25,11 @@ class Editor(QTextEdit):
         "Letter": Vector2(215.9, 279.4),
         "Legal": Vector2(215.9, 355.6),
         }
-        self.DEFAULT_FONT_SIZE = 14
+        self.DEFAULT_FONT_SIZE = 12
         self.DEFAULT_PAPER_COLOR = "white"
         self.DEFAULT_FONT_COLOR = "black"
         self.DEFAULT_PAGE_SIZE = self.PAGE_SIZES["A4"]
-        self.DEFAULT_LINE_SPACING = 120
+        self.DEFAULT_LINE_SPACING = 115
         self.set_line_spacing(self.DEFAULT_LINE_SPACING)
 
         self.last_char_format = None
@@ -349,12 +349,13 @@ class Editor(QTextEdit):
             self.main_window.toolbar.sync_font()
 
     def set_line_spacing(self, value):
+        self.line_spacing = value
         cursor = self.textCursor()
         cursor.select(QTextCursor.SelectionType.Document)
         block_format = cursor.blockFormat()
         block_format.setLineHeight(float(value), QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
         cursor.mergeBlockFormat(block_format)
-        self.line_spacing = value
+        
         
 
     def paintEvent(self, event):
