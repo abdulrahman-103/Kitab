@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from PySide6.QtCore import QTranslator, QLocale
 
-version = "0.2.0"
+version = "0.3`.0"
 
 def main():
     if len(sys.argv) == 2 and sys.argv[1] == "--version":

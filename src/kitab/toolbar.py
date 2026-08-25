@@ -10,6 +10,7 @@ class Toolbar(QToolBar):
     def __init__(self, main_window, parent=None):
         super().__init__(parent)
         self.main_window = main_window
+        self.editor = self.main_window.editor
         self.layout().setSpacing(5)
         self.setContentsMargins(3, 3, 3, 3)
         self.setMovable(False)
@@ -22,7 +23,7 @@ class Toolbar(QToolBar):
         self.color_button.setToolTip("Font Color")
         self.color_button.setFixedSize(self.main_window.size_unit * 1.5, self.main_window.size_unit)
         self.color_button.setStyleSheet(f"QPushButton {{background-color: {self.main_window.editor.DEFAULT_FONT_COLOR};}}")
-        self.color_button.clicked.connect(self.change_font_color)
+        self.color_button.clicked.connect(self.editor.set_font_color)
 
         self.font_family_menu = QFontComboBox()
         self.font_family_menu.setToolTip("Font Family")
@@ -374,14 +375,6 @@ class Toolbar(QToolBar):
         self.main_window.editor.setFontPointSize(self.font_size)
         self.main_window.view.viewport().setFocus()
 
-    def change_font_color(self):
-        dialog = QColorDialog(self.font_color)
-        if dialog.exec() == QColorDialog.Accepted:
-            self.font_color = dialog.selectedColor()
-            self.main_window.editor.setTextColor(self.font_color)
-            self.color_button.setStyleSheet(f"QPushButton {{ background-color: {self.font_color.name()}; }}")
-        self.main_window.view.viewport().setFocus()
-
     def highlight_text(self):
         dialog = QColorDialog(self.highlight_color)
         if dialog.exec() == QColorDialog.Accepted:
@@ -548,9 +541,9 @@ class Toolbar(QToolBar):
         cursor = self.main_window.editor.textCursor()
         block_format = cursor.blockFormat()
         if alignment != Qt.AlignmentFlag.AlignHCenter and alignment != Qt.AlignmentFlag.AlignJustify:
-            self.main_window.editor.text_alignment = alignment | Qt.AlignmentFlag.AlignAbsolute
+            alignment = alignment | Qt.AlignmentFlag.AlignAbsolute
         else:
-            self.main_window.editor.text_alignment = alignment
-        block_format.setAlignment(self.main_window.editor.text_alignment)
+            alignment = alignment
+        block_format.setAlignment(alignment)
         cursor.mergeBlockFormat(block_format)
         self.main_window.view.viewport().setFocus()

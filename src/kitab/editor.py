@@ -3,9 +3,9 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy, QDialog, QProgressDialog, QFileDialog
-from PySide6.QtGui import QTextDocument, QTextDocumentFragment, QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter
-from PySide6.QtCore import Qt, QRectF, QSizeF, QTimer, QElapsedTimer
+from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy, QDialog, QProgressDialog, QFileDialog, QColorDialog
+from PySide6.QtGui import QPageLayout, QTextDocument, QTextDocumentFragment, QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter, QColor
+from PySide6.QtCore import Qt, QRectF, QSizeF, QTimer, QElapsedTimer, QMarginsF
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 import zipfile
 import subprocess
@@ -18,6 +18,7 @@ from recent_documents import *
 class Editor(QTextEdit):
     def __init__(self, main_window):
         super().__init__()
+        self.main_window = main_window
         self.unit = "millimeter"
         self.PAGE_SIZES = {
         "A4": Vector2(210, 297),
@@ -27,26 +28,26 @@ class Editor(QTextEdit):
         }
         self.DEFAULT_FONT_SIZE = 14
         self.DEFAULT_PAPER_COLOR = "white"
+        self.paper_color = self.DEFAULT_PAPER_COLOR
         self.DEFAULT_FONT_COLOR = "black"
+        self.font_color = self.DEFAULT_FONT_COLOR
+        self.set_paper_color(self.DEFAULT_PAPER_COLOR)
         self.DEFAULT_PAGE_SIZE = self.PAGE_SIZES["A4"]
         self.DEFAULT_LINE_SPACING = 115
-        self.set_line_spacing(self.DEFAULT_LINE_SPACING)
 
         self.last_char_format = None
         self.last_font = None
-        self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute
-        self.set_paper_and_font_color(self.DEFAULT_PAPER_COLOR, self.DEFAULT_FONT_COLOR)
+        
         if self.unit == "inch":
             self.page_size = self.DEFAULT_PAGE_SIZE.inches_to_mm()
         else:
             self.page_size = self.DEFAULT_PAGE_SIZE
         self.base_width, self.base_height = self.DEFAULT_PAGE_SIZE.mm_to_pixels()
-        self.main_window = main_window
         self.setMinimumSize(self.base_width, self.base_height)
         self.document().setPageSize(QSizeF(self.base_width, self.base_height))
         self.document().setDocumentMargin(20*(96/25.4))
         self.page_count = self.document().pageCount()
-        
+        self.set_line_spacing(self.DEFAULT_LINE_SPACING, check_limit=False)
         text_option = self.document().defaultTextOption()
         text_option.setFlags(text_option.flags() | QTextOption.Flag.IncludeTrailingSpaces)
         self.document().setDefaultTextOption(text_option)
@@ -62,6 +63,8 @@ class Editor(QTextEdit):
         self.setFont(font)
         self.DEFAULT_FONT = font
         self.DEFAULT_CHAR_FORMAT = QTextCharFormat()
+        self.DEFAULT_CHAR_FORMAT.setForeground(QColor("black"))
+        self.setTextColor(QColor("black"))
         self.textChanged.connect(self.check_page_limit)
         self.textChanged.connect(self.preserve_font_when_empty_page)
         self.was_zooming = False 
@@ -85,6 +88,14 @@ class Editor(QTextEdit):
             event.acceptProposedAction()
         else:
             super().dropEvent(event)
+
+    def set_font_color(self):
+        dialog = QColorDialog(self.font_color)
+        if dialog.exec() == QColorDialog.Accepted:
+            self.font_color = dialog.selectedColor()
+            self.setTextColor(self.font_color)
+            self.main_window.toolbar.color_button.setStyleSheet(f"QPushButton {{ background-color: {self.font_color.name()}; }}")
+        self.main_window.view.viewport().setFocus()
 
     def set_page_size(self, size):
         if self.unit == "inch":
@@ -130,6 +141,7 @@ class Editor(QTextEdit):
             pdf_writer.setPageSize(QPageSize(QSizeF(self.page_size.x, self.page_size.y), QPageSize.Unit.Inch))
         else:
             pdf_writer.setPageSize(QPageSize(QSizeF(self.page_size.x, self.page_size.y), QPageSize.Unit.Millimeter))
+        pdf_writer.setPageMargins(QMarginsF(0, 0, 0, 0), QPageLayout.Unit.Millimeter)
         self.document().print_(pdf_writer)
         time_taken = export_timer.elapsed()
         minimum_time = 500
@@ -166,12 +178,13 @@ class Editor(QTextEdit):
             json_data = {
                         "page size": self.page_size.to_tuple(),
                         "unit": self.unit,
-                        "line spacing": self.line_spacing
+                        "line spacing": self.line_spacing,
+                        "paper color": self.paper_color
                         }
             with zipfile.ZipFile(self.main_window.file_path, mode="w") as zip:
                 zip.writestr("mimetype", "application/prs.ktb+zip", compress_type=zipfile.ZIP_STORED)
                 zip.writestr("document.html", html_data, compress_type=zipfile.ZIP_DEFLATED)
-                zip.writestr("info.json", json.dumps(json_data), compress_type=zipfile.ZIP_DEFLATED)
+                zip.writestr("information.json", json.dumps(json_data), compress_type=zipfile.ZIP_DEFLATED)
         elif self.main_window.file_path.endswith(".odt"):
             odf_kit = Path(__file__).resolve().parent / "odf-kit"
             js = odf_kit / "html_to_odt.js"
@@ -234,11 +247,12 @@ class Editor(QTextEdit):
         if self.main_window.file_path.endswith(".ktb"):
             with zipfile.ZipFile(self.main_window.file_path, "r") as zip:
                 html_data = zip.read("document.html").decode("utf-8")
-                json_data = json.loads(zip.read("info.json").decode("utf-8"))
+                json_data = json.loads(zip.read("information.json").decode("utf-8"))
             self.setHtml(html_data)
             self.unit = json_data["unit"]
             self.set_page_size(Vector2.tuple_to_vector2(json_data["page size"]))
             self.set_line_spacing(json_data["line spacing"])
+            self.paper_color = json_data["paper color"]
         elif self.main_window.file_path.endswith(".html"):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
                 html_data = file.read()
@@ -284,9 +298,14 @@ class Editor(QTextEdit):
         self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
         self._open_file()
 
-    def set_paper_and_font_color(self, paper_color, font_color):
-        self.setStyleSheet(f"QTextEdit {{ background-color: {paper_color}; color: {font_color}; border: none; }};")
+    def set_paper_color(self, paper_color):
+        self.setStyleSheet(f"QTextEdit {{ background-color: {paper_color}; color: {self.DEFAULT_FONT_COLOR}; border: none; }}")
+        self.document().setDefaultStyleSheet(f"body {{background-color: {paper_color};}}")
         self.paper_color = paper_color
+        root = self.document().rootFrame()
+        format = root.frameFormat()
+        format.setBackground(QColor(paper_color))
+        root.setFrameFormat(format)
 
     def current_page(self):
         center_y = self.main_window.view.mapToScene(0, int(self.main_window.view.viewport().rect().center().y()))
@@ -360,13 +379,15 @@ class Editor(QTextEdit):
                 block_format.setLineHeight(float(self.line_spacing), QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
                 cursor.setBlockFormat(block_format)
 
-    def set_line_spacing(self, value):
+    def set_line_spacing(self, value, check_limit=True):
         self.line_spacing = value
         cursor = self.textCursor()
         cursor.select(QTextCursor.SelectionType.Document)
-        block_format = cursor.blockFormat()
+        block_format = QTextBlockFormat()
         block_format.setLineHeight(float(value), QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
         cursor.mergeBlockFormat(block_format)
+        if check_limit:
+            self.check_page_limit()
     
     # Applies self.line_spacing to pasted text/html.
     def insertFromMimeData(self, data):
@@ -391,6 +412,7 @@ class Editor(QTextEdit):
 
     # Paints the page seperators, contains a bug (github issue #2).
     def paintEvent(self, event):
+        super().paintEvent(event)
         painter = QPainter(self.viewport())
         gap_height = self.base_height / 100
         for page_index in range(self.page_count):
@@ -399,7 +421,6 @@ class Editor(QTextEdit):
                 gap_rect = QRectF(0, page_bottom, self.width(), gap_height)
                 painter.fillRect(gap_rect, self.main_window.background_color)
         painter.end()
-        super().paintEvent(event)
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MouseButton.RightButton:
