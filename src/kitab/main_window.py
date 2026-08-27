@@ -57,7 +57,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.minimap)
         self.setCentralWidget(central_widget)
 
-        self.toolbar.align(Qt.AlignmentFlag.AlignHCenter)
+        self.editor.align(Qt.AlignmentFlag.AlignHCenter)
         self.editor.document().clearUndoRedoStacks()
 
         self.editor.cursorPositionChanged.connect(self.toolbar.sync_font)

@@ -192,6 +192,24 @@ class PageSetupDialog(QDialog):
 
         layout = QVBoxLayout()
 
+        self.units_group = QButtonGroup(self)
+        self.millimeter = QRadioButton("Millimeter")
+        self.inch = QRadioButton("Inch")
+        if self.editor.unit == "millimeter":
+            self.millimeter.setChecked(True)
+        else:
+            self.inch.setChecked(True)
+        self.units_group.addButton(self.millimeter)
+        self.units_group.addButton(self.inch)
+        
+        units_layout = QHBoxLayout()
+        units_layout.addStretch()
+        units_layout.addWidget(QLabel("Unit:"))
+        units_layout.addWidget(self.millimeter)
+        units_layout.addWidget(self.inch)
+        units_layout.addStretch()
+        layout.addLayout(units_layout)
+
         page_size_layout = QVBoxLayout()
         page_size_group = QGroupBox("Page Size")
         page_size_group.setLayout(page_size_layout)
@@ -215,26 +233,6 @@ class PageSetupDialog(QDialog):
             page_size_combo.setCurrentIndex(custom_index)
 
         page_size_layout.addWidget(page_size_combo)
-
-        units_layout = QHBoxLayout()
-        units_layout.addStretch()
-
-        units_layout.addWidget(QLabel("Unit:"))
-
-        self.units_group = QButtonGroup(self)
-        self.millimeter = QRadioButton("Millimeter")
-        self.inch = QRadioButton("Inch")
-        if self.editor.unit == "millimeter":
-            self.millimeter.setChecked(True)
-        else:
-            self.inch.setChecked(True)
-        self.units_group.addButton(self.millimeter)
-        self.units_group.addButton(self.inch)
-        
-        units_layout.addWidget(self.millimeter)
-        units_layout.addWidget(self.inch)
-        units_layout.addStretch()
-        page_size_layout.addLayout(units_layout)
 
         x = self.editor.page_size.x
         y = self.editor.page_size.y
@@ -265,15 +263,15 @@ class PageSetupDialog(QDialog):
 
         self.editor.line_spacing = self.editor.textCursor().blockFormat().lineHeight()
         self.line_spacing_field = QSpinBox()
+        self.line_spacing_field.setSuffix(" %")
         self.line_spacing_field.setMinimum(100)
         self.line_spacing_field.setMaximum(300)
         self.line_spacing_field.setValue(self.editor.line_spacing)
-        self.paragraph_spacing_field = QSpinBox()
-        self.paragraph_spacing_field.setMaximum(100000)
+        #self.paragraph_spacing_field = QSpinBox()
 
         spacing_fields = QFormLayout()
         spacing_fields.addRow("Line Spacing:", self.line_spacing_field)
-        spacing_fields.addRow("Paragraph Spacing:", self.paragraph_spacing_field)
+        #spacing_fields.addRow("Paragraph Spacing:", self.paragraph_spacing_field)
 
         spacing_fields_layout = QHBoxLayout()
         spacing_fields_layout.addStretch()
@@ -283,6 +281,23 @@ class PageSetupDialog(QDialog):
         spacing_layout.addLayout(spacing_fields_layout)
         layout.addWidget(spacing_group)
 
+
+    
+        self.editor.margins = self.editor.textCursor().blockFormat().lineHeight()
+        self.margin_field = QSpinBox()
+        self.margin_field.setMinimum(0)
+        self.margin_field.setMaximum(300)
+        self.margin_field.setValue(self.editor.document().documentMargin() / (96 / 25.4))
+        margin_fields = QFormLayout()
+        margin_fields.addRow("Margin:", self.margin_field)
+        margin_group = QGroupBox("Margins")
+        margin_layout = QHBoxLayout()
+        margin_layout.addStretch()
+        margin_layout.addLayout(margin_fields)
+        margin_layout.addStretch()
+        margin_group.setLayout(margin_layout)
+        margin_layout.addLayout(margin_layout)
+        layout.addWidget(margin_group)
 
 
         button_layout = QHBoxLayout()
@@ -300,7 +315,7 @@ class PageSetupDialog(QDialog):
         self.inch.toggled.connect(lambda: self.unit_change_sync())
         self.width_field.textChanged.connect(lambda: page_size_combo.setCurrentIndex(custom_index))
         self.height_field.textChanged.connect(lambda: page_size_combo.setCurrentIndex(custom_index))
-        apply_button.clicked.connect(lambda: (editor.document().setModified(True), self.set_page_size(page_size_combo.currentText()), self.editor.set_line_spacing(self.line_spacing_field.value())))
+        apply_button.clicked.connect(lambda: (editor.document().setModified(True), self.set_page_size(page_size_combo.currentText()), self.editor.set_line_spacing(self.line_spacing_field.value()), self.editor.document().setDocumentMargin(self.margin_field.value() * (96 / 25.4))))
         cancel_button.clicked.connect(self.reject)
 
         

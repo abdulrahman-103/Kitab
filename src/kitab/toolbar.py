@@ -3,8 +3,8 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QSizePolicy, QWidget, QToolBar, QLabel, QPushButton, QHBoxLayout, QComboBox, QButtonGroup, QFontComboBox, QColorDialog
-from PySide6.QtGui import QFont, QTextCharFormat, QIntValidator, QIcon, QColor, QTextListFormat, QTextCursor
+from PySide6.QtWidgets import QSizePolicy, QWidget, QToolBar, QLabel, QPushButton, QHBoxLayout, QComboBox, QButtonGroup, QFontComboBox
+from PySide6.QtGui import QTextCharFormat, QIntValidator, QIcon, QColor, QTextListFormat
 from PySide6.QtCore import Qt, QSize
 class Toolbar(QToolBar):
     def __init__(self, main_window, parent=None):
@@ -15,7 +15,7 @@ class Toolbar(QToolBar):
         self.setContentsMargins(3, 3, 3, 3)
         self.setMovable(False)
 
-        self.font_color = QColor("blue")
+        self.editor.font_color = QColor("blue")
         self.color_button = QPushButton()
         self.main_window.size_unit = self.color_button.sizeHint().height()
         color_icon = QIcon.fromTheme("format-text-color-symbolic")
@@ -30,7 +30,7 @@ class Toolbar(QToolBar):
         self.font_family_menu.setFontFilters(QFontComboBox.FontFilter.ScalableFonts)
         self.font_family_menu.setFixedWidth(self.main_window.size_unit*6)
         self.font_family_menu.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        self.font_family_menu.currentFontChanged.connect(lambda font: self.font_family(font))
+        self.font_family_menu.currentFontChanged.connect(lambda font: self.editor.font_family(font))
         self.font_family_menu.activated.connect(lambda: self.main_window.view.viewport().setFocus())
         self.font_family_menu.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.addWidget(self.font_family_menu)
@@ -43,8 +43,8 @@ class Toolbar(QToolBar):
         self.font_size_menu.setEditable(True)
         self.font_size_menu.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.font_size_menu.lineEdit().setValidator(QIntValidator(6, 500, self))
-        self.font_size_menu.activated.connect(self.change_font_size)
-        self.font_size_menu.lineEdit().returnPressed.connect(lambda: (self.change_font_size(), self.main_window.view.viewport().setFocus()))
+        self.font_size_menu.activated.connect(self.editor.change_font_size)
+        self.font_size_menu.lineEdit().returnPressed.connect(lambda: (self.editor.change_font_size(), self.main_window.view.viewport().setFocus()))
         self.font_size_menu.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.font_size_menu.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.font_size_menu.setFixedWidth(self.main_window.size_unit*2.5)
@@ -60,13 +60,13 @@ class Toolbar(QToolBar):
 
         self.addWidget(self.color_button)
 
-        self.highlight_color = QColor("yellow")
+        self.editor.highlight_color = QColor("yellow")
         self.highlight_button = QPushButton()
         highlight_icon = QIcon.fromTheme("draw-highlight-symbolic")
         self.highlight_button.setIcon(highlight_icon)
         self.highlight_button.setToolTip("Highlight")
         self.highlight_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
-        self.highlight_button.clicked.connect(self.highlight_text)
+        self.highlight_button.clicked.connect(self.editor.highlight_text)
         self.addWidget(self.highlight_button)
         self.addSeparator()
 
@@ -77,7 +77,7 @@ class Toolbar(QToolBar):
         self.bold_button.setToolTip("Bold (Ctrl+B)")
         self.bold_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.bold_button.setCheckable(True)
-        self.bold_button.clicked.connect(self.toggle_bold)
+        self.bold_button.clicked.connect(self.editor.toggle_bold)
         self.addWidget(self.bold_button)
 
         self.strikethrough_button = QPushButton()
@@ -86,7 +86,7 @@ class Toolbar(QToolBar):
         self.strikethrough_button.setToolTip("Strikethrough")
         self.strikethrough_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.strikethrough_button.setCheckable(True)
-        self.strikethrough_button.clicked.connect(self.toggle_strikethrough)
+        self.strikethrough_button.clicked.connect(self.editor.toggle_strikethrough)
         self.addWidget(self.strikethrough_button)
 
         self.underline_button = QPushButton()
@@ -96,7 +96,7 @@ class Toolbar(QToolBar):
         self.underline_button.setToolTip("Underline (Ctrl+U)")
         self.underline_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.underline_button.setCheckable(True)
-        self.underline_button.clicked.connect(self.toggle_underline)
+        self.underline_button.clicked.connect(self.editor.toggle_underline)
         self.addWidget(self.underline_button)
 
         self.italic_button = QPushButton()
@@ -106,7 +106,7 @@ class Toolbar(QToolBar):
         self.italic_button.setToolTip("Italic (Ctrl+I)")
         self.italic_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.italic_button.setCheckable(True)
-        self.italic_button.clicked.connect(self.toggle_italic)
+        self.italic_button.clicked.connect(self.editor.toggle_italic)
         self.addWidget(self.italic_button)
         self.addSeparator()
         
@@ -115,7 +115,7 @@ class Toolbar(QToolBar):
         self.clear_formatting_button.setIcon(clear_formatting_icon)
         self.clear_formatting_button.setToolTip("Clear Formatting")
         self.clear_formatting_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
-        self.clear_formatting_button.clicked.connect(self.clear_formatting)
+        self.clear_formatting_button.clicked.connect(self.editor.clear_formatting)
         self.addWidget(self.clear_formatting_button)
         self.addSeparator()
 
@@ -124,7 +124,7 @@ class Toolbar(QToolBar):
         self.numbered_list_button.setToolTip("Numbered List")
         self.numbered_list_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.numbered_list_button.setCheckable(True)
-        self.numbered_list_button.clicked.connect(self.toggle_numbered_list)
+        self.numbered_list_button.clicked.connect(self.editor.toggle_numbered_list)
         self.addWidget(self.numbered_list_button)
 
         self.bulleted_list_button = QPushButton()
@@ -132,7 +132,7 @@ class Toolbar(QToolBar):
         self.bulleted_list_button.setToolTip("Bulleted List")
         self.bulleted_list_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.bulleted_list_button.setCheckable(True)
-        self.bulleted_list_button.clicked.connect(self.toggle_bulleted_list)
+        self.bulleted_list_button.clicked.connect(self.editor.toggle_bulleted_list)
         self.addWidget(self.bulleted_list_button)
         self.addSeparator()
 
@@ -143,7 +143,7 @@ class Toolbar(QToolBar):
         self.align_left_button.setToolTip("Align Left (Ctrl+L)")
         self.align_left_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.align_left_button.setCheckable(True)
-        self.align_left_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignLeft))
+        self.align_left_button.clicked.connect(lambda: self.editor.align(Qt.AlignmentFlag.AlignLeft))
         self.addWidget(self.align_left_button)
 
         self.align_center_button = QPushButton()
@@ -153,7 +153,7 @@ class Toolbar(QToolBar):
         self.align_center_button.setToolTip("Align Center (Ctrl+E)")
         self.align_center_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.align_center_button.setCheckable(True)
-        self.align_center_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignHCenter))
+        self.align_center_button.clicked.connect(lambda: self.editor.align(Qt.AlignmentFlag.AlignHCenter))
         self.addWidget(self.align_center_button)
 
         self.align_right_button = QPushButton()
@@ -163,7 +163,7 @@ class Toolbar(QToolBar):
         self.align_right_button.setToolTip("Align Right (Ctrl+R)")
         self.align_right_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.align_right_button.setCheckable(True)
-        self.align_right_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignRight))
+        self.align_right_button.clicked.connect(lambda: self.editor.align(Qt.AlignmentFlag.AlignRight))
         self.addWidget(self.align_right_button)
 
         self.justify_button = QPushButton()
@@ -173,7 +173,7 @@ class Toolbar(QToolBar):
         self.justify_button.setToolTip("Justify (Ctrl+J)")
         self.justify_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.justify_button.setCheckable(True)
-        self.justify_button.clicked.connect(lambda: self.align(Qt.AlignmentFlag.AlignJustify))
+        self.justify_button.clicked.connect(lambda: self.editor.align(Qt.AlignmentFlag.AlignJustify))
         self.addWidget(self.justify_button)
 
         self.alignment_group = QButtonGroup(self)
@@ -191,7 +191,7 @@ class Toolbar(QToolBar):
         self.superscript_button.setToolTip("superscript (Ctrl+B)")
         self.superscript_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.superscript_button.setCheckable(True)
-        self.superscript_button.clicked.connect(self.toggle_superscript)
+        self.superscript_button.clicked.connect(self.editor.toggle_superscript)
         self.addWidget(self.superscript_button)
 
         self.subscript_button = QPushButton()
@@ -201,7 +201,7 @@ class Toolbar(QToolBar):
         self.subscript_button.setToolTip("subscript (Ctrl+B)")
         self.subscript_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.subscript_button.setCheckable(True)
-        self.subscript_button.clicked.connect(self.toggle_subscript)
+        self.subscript_button.clicked.connect(self.editor.toggle_subscript)
         self.addWidget(self.subscript_button)
 
         spacer = QWidget()
@@ -221,70 +221,6 @@ class Toolbar(QToolBar):
         self.addWidget(self.toggle_minimap_button)
 
         self.main_window.addToolBar(self)
-
-    def toggle_list(self, style):
-        editor = self.main_window.editor
-        cursor = editor.textCursor()
-        cursor.beginEditBlock()
-
-        if cursor.hasSelection():
-            doc = editor.document()
-
-            start_block = doc.findBlock(cursor.selectionStart())
-            end_block = doc.findBlock(cursor.selectionEnd())
-
-            removing = True
-            block = start_block
-            while True:
-                lst = block.textList()
-                if not lst or lst.format().style() != style:
-                    removing = False
-                    break
-                if block == end_block:
-                    break
-                block = block.next()
-            
-            if removing:
-                block = start_block
-                while True:
-                    current_list = block.textList()
-                    if current_list and current_list.format().style() == style:
-                        block_cursor = QTextCursor(block)
-                        current_list.remove(block)
-                        block_format = block_cursor.blockFormat()
-                        block_format.setObjectIndex(-1)
-                        block_format.setIndent(0)
-                        block_cursor.setBlockFormat(block_format)
-                    if block == end_block:
-                        break
-                    block = block.next()
-            else:
-                list_format = QTextListFormat()
-                list_format.setStyle(style)
-                cursor.createList(list_format)
-        else:
-            current_list = cursor.currentList()
-
-            if current_list and current_list.format().style() == style:
-                current_list.remove(cursor.block())
-                block_format = cursor.blockFormat()
-                block_format.setObjectIndex(-1)
-                block_format.setIndent(0)
-                cursor.mergeBlockFormat(block_format)
-            else:
-                list_format = QTextListFormat()
-                list_format.setStyle(style)
-                cursor.createList(list_format)
-
-        cursor.endEditBlock()
-        self.sync_font()
-        self.main_window.view.viewport().setFocus()
-
-    def toggle_numbered_list(self):
-        self.toggle_list(QTextListFormat.Style.ListDecimal)
-
-    def toggle_bulleted_list(self):
-        self.toggle_list(QTextListFormat.Style.ListDisc)
         
     def toggle_minimap(self):
         minimap = self.main_window.minimap
@@ -367,183 +303,3 @@ class Toolbar(QToolBar):
                 self.superscript_button.setChecked(False)
                 self.subscript_button.setChecked(False)
             
-    def font_family(self, font):
-        self.main_window.editor.setFontFamily(font.family())
-
-    def change_font_size(self):
-        self.font_size = int(self.font_size_menu.currentText())
-        self.main_window.editor.setFontPointSize(self.font_size)
-        self.main_window.view.viewport().setFocus()
-
-    def highlight_text(self):
-        dialog = QColorDialog(self.highlight_color)
-        if dialog.exec() == QColorDialog.Accepted:
-            self.highlight_color = dialog.selectedColor()
-            char_format = self.main_window.editor.currentCharFormat()
-            char_format.setBackground(self.highlight_color)
-            self.main_window.editor.setTextBackgroundColor(self.highlight_color)
-            self.highlight_button.setStyleSheet(f"QPushButton {{background-color: {self.highlight_color.name()}; }}")
-        self.main_window.view.viewport().setFocus()
-
-    def toggle_bold(self):
-        editor = self.main_window.editor
-        cursor = editor.textCursor()
-        if cursor.hasSelection():
-            check_cursor = QTextCursor(editor.document())
-            check_cursor.setPosition(cursor.selectionStart())
-            check_cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
-            is_bold = check_cursor.charFormat().fontWeight() == QFont.Weight.Bold
-            char_format = QTextCharFormat()
-            char_format.setFontWeight(QFont.Weight.Normal if is_bold else QFont.Weight.Bold)
-            cursor.mergeCharFormat(char_format)
-            editor.setTextCursor(cursor)
-        else:
-            char_format = editor.currentCharFormat()
-            is_bold = char_format.fontWeight() == QFont.Weight.Bold
-            char_format.setFontWeight(QFont.Weight.Normal if is_bold else QFont.Weight.Bold)
-            editor.mergeCurrentCharFormat(char_format)
-        self.bold_button.setChecked(not is_bold)
-        self.main_window.view.viewport().setFocus()
-
-    def toggle_strikethrough(self):
-        editor = self.main_window.editor
-        cursor = editor.textCursor()
-        if cursor.hasSelection():
-            check_cursor = QTextCursor(editor.document())
-            check_cursor.setPosition(cursor.selectionStart())
-            check_cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
-            is_strikethrough = check_cursor.charFormat().fontStrikeOut()
-            char_format = QTextCharFormat()
-            char_format.setFontStrikeOut(not is_strikethrough)
-            cursor.mergeCharFormat(char_format)
-            editor.setTextCursor(cursor)
-        else:
-            char_format = editor.currentCharFormat()
-            is_strikethrough = char_format.fontStrikeOut()
-            char_format.setFontStrikeOut(not is_strikethrough)
-            editor.mergeCurrentCharFormat(char_format)
-        self.strikethrough_button.setChecked(not is_strikethrough)
-        self.main_window.view.viewport().setFocus()
-
-    def toggle_underline(self):
-        editor = self.main_window.editor
-        cursor = editor.textCursor()
-        if cursor.hasSelection():
-            check_cursor = QTextCursor(editor.document())
-            check_cursor.setPosition(cursor.selectionStart())
-            check_cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
-            is_underline = check_cursor.charFormat().fontUnderline()
-            char_format = QTextCharFormat()
-            char_format.setFontUnderline(not is_underline)
-            cursor.mergeCharFormat(char_format)
-            editor.setTextCursor(cursor)
-        else:
-            char_format = editor.currentCharFormat()
-            is_underline = char_format.fontUnderline()
-            char_format.setFontUnderline(not is_underline)
-            editor.mergeCurrentCharFormat(char_format)
-        self.underline_button.setChecked(not is_underline)
-        self.main_window.view.viewport().setFocus()
-
-    def toggle_italic(self):
-        editor = self.main_window.editor
-        cursor = editor.textCursor()
-        if cursor.hasSelection():
-            check_cursor = QTextCursor(editor.document())
-            check_cursor.setPosition(cursor.selectionStart())
-            check_cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
-            is_italic = check_cursor.charFormat().fontItalic()
-            char_format = QTextCharFormat()
-            char_format.setFontItalic(not is_italic)
-            cursor.mergeCharFormat(char_format)
-            editor.setTextCursor(cursor)
-        else:
-            char_format = editor.currentCharFormat()
-            is_italic = char_format.fontItalic()
-            char_format.setFontItalic(not is_italic)
-            editor.mergeCurrentCharFormat(char_format)
-        self.italic_button.setChecked(not is_italic)
-        self.main_window.view.viewport().setFocus()
-
-    def toggle_superscript(self):
-        editor = self.main_window.editor
-        cursor = editor.textCursor()
-        if cursor.hasSelection():
-            check_cursor = QTextCursor(editor.document())
-            check_cursor.setPosition(cursor.selectionStart())
-            check_cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
-            is_superscript = check_cursor.charFormat().verticalAlignment() == QTextCharFormat.VerticalAlignment.AlignSuperScript
-            char_format = QTextCharFormat()
-            char_format.setVerticalAlignment(QTextCharFormat.VerticalAlignment.AlignNormal if is_superscript else QTextCharFormat.VerticalAlignment.AlignSuperScript)
-            cursor.mergeCharFormat(char_format)
-            editor.setTextCursor(cursor)
-            
-        else:
-            char_format = editor.currentCharFormat()
-            is_superscript = char_format.verticalAlignment() == QTextCharFormat.VerticalAlignment.AlignSuperScript
-            char_format.setVerticalAlignment(QTextCharFormat.VerticalAlignment.AlignNormal if is_superscript else QTextCharFormat.VerticalAlignment.AlignSuperScript)
-            editor.mergeCurrentCharFormat(char_format)
-        self.superscript_button.setChecked(not is_superscript)
-        self.subscript_button.setChecked(False)
-        self.main_window.view.viewport().setFocus()
-
-    def toggle_subscript(self):
-        editor = self.main_window.editor
-        cursor = editor.textCursor()
-        if cursor.hasSelection():
-            check_cursor = QTextCursor(editor.document())
-            check_cursor.setPosition(cursor.selectionStart())
-            check_cursor.movePosition(QTextCursor.MoveOperation.NextCharacter, QTextCursor.MoveMode.KeepAnchor)
-            is_subscript = check_cursor.charFormat().verticalAlignment() == QTextCharFormat.VerticalAlignment.AlignSubScript
-            char_format = QTextCharFormat()
-            char_format.setVerticalAlignment(QTextCharFormat.VerticalAlignment.AlignNormal if is_subscript else QTextCharFormat.VerticalAlignment.AlignSubScript)
-            cursor.mergeCharFormat(char_format)
-            editor.setTextCursor(cursor)
-            
-        else:
-            char_format = editor.currentCharFormat()
-            is_subscript = char_format.verticalAlignment() == QTextCharFormat.VerticalAlignment.AlignSubScript
-            char_format.setVerticalAlignment(QTextCharFormat.VerticalAlignment.AlignNormal if is_subscript else QTextCharFormat.VerticalAlignment.AlignSubScript)
-            editor.mergeCurrentCharFormat(char_format)
-        self.subscript_button.setChecked(not is_subscript)
-        self.superscript_button.setChecked(False)
-        self.main_window.view.viewport().setFocus()
-        
-    def clear_formatting(self):
-        self.main_window.editor.blockSignals(True)
-        cursor = self.main_window.editor.textCursor()
-        plain = self.main_window.editor.DEFAULT_CHAR_FORMAT
-        cursor.setCharFormat(plain)
-        self.main_window.editor.setFont(self.main_window.editor.DEFAULT_FONT)
-        block_format = cursor.blockFormat()
-        block_format.clearBackground()
-        block_format.setIndent(0)
-        block_format.setObjectIndex(-1)
-        cursor.setBlockFormat(block_format)
-        self.main_window.editor.setCurrentCharFormat(plain)
-        font_size = self.main_window.editor.currentFont().pointSize()
-        self.font_size_menu.setCurrentText(str(font_size))
-        self.color_button.setStyleSheet(f"QPushButton {{ background-color: {self.main_window.editor.textColor().name()}; }}")
-        self.main_window.view.viewport().setFocus()
-        self.sync_font()
-        self.main_window.editor.blockSignals(False)
-
-    def align(self, alignment):
-        match alignment:
-                case Qt.AlignmentFlag.AlignLeft:
-                    self.align_left_button.setChecked(True)
-                case Qt.AlignmentFlag.AlignHCenter:
-                    self.align_center_button.setChecked(True)
-                case Qt.AlignmentFlag.AlignRight:
-                    self.align_right_button.setChecked(True)
-                case Qt.AlignmentFlag.AlignJustify:
-                    self.justify_button.setChecked(True)
-        cursor = self.main_window.editor.textCursor()
-        block_format = cursor.blockFormat()
-        if alignment != Qt.AlignmentFlag.AlignHCenter and alignment != Qt.AlignmentFlag.AlignJustify:
-            alignment = alignment | Qt.AlignmentFlag.AlignAbsolute
-        else:
-            alignment = alignment
-        block_format.setAlignment(alignment)
-        cursor.mergeBlockFormat(block_format)
-        self.main_window.view.viewport().setFocus()
