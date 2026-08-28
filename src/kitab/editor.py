@@ -27,7 +27,7 @@ class Editor(QTextEdit):
         "Legal": Vector2(215.9, 355.6),
         }
         self.DEFAULT_FONT_SIZE = 14
-        self.DEFAULT_PAGE_COLOR = "white"
+        self.DEFAULT_PAGE_COLOR = "#ffffff"
         self.DEFAULT_FONT_COLOR = "black"
         self.font_color = self.DEFAULT_FONT_COLOR
         self.set_page_color(self.DEFAULT_PAGE_COLOR)
@@ -251,9 +251,11 @@ class Editor(QTextEdit):
         self.clear()
         self.set_line_spacing(self.DEFAULT_LINE_SPACING)
         self.set_page_size(self.DEFAULT_PAGE_SIZE)
+        self.clear_formatting()
+        self.align(Qt.AlignmentFlag.AlignHCenter)
+        self.set_page_color(self.DEFAULT_PAGE_COLOR)
+        self.set_page_margins(self.DEFAULT_MARGINS)
         self.document().setModified(False)
-        self.main_window.toolbar.clear_formatting()
-        self.main_window.toolbar.align(Qt.AlignmentFlag.AlignHCenter)
         self.document().clearUndoRedoStacks()
         self.main_window.view.viewport().setFocus()
         self.setFocus()
@@ -629,7 +631,7 @@ class Editor(QTextEdit):
             char_format = self.currentCharFormat()
             char_format.setBackground(self.highlight_color)
             self.setTextBackgroundColor(self.highlight_color)
-            self.main_window.toolbar.highlight_button.setStyleSheet(f"QPushButton {{background-color: {self.highlight_color.name()}; }}")
+            self.main_window.toolbar.highlight_button.setStyleSheet(f"QPushButton {{background-color: {self.highlight_color.name(s.nam)}; }}")
         self.main_window.view.viewport().setFocus()
 
     def toggle_bold(self):

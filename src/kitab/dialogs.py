@@ -3,7 +3,7 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QSizePolicy, QLabel, QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox, QRadioButton, QButtonGroup, QGroupBox
+from PySide6.QtWidgets import QSizePolicy, QLabel, QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox, QRadioButton, QButtonGroup, QGroupBox, QColorDialog
 from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength, QDesktopServices, QTextBlockFormat
 from PySide6.QtCore import Qt, QUrl
 from urllib.parse import urlparse
@@ -188,9 +188,15 @@ class PageSetupDialog(QDialog):
         self.main_window = main_window
         self.editor = editor
         self.setWindowTitle("Page Setup")
-        self.setMinimumSize(main_window.size_unit * 7, main_window.size_unit * 6)
+        self.setMinimumSize(main_window.size_unit * 7, main_window.size_unit * 18)
 
+    
         layout = QVBoxLayout()
+        horizontal_layout = QHBoxLayout()
+        left_layout = QVBoxLayout()
+        right_layout = QVBoxLayout()
+        horizontal_layout.addLayout(left_layout)
+        horizontal_layout.addLayout(right_layout)
 
         self.units_group = QButtonGroup(self)
         self.millimeter = QRadioButton("Millimeter")
@@ -209,11 +215,11 @@ class PageSetupDialog(QDialog):
         units_layout.addWidget(self.inch)
         units_layout.addStretch()
         layout.addLayout(units_layout)
+        layout.addLayout(horizontal_layout)
 
         page_size_layout = QVBoxLayout()
         page_size_group = QGroupBox("Page Size")
         page_size_group.setLayout(page_size_layout)
-
         self.page_size_combo = QComboBox()
         sizes = list(editor.PAGE_SIZES.keys())
         self.page_size_combo.addItems(sizes)
@@ -254,12 +260,8 @@ class PageSetupDialog(QDialog):
         size_fields_layout.addStretch()
 
         page_size_layout.addLayout(size_fields_layout)
-        layout.addWidget(page_size_group)
+        left_layout.addWidget(page_size_group)
 
-
-        spacing_layout = QVBoxLayout()
-        spacing_group = QGroupBox("Spacing")
-        spacing_group.setLayout(spacing_layout)
 
         self.editor.line_spacing = self.editor.textCursor().blockFormat().lineHeight()
         self.line_spacing_field = QSpinBox()
@@ -278,8 +280,11 @@ class PageSetupDialog(QDialog):
         spacing_fields_layout.addLayout(spacing_fields)
         spacing_fields_layout.addStretch()
 
+        spacing_layout = QVBoxLayout()
+        spacing_group = QGroupBox("Spacing")
+        spacing_group.setLayout(spacing_layout)
         spacing_layout.addLayout(spacing_fields_layout)
-        layout.addWidget(spacing_group)
+        left_layout.addWidget(spacing_group)
 
 
     
@@ -316,7 +321,20 @@ class PageSetupDialog(QDialog):
         margin_layout.addLayout(margin_fields)
         margin_layout.addStretch()
         margin_group.setLayout(margin_layout)
-        layout.addWidget(margin_group)
+        left_layout.addWidget(margin_group)
+
+
+        self.page_color_button = QPushButton()
+        self.page_color_button.setStyleSheet(f"QPushButton {{background-color: {self.editor.page_color}; }}")
+        self.page_color_button.clicked.connect(self.set_page_color)
+        self.page_color = self.editor.page_color
+        page_color_group = QGroupBox("Page Color")
+        page_color_layout = QHBoxLayout()
+        page_color_layout.addStretch()
+        page_color_layout.addWidget(self.page_color_button)
+        page_color_layout.addStretch()
+        page_color_group.setLayout(page_color_layout)
+        left_layout.addWidget(page_color_group)
 
 
         button_layout = QHBoxLayout()
@@ -337,6 +355,13 @@ class PageSetupDialog(QDialog):
         apply_button.clicked.connect(self.on_apply)
         cancel_button.clicked.connect(self.reject)
 
+    def set_page_color(self):
+        dialog = QColorDialog(self.editor.page_color)
+        if dialog.exec() == QColorDialog.Accepted:
+            self.page_color = dialog.selectedColor().name()
+            self.page_color_button.setStyleSheet(f"QPushButton {{background-color: {self.page_color}; }}")
+        
+
     def on_apply(self):
         if self.inch.isChecked():
             self.editor.unit = "inch"
@@ -346,6 +371,7 @@ class PageSetupDialog(QDialog):
         margins = (self.top_margin_field.value(), self.right_margin_field.value(), self.bottom_margin_field.value(), self.left_margin_field.value())
         self.editor.set_page_margins(margins)
         self.set_page_size(self.page_size_combo.currentText())
+        self.editor.set_page_color(self.page_color)
 
     def unit_change_sync(self):
         if self.inch.isChecked():
