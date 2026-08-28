@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy, QDialog, QProgressDialog, QFileDialog, QColorDialog
-from PySide6.QtGui import QFont, QTextListFormat, QPageLayout, QTextDocument, QTextDocumentFragment, QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter, QColor
+from PySide6.QtGui import QTextFrameFormat, QFont, QTextListFormat, QPageLayout, QTextDocument, QTextDocumentFragment, QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter, QColor
 from PySide6.QtCore import Qt, QRectF, QSizeF, QTimer, QElapsedTimer, QMarginsF
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 import zipfile
@@ -27,13 +27,15 @@ class Editor(QTextEdit):
         "Legal": Vector2(215.9, 355.6),
         }
         self.DEFAULT_FONT_SIZE = 14
-        self.DEFAULT_PAPER_COLOR = "white"
-        self.paper_color = self.DEFAULT_PAPER_COLOR
+        self.DEFAULT_PAGE_COLOR = "white"
         self.DEFAULT_FONT_COLOR = "black"
         self.font_color = self.DEFAULT_FONT_COLOR
-        self.set_paper_color(self.DEFAULT_PAPER_COLOR)
+        self.set_page_color(self.DEFAULT_PAGE_COLOR)
         self.DEFAULT_PAGE_SIZE = self.PAGE_SIZES["A4"]
         self.DEFAULT_LINE_SPACING = 115
+        self.DEFAULT_MARGINS = (20, 20, 20, 20)
+        self.set_page_margins(self.DEFAULT_MARGINS)
+        #self.document().setDocumentMargin(20 * (96 / 25.4))
 
         self.last_char_format = None
         self.last_font = None
@@ -45,7 +47,6 @@ class Editor(QTextEdit):
         self.base_width, self.base_height = self.DEFAULT_PAGE_SIZE.mm_to_pixels()
         self.setMinimumSize(self.base_width, self.base_height)
         self.document().setPageSize(QSizeF(self.base_width, self.base_height))
-        self.document().setDocumentMargin(20 * (96 / 25.4))
         self.page_count = self.document().pageCount()
         self.set_line_spacing(self.DEFAULT_LINE_SPACING, check_limit=False)
         text_option = self.document().defaultTextOption()
@@ -115,6 +116,20 @@ class Editor(QTextEdit):
         self.main_window.default_zoom_factor = self.main_window.resolution.height() / self.base_height / 1.25
         self.main_window.zoom("reset")
 
+    def set_page_margins(self, margins):
+        root = self.document().rootFrame()
+        if self.unit == "inch":
+            unit = 96
+        else:
+            unit = (96 / 25.4)
+        format = root.frameFormat()
+        format.setTopMargin(margins[0] * unit)
+        format.setRightMargin(margins[1] * unit)
+        format.setBottomMargin(margins[2] * unit)
+        format.setLeftMargin(margins[3] * unit)
+        root.setFrameFormat(format)
+        self.margins = margins
+
     def print_document(self):
         printer = QPrinter(QPrinter.PrinterMode.HighResolution)
         if self.unit == "inch":
@@ -176,10 +191,11 @@ class Editor(QTextEdit):
             html_data = self.toHtml()
             self.line_spacing = self.textCursor().blockFormat().lineHeight()
             json_data = {
-                        "page size": self.page_size.to_tuple(),
                         "unit": self.unit,
+                        "page size": self.page_size.to_tuple(),
+                        "page margins": self.margins,
                         "line spacing": self.line_spacing,
-                        "paper color": self.paper_color
+                        "page color": self.page_color
                         }
             with zipfile.ZipFile(self.main_window.file_path, mode="w") as zip:
                 zip.writestr("mimetype", "application/prs.ktb+zip", compress_type=zipfile.ZIP_STORED)
@@ -252,7 +268,8 @@ class Editor(QTextEdit):
             self.unit = json_data["unit"]
             self.set_page_size(Vector2.tuple_to_vector2(json_data["page size"]))
             self.set_line_spacing(json_data["line spacing"])
-            self.paper_color = json_data["paper color"]
+            self.set_page_margins(json_data["page margins"])
+            self.set_page_color(json_data["page color"])
         elif self.main_window.file_path.endswith(".html"):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
                 html_data = file.read()
@@ -298,13 +315,13 @@ class Editor(QTextEdit):
         self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
         self._open_file()
 
-    def set_paper_color(self, paper_color):
-        self.setStyleSheet(f"QTextEdit {{ background-color: {paper_color}; color: {self.DEFAULT_FONT_COLOR}; border: none; }}")
-        self.document().setDefaultStyleSheet(f"body {{background-color: {paper_color};}}")
-        self.paper_color = paper_color
+    def set_page_color(self, page_color):
+        self.setStyleSheet(f"QTextEdit {{ background-color: {page_color}; color: {self.DEFAULT_FONT_COLOR}; border: none; }}")
+        self.document().setDefaultStyleSheet(f"body {{background-color: {page_color};}}")
+        self.page_color = page_color
         root = self.document().rootFrame()
         format = root.frameFormat()
-        format.setBackground(QColor(paper_color))
+        format.setBackground(QColor(page_color))
         root.setFrameFormat(format)
 
     def current_page(self):

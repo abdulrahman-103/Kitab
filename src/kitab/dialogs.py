@@ -214,25 +214,25 @@ class PageSetupDialog(QDialog):
         page_size_group = QGroupBox("Page Size")
         page_size_group.setLayout(page_size_layout)
 
-        page_size_combo = QComboBox()
+        self.page_size_combo = QComboBox()
         sizes = list(editor.PAGE_SIZES.keys())
-        page_size_combo.addItems(sizes)
-        page_size_combo.addItem("Custom")
-        custom_index = page_size_combo.count() - 1
+        self.page_size_combo.addItems(sizes)
+        self.page_size_combo.addItem("Custom")
+        custom_index = self.page_size_combo.count() - 1
         current_size = Vector2(editor.base_width, editor.base_height).pixels_to_mm()
         for i, name in enumerate(sizes):
             if self.editor.unit == "inch":
                 if round(editor.PAGE_SIZES[name].mm_to_inches(), 2) == round(current_size.mm_to_inches(), 2):
-                    page_size_combo.setCurrentIndex(i)
+                    self.page_size_combo.setCurrentIndex(i)
                     break
             else:
                 if editor.PAGE_SIZES[name] == current_size:
-                    page_size_combo.setCurrentIndex(i)
+                    self.page_size_combo.setCurrentIndex(i)
                     break
         else:
-            page_size_combo.setCurrentIndex(custom_index)
+            self.page_size_combo.setCurrentIndex(custom_index)
 
-        page_size_layout.addWidget(page_size_combo)
+        page_size_layout.addWidget(self.page_size_combo)
 
         x = self.editor.page_size.x
         y = self.editor.page_size.y
@@ -270,7 +270,7 @@ class PageSetupDialog(QDialog):
         #self.paragraph_spacing_field = QSpinBox()
 
         spacing_fields = QFormLayout()
-        spacing_fields.addRow("Line Spacing:", self.line_spacing_field)
+        spacing_fields.addRow("Line spacing:", self.line_spacing_field)
         #spacing_fields.addRow("Paragraph Spacing:", self.paragraph_spacing_field)
 
         spacing_fields_layout = QHBoxLayout()
@@ -283,20 +283,39 @@ class PageSetupDialog(QDialog):
 
 
     
-        self.editor.margins = self.editor.textCursor().blockFormat().lineHeight()
-        self.margin_field = QSpinBox()
-        self.margin_field.setMinimum(0)
-        self.margin_field.setMaximum(300)
-        self.margin_field.setValue(self.editor.document().documentMargin() / (96 / 25.4))
+        margins = self.editor.margins
+    
+        self.top_margin_field = QDoubleSpinBox()
+        self.top_margin_field.setMinimum(0)
+        self.top_margin_field.setMaximum(500)
+        self.top_margin_field.setValue(margins[0])
+
+        self.right_margin_field = QDoubleSpinBox()
+        self.right_margin_field.setMinimum(0)
+        self.right_margin_field.setMaximum(500)
+        self.right_margin_field.setValue(margins[1])
+
+        self.bottom_margin_field = QDoubleSpinBox()
+        self.bottom_margin_field.setMinimum(0)
+        self.bottom_margin_field.setMaximum(500)
+        self.bottom_margin_field.setValue(margins[2])
+
+        self.left_margin_field = QDoubleSpinBox()
+        self.left_margin_field.setMinimum(0)
+        self.left_margin_field.setMaximum(500)
+        self.left_margin_field.setValue(margins[3])
+
         margin_fields = QFormLayout()
-        margin_fields.addRow("Margin:", self.margin_field)
+        margin_fields.addRow("Top margin:", self.top_margin_field)
+        margin_fields.addRow("Right margin:", self.right_margin_field)
+        margin_fields.addRow("Bottom margin:", self.bottom_margin_field)
+        margin_fields.addRow("Left margin:", self.left_margin_field)
         margin_group = QGroupBox("Margins")
         margin_layout = QHBoxLayout()
         margin_layout.addStretch()
         margin_layout.addLayout(margin_fields)
         margin_layout.addStretch()
         margin_group.setLayout(margin_layout)
-        margin_layout.addLayout(margin_layout)
         layout.addWidget(margin_group)
 
 
@@ -311,14 +330,23 @@ class PageSetupDialog(QDialog):
         layout.addLayout(button_layout)
         self.setLayout(layout)
         
-        page_size_combo.currentTextChanged.connect(lambda: self.page_size_combo_sync(page_size_combo.currentText()))
+        self.page_size_combo.currentTextChanged.connect(lambda: self.page_size_combo_sync(self.page_size_combo.currentText()))
         self.inch.toggled.connect(lambda: self.unit_change_sync())
-        self.width_field.textChanged.connect(lambda: page_size_combo.setCurrentIndex(custom_index))
-        self.height_field.textChanged.connect(lambda: page_size_combo.setCurrentIndex(custom_index))
-        apply_button.clicked.connect(lambda: (editor.document().setModified(True), self.set_page_size(page_size_combo.currentText()), self.editor.set_line_spacing(self.line_spacing_field.value()), self.editor.document().setDocumentMargin(self.margin_field.value() * (96 / 25.4))))
+        self.width_field.textChanged.connect(lambda: self.page_size_combo.setCurrentIndex(custom_index))
+        self.height_field.textChanged.connect(lambda: self.page_size_combo.setCurrentIndex(custom_index))
+        apply_button.clicked.connect(self.on_apply)
         cancel_button.clicked.connect(self.reject)
 
-        
+    def on_apply(self):
+        if self.inch.isChecked():
+            self.editor.unit = "inch"
+        else:
+            self.editor.unit = "millimeter"
+        self.editor.set_line_spacing(self.line_spacing_field.value())
+        margins = (self.top_margin_field.value(), self.right_margin_field.value(), self.bottom_margin_field.value(), self.left_margin_field.value())
+        self.editor.set_page_margins(margins)
+        self.set_page_size(self.page_size_combo.currentText())
+
     def unit_change_sync(self):
         if self.inch.isChecked():
             width = self.width_field.value()
@@ -329,6 +357,12 @@ class PageSetupDialog(QDialog):
             self.height_field.setValue(height / 25.4)
             self.width_field.blockSignals(False)
             self.height_field.blockSignals(False)
+
+            margins = (self.top_margin_field.value(), self.right_margin_field.value(), self.bottom_margin_field.value(), self.left_margin_field.value())
+            self.top_margin_field.setValue(margins[0] / 25.4)
+            self.right_margin_field.setValue(margins[1] / 25.4)
+            self.bottom_margin_field.setValue(margins[2] / 25.4)
+            self.left_margin_field.setValue(margins[3] / 25.4)
         else:
             width = self.width_field.value()
             height = self.height_field.value()
@@ -338,6 +372,12 @@ class PageSetupDialog(QDialog):
             self.height_field.setValue(height * 25.4)
             self.width_field.blockSignals(False)
             self.height_field.blockSignals(False)
+
+            margins = (self.top_margin_field.value(), self.right_margin_field.value(), self.bottom_margin_field.value(), self.left_margin_field.value())
+            self.top_margin_field.setValue(margins[0] * 25.4)
+            self.right_margin_field.setValue(margins[1] * 25.4)
+            self.bottom_margin_field.setValue(margins[2] * 25.4)
+            self.left_margin_field.setValue(margins[3] * 25.4)
 
     def page_size_combo_sync(self, preset):
         if preset != "Custom":
@@ -354,10 +394,6 @@ class PageSetupDialog(QDialog):
 
     def set_page_size(self, preset):
         size = Vector2(float(self.width_field.value()), float(self.height_field.value()))
-        if self.inch.isChecked():
-            self.editor.unit = "inch"
-        else:
-            self.editor.unit = "millimeter"
         self.editor.set_page_size(size)
         self.accept()
 
