@@ -152,9 +152,9 @@ class MainWindow(QMainWindow):
             if event.gestureType() == Qt.ZoomNativeGesture:
                 scale = event.value()
                 if scale>0:
-                    self.zoom("in", 0.12)
+                    self.zoom("in", 0.125)
                 elif scale<0:
-                    self.zoom("out", 0.12)
+                    self.zoom("out", 0.125)
         return super().eventFilter(watched, event)
 
 
