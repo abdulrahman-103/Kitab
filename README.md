@@ -19,7 +19,7 @@ Saves documents in `ktb`, `html`, `md` and `txt` formats and exports to PDF.
 ### Debian/Ubuntu Linux
 
 ```bash
-sudo apt install --no-install-recommends git python3-pyside6 nodejs
+sudo apt install git python3-pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -28,7 +28,7 @@ python main.py
 ### Arch Linux
 
 ```bash
-sudo pacman -Syu git pyside6 nodejs
+sudo pacman -Syu git pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -37,14 +37,14 @@ python main.py
 ###  Fedora Linux
 
 ```bash
-sudo dnf install --setopt=install_weak_deps=False git python3-pyside6 nodejs22
+sudo dnf install git python3-pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
 ```
 
 ### Other platforms
-Install git, pyside6 and nodejs
+Install git and pyside6
 ```bash
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
@@ -86,7 +86,7 @@ python main.py
 ### Debian/Ubuntu Linux
 
 ```bash
-sudo apt install --no-install-recommends git python3-pyside6 nodejs
+sudo apt install git python3-pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -95,7 +95,7 @@ python main.py
 ### Arch Linux
 
 ```bash
-sudo pacman -Syu git pyside6 nodejs
+sudo pacman -Syu git pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -104,7 +104,7 @@ python main.py
 ###  Fedora Linux
 
 ```bash
-sudo dnf install --setopt=install_weak_deps=False git python3-pyside6 nodejs22
+sudo dnf install git python3-pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
 python main.py
@@ -112,7 +112,7 @@ python main.py
 
 #### المنصات الأخرى
 
-ثبت git, pyside6 and nodejs
+ثبت git, pyside6
 ```bash
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
