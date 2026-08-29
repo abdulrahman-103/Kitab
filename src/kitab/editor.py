@@ -4,16 +4,16 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy, QDialog, QProgressDialog, QFileDialog, QColorDialog
-from PySide6.QtGui import QTextFrameFormat, QFont, QTextListFormat, QPageLayout, QTextDocument, QTextDocumentFragment, QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter, QColor
+from PySide6.QtGui import QFont, QTextListFormat, QPageLayout, QTextDocument, QTextDocumentFragment, QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter, QColor
 from PySide6.QtCore import Qt, QRectF, QSizeF, QTimer, QElapsedTimer, QMarginsF
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 import zipfile
-import subprocess
 import json
 from pathlib import Path
 from dialogs import InsertLinkDialog
 from vector2 import Vector2
 from recent_documents import *
+import parser
 
 class Editor(QTextEdit):
     def __init__(self, main_window):
@@ -280,7 +280,11 @@ class Editor(QTextEdit):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
                 data = file.read()
                 self.setMarkdown(data)
-        
+        elif self.main_window.file_path.endswith(".odt"):
+            html_data = parser.odtToKtb(self.main_window.file_path)
+            self.setHtml(html_data)
+            self.line_spacing = self.textCursor().blockFormat().lineHeight()
+
         self.document().setModified(False)
         self.document().setPageSize(QSizeF(self.base_width, self.base_height))
         total_pages = self.document().pageCount()
@@ -290,7 +294,7 @@ class Editor(QTextEdit):
         register_recent_file(self.main_window.file_path)
 
     def open_file(self):
-        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getOpenFileName(self.main_window, "Open", self.main_window.last_directory, "(*.ktb *.txt *.md *.html);;Kitab Document (*.ktb);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
+        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getOpenFileName(self.main_window, "Open", self.main_window.last_directory, "(*.ktb *.odt *.txt *.md *.html);;Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
         if not self.main_window.file_path:
             return
         self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
