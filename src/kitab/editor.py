@@ -78,7 +78,7 @@ class Editor(QTextEdit):
             path_list = event.mimeData().urls()
             if len(path_list) == 1:
                 path = path_list[0].toLocalFile()
-                if path.endswith((".txt", ".ktb", "docx", ".md", ".odt", ".html")):
+                if path.endswith((".txt", ".ktb", ".md", ".html")):
                     self.main_window.file_path = path
                     self._open_file()
                 if path.endswith(("jpg", "jpeg", "png", "gif", "bmp", "svg")):
@@ -201,11 +201,6 @@ class Editor(QTextEdit):
                 zip.writestr("mimetype", "application/prs.ktb+zip", compress_type=zipfile.ZIP_STORED)
                 zip.writestr("document.html", html_data, compress_type=zipfile.ZIP_DEFLATED)
                 zip.writestr("information.json", json.dumps(json_data), compress_type=zipfile.ZIP_DEFLATED)
-        elif self.main_window.file_path.endswith(".odt"):
-            odf_kit = Path(__file__).resolve().parent / "odf-kit"
-            js = odf_kit / "html_to_odt.js"
-            html = self.toHtml()
-            data = subprocess.run(["node", js, self.main_window.file_path], cwd=odf_kit, capture_output=True, text=True, input=html)
 
         self.document().setModified(False)
         self.main_window.file_name = Path(self.main_window.file_path).name
@@ -226,7 +221,7 @@ class Editor(QTextEdit):
 
     def save(self):
         if not self.main_window.file_path:
-            self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self.main_window, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
+            self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self.main_window, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
             if not self.main_window.file_path:
                 return "canceled"
             self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
@@ -236,7 +231,7 @@ class Editor(QTextEdit):
 
     def save_as(self, show_dialog=True):
         file_path, format_filter = self.main_window.file_path, self.main_window.format_filter
-        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self.main_window, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
+        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self.main_window, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
         if not self.main_window.file_path:
             self.main_window.file_path, self.main_window.format_filter = file_path, format_filter
         else:
@@ -285,21 +280,6 @@ class Editor(QTextEdit):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
                 data = file.read()
                 self.setMarkdown(data)
-        elif self.main_window.file_path.endswith(".odt"):
-            odf_kit = Path(__file__).resolve().parent / "odf-kit"
-            js = odf_kit / "odt_to_html.js"
-            odt = Path(self.main_window.file_path).read_bytes()
-            data = subprocess.run(["node", js], input=odt, cwd=odf_kit, capture_output=True)
-            html = data.stdout.decode("utf-8")
-            self.setHtml(html)
-        elif self.main_window.file_path.endswith(".docx"):
-            odf_kit = Path(__file__).resolve().parent / "odf-kit"
-            js_odt = odf_kit / "docx_to_odt.js"
-            js_html = odf_kit / "odt_to_html.js"
-            odt = subprocess.run(["node", js_odt, self.main_window.file_path], cwd=odf_kit, capture_output=True)
-            html = subprocess.run(["node", js_html], input=odt.stdout, cwd=odf_kit, capture_output=True)
-            html = html.stdout.decode("utf-8")
-            self.setHtml(html)
         
         self.document().setModified(False)
         self.document().setPageSize(QSizeF(self.base_width, self.base_height))
@@ -307,11 +287,10 @@ class Editor(QTextEdit):
         self.setFixedSize(self.width(), total_pages * self.base_height)
         self.main_window.file_name = Path(self.main_window.file_path).name
         self.main_window.setWindowTitle(f"{self.main_window.file_name}  –  {self.tr('Kitab')}")
-
         register_recent_file(self.main_window.file_path)
 
     def open_file(self):
-        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getOpenFileName(self.main_window, "Open", self.main_window.last_directory, "(*.ktb *.odt *.docx *.txt *.md *.html);;Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Microsoft Word Document (*.docx);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
+        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getOpenFileName(self.main_window, "Open", self.main_window.last_directory, "(*.ktb *.txt *.md *.html);;Kitab Document (*.ktb);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
         if not self.main_window.file_path:
             return
         self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
