@@ -21,8 +21,8 @@ Can save documents in `ktb`, `html`, `md` and `txt` formats and exports to PDF.
 
 ```bash
 sudo apt install git python3-pyside6
-git clone https://github.com/abdulrahman-103/Kitab
-cd Kitab
+git clone https://github.com/abdulrahman-103/kitab
+cd kitab
 ./install.sh
 kitab
 ```
@@ -31,8 +31,8 @@ kitab
 
 ```bash
 sudo pacman -Syu git pyside6
-git clone https://github.com/abdulrahman-103/Kitab
-cd Kitab
+git clone https://github.com/abdulrahman-103/kitab
+cd kitab
 ./install.sh
 kitab
 ```
@@ -41,8 +41,8 @@ kitab
 
 ```bash
 sudo dnf install git python3-pyside6
-git clone https://github.com/abdulrahman-103/Kitab
-cd Kitab
+git clone https://github.com/abdulrahman-103/kitab
+cd kitab
 ./install.sh
 kitab
 ```
@@ -50,8 +50,8 @@ kitab
 ### Other platforms
 Install git and pyside6
 ```bash
-git clone https://github.com/abdulrahman-103/Kitab
-cd Kitab
+git clone https://github.com/abdulrahman-103/kitab
+cd kitab
 ./install.sh
 kitab
 ```
@@ -87,8 +87,8 @@ kitab
 
 ```bash
 sudo apt install git python3-pyside6
-git clone https://github.com/abdulrahman-103/Kitab
-cd Kitab
+git clone https://github.com/abdulrahman-103/kitab
+cd kitab
 ./install.sh
 kitab
 ```
@@ -97,8 +97,8 @@ kitab
 
 ```bash
 sudo pacman -Syu git pyside6
-git clone https://github.com/abdulrahman-103/Kitab
-cd Kitab
+git clone https://github.com/abdulrahman-103/kitab
+cd kitab
 ./install.sh
 kitab
 ```
@@ -107,8 +107,8 @@ kitab
 
 ```bash
 sudo dnf install git python3-pyside6
-git clone https://github.com/abdulrahman-103/Kitab
-cd Kitab
+git clone https://github.com/abdulrahman-103/kitab
+cd kitab
 ./install.sh
 kitab
 ```
@@ -117,8 +117,8 @@ kitab
 
 ثبت git, pyside6
 ```bash
-git clone https://github.com/abdulrahman-103/Kitab
-cd Kitab
+git clone https://github.com/abdulrahman-103/kitab
+cd kitab
 ./install.sh
 kitab
 ```
