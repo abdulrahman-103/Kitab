@@ -78,7 +78,7 @@ class Editor(QTextEdit):
             path_list = event.mimeData().urls()
             if len(path_list) == 1:
                 path = path_list[0].toLocalFile()
-                if path.endswith((".txt", ".ktb", ".md", ".html")):
+                if path.endswith((".txt", ".ktb", "odt", ".md", ".html")):
                     self.main_window.file_path = path
                     self._open_file()
                 if path.endswith(("jpg", "jpeg", "png", "gif", "bmp", "svg")):
