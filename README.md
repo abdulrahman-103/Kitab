@@ -10,7 +10,8 @@
 
 A lightweight word processor built with **PySide6 (Qt6)**.  
 A simple alternative to LibreOffice Writer and Microsoft Word.  
-Saves documents in `ktb`, `html`, `md` and `txt` formats and exports to PDF.
+Can open `ktb`, `html`, `md`, `txt` and `odt` documents.  
+Can save documents in `ktb`, `html`, `md` and `txt` formats and exports to PDF.
 
 ---
 
@@ -75,7 +76,8 @@ python main.py
 
 معالج نصوص خفيف مبني على **PySide6 (Qt6)**.  
 بديل بسيط لـ LibreOffice Writer و Microsoft Word.  
-يحفظ المستندات بصيغة `ktb`, `odt`, `html`, `md` ,`txt` ويُصدّرها إلى PDF.
+يفتح مستندات `ktb`, `html`, `md`, `txt`, `odt`.  
+يحفظ المستندات بصيغة `ktb`, `html`, `md`, `txt` ويُصدّرها إلى PDF.
 
 
 ---
