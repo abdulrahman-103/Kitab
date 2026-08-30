@@ -18,6 +18,7 @@ li.checked::marker { content: "\2612"; }
 <table style="-qt-table-type: root; margin-top:75.5906px; margin-bottom:75.5906px; margin-left:75.5906px; margin-right:75.5906px;">
 <tr>
 <td style="border: none;">"""
+
 proc parseNode(node: XmlNode): string
 
 proc parseChildren(node: XmlNode): string =
@@ -29,19 +30,22 @@ proc parseNode(node: XmlNode): string =
   of xnText:
     result &= node.text & "\n"
   of xnElement:
-    result &= "<" & node.tag & ">\n"
-    result &= node.parseChildren()
-    result &= "</" & node.tag & ">\n"
+    case node.tag
+    of "office:document-content":
+      result &= baseHtml
+      result &= node.parseChildren()
+      result &= "</body>\n</html>"
+    of "text:p":
+      result &= "<p>\n"
+      result &= node.parseChildren()
+      result &= "</p>\n"
+    of "text:span":
+      result &= "<span>\n"
+      result &= node.parseChildren()
+      result &= "</span>\n"
+    else:
+      result &= node.parseChildren()
   else: discard
-
-var map = {
-          "<office:document-content>": baseHtml,
-          "<text:p>": "<p>",
-          "</text:p>": "</p>",
-          "</office:document-content>": "</body>\n</html>",
-          "<text:span>": "<span>",
-          "</text:span>": "</span>",
-          }.toTable()
 
 proc odtToKtb(path: string): string {.exportpy.} =
   let odt = openZipArchive(path)
@@ -49,16 +53,7 @@ proc odtToKtb(path: string): string {.exportpy.} =
   let content = odt.extractFile("content.xml")
   let styles = odt.extractFile("styles.xml")
   let xml = parseXml(content)
-  var html: string
-  let parsedXml = xml.parseNode()
-  for line in parsedXml.splitLines():
-    if map.hasKey(line):
-      html &= map[line] & "\n"
-    if not line.startsWith("<"):
-      html &= line & "\n"
-    echo line
-  echo html
+  let html = xml.parseNode()
   return html
-  
-echo odtToKtb("/home/abdulrahman/Desktop/document.odt")
-#writeFile(htmlPath, html)
+#echo odtToKtb("/home/abdulrahman/Desktop/document.odt")
+#writeFile("/home/abdulrahman/Desktop/document.html", odtToKtb("/home/abdulrahman/Desktop/document.odt"))

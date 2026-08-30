@@ -3,7 +3,7 @@
 #This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy, QDialog, QProgressDialog, QFileDialog, QColorDialog
+from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy, QDialog, QProgressDialog, QFileDialog, QColorDialog, QMessageBox
 from PySide6.QtGui import QFont, QTextListFormat, QPageLayout, QTextDocument, QTextDocumentFragment, QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter, QColor
 from PySide6.QtCore import Qt, QRectF, QSizeF, QTimer, QElapsedTimer, QMarginsF
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
@@ -168,6 +168,16 @@ class Editor(QTextEdit):
 
     # Base of self.save and self.save_as, saves documents without a dialog.
     def _save_file(self):
+        if self.main_window.file_path.endswith(".odt"):
+            message_box = QMessageBox()
+            message_box.setIcon(QMessageBox.Icon.Critical)
+            message_box.setWindowTitle("Save Failed")
+            message_box.setText("You can't save as an odt file.")
+            message_box.setInformativeText("""Supported save formats are: ktb, html, md, txt.
+If you want to open the document in libreoffice, save it in html.""")
+            message_box.exec()
+            return
+
         saving = QProgressDialog("Saving...", None, 0, 0, self.main_window)
         saving.setWindowTitle("Saving...")
         saving.setWindowModality(Qt.WindowModality.WindowModal)
