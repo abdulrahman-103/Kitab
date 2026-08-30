@@ -15,7 +15,7 @@ Can save documents in `ktb`, `html`, `md` and `txt` formats and exports to PDF.
 
 ---
 
-## Dependencies
+## Installation
 
 ### Debian/Ubuntu Linux
 
@@ -32,7 +32,8 @@ python main.py
 sudo pacman -Syu git pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
-python main.py
+./install.sh
+kitab
 ```
 
 ###  Fedora Linux
@@ -41,7 +42,8 @@ python main.py
 sudo dnf install git python3-pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
-python main.py
+./install.sh
+kitab
 ```
 
 ### Other platforms
@@ -49,15 +51,10 @@ Install git and pyside6
 ```bash
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
-python main.py
+./install.sh
+kitab
 ```
 ---
-
-## Installation
-
-```bash
-./install.sh
-```
 
 ### Hidden shortcuts
 
@@ -82,7 +79,7 @@ python main.py
 
 ---
 
-### التنصيب
+### التثبيت
 
 
 ### Debian/Ubuntu Linux
@@ -100,7 +97,8 @@ python main.py
 sudo pacman -Syu git pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
-python main.py
+./install.sh
+kitab
 ```
 
 ###  Fedora Linux
@@ -109,7 +107,8 @@ python main.py
 sudo dnf install git python3-pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
-python main.py
+./install.sh
+kitab
 ```
 
 #### المنصات الأخرى
@@ -118,12 +117,6 @@ python main.py
 ```bash
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
-python main.py
-```
-
----
-### التثبيت
-
-```bash
 ./install.sh
+kitab
 ```
