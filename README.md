@@ -23,7 +23,8 @@ Can save documents in `ktb`, `html`, `md` and `txt` formats and exports to PDF.
 sudo apt install git python3-pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
-python main.py
+./install.sh
+kitab
 ```
 
 ### Arch Linux
@@ -88,7 +89,8 @@ kitab
 sudo apt install git python3-pyside6
 git clone https://github.com/abdulrahman-103/Kitab
 cd Kitab
-python main.py
+./install.sh
+kitab
 ```
 
 ### Arch Linux
