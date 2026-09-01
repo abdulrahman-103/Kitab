@@ -33,6 +33,7 @@ class Editor(QTextEdit):
         self.set_page_color(self.DEFAULT_PAGE_COLOR)
         self.DEFAULT_PAGE_SIZE = self.PAGE_SIZES["A4"]
         self.DEFAULT_LINE_SPACING = 115
+        self.DEFAULT_PARAGRAPH_SPACING = (0, 0)
         self.DEFAULT_MARGINS = (20, 20, 20, 20)
         self.set_page_margins(self.DEFAULT_MARGINS)
         #self.document().setDocumentMargin(20 * (96 / 25.4))
@@ -40,6 +41,13 @@ class Editor(QTextEdit):
         self.last_char_format = None
         self.last_font = None
         
+        self.formats = {
+                        "ktb": "Kitab Document (*.ktb)",
+                        "txt": "Plain Text (*.txt)",
+                        "md": "Markdown Document (*.md)",
+                        "html": "HTML Document (*.html)"
+                        }
+
         if self.unit == "inch":
             self.page_size = self.DEFAULT_PAGE_SIZE.inches_to_mm()
         else:
@@ -185,19 +193,19 @@ If you want to open the document in libreoffice, save it in html.""")
         save_timer.start()
         saving.show()
 
-        if self.main_window.file_path.endswith(".txt"):
+        if self.main_window.format_filter == self.formats["txt"]:
             data = self.toPlainText()
             with open(self.main_window.file_path, "w", encoding="utf-8") as file:
                 file.write(data)
-        elif self.main_window.file_path.endswith(".html"):
+        elif self.main_window.format_filter == self.formats["html"]:
             data = self.toHtml()
             with open(self.main_window.file_path, "w", encoding="utf-8") as file:
                 file.write(data)
-        elif self.main_window.file_path.endswith(".md"):
+        elif self.main_window.format_filter == self.formats["md"]:
             data = self.toMarkdown()
             with open(self.main_window.file_path, "w", encoding="utf-8") as file:
                 file.write(data)
-        elif self.main_window.file_path.endswith(".ktb"):
+        elif self.main_window.format_filter == self.formats["ktb"]:
             html_data = self.toHtml()
             self.line_spacing = self.textCursor().blockFormat().lineHeight()
             json_data = {
@@ -400,6 +408,16 @@ If you want to open the document in libreoffice, save it in html.""")
         cursor.mergeBlockFormat(block_format)
         if check_limit:
             self.check_page_limit()
+
+    def set_paragraph_spacing(self, value, check_limit=True):
+        self.paragraph_spacing = value
+        cursor = self.textCursor()
+        cursor.select(QTextCursor.SelectionType.Document)
+        block_format = QTextBlockFormat()
+        block_format.setLineHeight(float(value), QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+        cursor.mergeBlockFormat(block_format)
+        if check_limit:
+            self.check_page_limit()
     
     # Applies self.line_spacing to pasted text/html.
     def insertFromMimeData(self, data):
@@ -414,9 +432,9 @@ If you want to open the document in libreoffice, save it in html.""")
         block = temporary_document.firstBlock()
         while block.isValid():
             block_cursor = QTextCursor(block)
-            fmt = block_cursor.blockFormat()
-            fmt.setLineHeight(self.line_spacing, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
-            block_cursor.setBlockFormat(fmt)
+            block_format = block_cursor.blockFormat()
+            block_format.setLineHeight(self.line_spacing, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+            block_cursor.setBlockFormat(block_format)
             block = block.next()
         cursor = self.textCursor()
         self.textCursor().insertFragment(QTextDocumentFragment(temporary_document))
