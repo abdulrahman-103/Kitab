@@ -57,6 +57,7 @@ class Editor(QTextEdit):
         self.document().setPageSize(QSizeF(self.base_width, self.base_height))
         self.page_count = self.document().pageCount()
         self.set_line_spacing(self.DEFAULT_LINE_SPACING, check_limit=False)
+        self.set_paragraph_spacing(self.DEFAULT_PARAGRAPH_SPACING, check_limit=False)
         text_option = self.document().defaultTextOption()
         text_option.setFlags(text_option.flags() | QTextOption.Flag.IncludeTrailingSpaces)
         self.document().setDefaultTextOption(text_option)
@@ -346,6 +347,8 @@ If you want to open the document in libreoffice, save it in html.""")
             block_format.setObjectIndex(cursor.blockFormat().objectIndex())
             block_format.setAlignment(alignment)
             block_format.setLineHeight(self.line_spacing, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+            block_format.setTopMargin(self.paragraph_spacing[0])
+            block_format.setBottomMargin(self.paragraph_spacing[1])
             char_format = self.currentCharFormat()
 
             # insert horizontal rule by ---
@@ -393,12 +396,7 @@ If you want to open the document in libreoffice, save it in html.""")
             self.setFont(self.last_font)
             self.setCurrentCharFormat(self.last_char_format)
             self.main_window.toolbar.sync_font()
-            cursor = self.textCursor()
-            block_format = self.textCursor().blockFormat()
-            if block_format.lineHeight() != self.line_spacing:
-                block_format.setLineHeight(float(self.line_spacing), QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
-                cursor.setBlockFormat(block_format)
-
+   
     def set_line_spacing(self, value, check_limit=True):
         self.line_spacing = value
         cursor = self.textCursor()
@@ -409,13 +407,16 @@ If you want to open the document in libreoffice, save it in html.""")
         if check_limit:
             self.check_page_limit()
 
-    def set_paragraph_spacing(self, value, check_limit=True):
-        self.paragraph_spacing = value
+    def set_paragraph_spacing(self, paragraph_spacing, check_limit=True):
+        self.paragraph_spacing = paragraph_spacing
         cursor = self.textCursor()
         cursor.select(QTextCursor.SelectionType.Document)
         block_format = QTextBlockFormat()
-        block_format.setLineHeight(float(value), QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+        block_format.setTopMargin(paragraph_spacing[0])
+        block_format.setBottomMargin(paragraph_spacing[1])
+        self.document().blockSignals(True)
         cursor.mergeBlockFormat(block_format)
+        self.document().blockSignals(False)
         if check_limit:
             self.check_page_limit()
     
@@ -434,6 +435,8 @@ If you want to open the document in libreoffice, save it in html.""")
             block_cursor = QTextCursor(block)
             block_format = block_cursor.blockFormat()
             block_format.setLineHeight(self.line_spacing, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+            block_format.setTopMargin(self.paragraph_spacing[0])
+            block_format.setBottomMargin(self.paragraph_spacing[1])
             block_cursor.setBlockFormat(block_format)
             block = block.next()
         cursor = self.textCursor()
