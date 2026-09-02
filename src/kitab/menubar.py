@@ -72,19 +72,16 @@ class MenuBar(QMenuBar):
         insert_table_icon = QIcon.fromTheme("insert-table-symbolic")
         table_option.setIcon(insert_table_icon)
         table_option.triggered.connect(self.insert_table)
-        table_option.setShortcut("Ctrl+T")
 
         image_option = insert_menu.addAction("Image")
         insert_image_icon = QIcon.fromTheme("insert-image-symbolic")
         image_option.setIcon(insert_image_icon)
         image_option.triggered.connect(self.insert_image)
-        image_option.setShortcut("Ctrl+Shift+I")
         
         link_option = insert_menu.addAction("Link")
         link_icon = QIcon.fromTheme("insert-link-symbolic")
         link_option.setIcon(link_icon)
         link_option.triggered.connect(self.insert_link)
-        link_option.setShortcut("Ctrl+K")
 
         self.horizontal_line_option = insert_menu.addAction("Horizontal Line")
         if self.main_window.color_scheme == Qt.ColorScheme.Dark:
@@ -94,7 +91,6 @@ class MenuBar(QMenuBar):
         horizontal_line_icon = QIcon(horizontal_line_icon_path)
         self.horizontal_line_option.setIcon(horizontal_line_icon)
         self.horizontal_line_option.triggered.connect(self.insert_horizontal_line)
-        self.horizontal_line_option.setShortcut("Ctrl+K")
 
         page = self.addAction("Page")
         page.triggered.connect(self.page_setup)

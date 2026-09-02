@@ -15,7 +15,6 @@ class FindReplaceDialog(QDialog):
         self.main_window = main_window
         self.editor = editor
         self.setWindowTitle("Find and Replace")
-        self.setMinimumSize(main_window.size_unit*12, main_window.size_unit*5)
 
         self.find_field = QLineEdit()
         self.replace_field = QLineEdit()
@@ -121,13 +120,15 @@ class InsertTableDialog(QDialog):
         super().__init__(main_window)
         self.dialog = True
         self.setWindowTitle("Insert Table")
-        self.setMinimumSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
 
         layout = QVBoxLayout()
 
         columns_field = QSpinBox()
+        columns_field.setRange(1, 100)
         rows_field = QSpinBox()
+        rows_field.setRange(1, 100)
         self.width_field = QSpinBox()
+        self.width_field.setRange(1, 100)
 
         fields = QFormLayout()
         fields.addRow("Columns:", columns_field)
@@ -188,8 +189,6 @@ class PageSetupDialog(QDialog):
         self.main_window = main_window
         self.editor = editor
         self.setWindowTitle("Page Setup")
-        self.setMinimumSize(main_window.size_unit * 7, main_window.size_unit * 18)
-
     
         layout = QVBoxLayout()
         horizontal_layout = QHBoxLayout()
@@ -266,30 +265,40 @@ class PageSetupDialog(QDialog):
         self.editor.line_spacing = self.editor.textCursor().blockFormat().lineHeight()
         self.line_spacing_field = QSpinBox()
         self.line_spacing_field.setSuffix(" %")
-        self.line_spacing_field.setMinimum(100)
-        self.line_spacing_field.setMaximum(300)
+        self.line_spacing_field.setRange(100, 300)
         self.line_spacing_field.setValue(self.editor.line_spacing)
-        #self.paragraph_spacing_field = QSpinBox()
+        
+        self.before_paragraph_spacing_field = QSpinBox()
+        self.before_paragraph_spacing_field.setSuffix(" pt")
+        self.before_paragraph_spacing_field.setMaximum(100)
+        self.before_paragraph_spacing_field.setValue(self.editor.paragraph_spacing[0])
 
-        spacing_fields = QFormLayout()
-        spacing_fields.addRow("Line spacing:", self.line_spacing_field)
-        #spacing_fields.addRow("Paragraph Spacing:", self.paragraph_spacing_field)
+        self.after_paragraph_spacing_field = QSpinBox()
+        self.after_paragraph_spacing_field.setSuffix(" pt")
+        self.after_paragraph_spacing_field.setMaximum(100)
+        self.after_paragraph_spacing_field.setValue(self.editor.paragraph_spacing[1])
 
-        spacing_fields_layout = QHBoxLayout()
-        spacing_fields_layout.addStretch()
-        spacing_fields_layout.addLayout(spacing_fields)
-        spacing_fields_layout.addStretch()
+        line_spacing_field = QFormLayout()
+        line_spacing_field.addRow("Line spacing:", self.line_spacing_field)
+        paragraph_spacing_label = QLabel("Paragraph Spacing")
+        paragraph_spacing_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        paragraph_spacing_fields = QFormLayout()
+        paragraph_spacing_fields.addRow("Before:", self.before_paragraph_spacing_field)
+        paragraph_spacing_fields.addRow("After:", self.after_paragraph_spacing_field)
+        paragraph_spacing_fields.setFormAlignment(Qt.AlignmentFlag.AlignHCenter)
+        spacing_fields_layout = QVBoxLayout()
+        spacing_fields_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        spacing_fields_layout.addLayout(line_spacing_field)
+        spacing_fields_layout.addWidget(paragraph_spacing_label)
+        spacing_fields_layout.addLayout(paragraph_spacing_fields)
 
         spacing_layout = QVBoxLayout()
         spacing_group = QGroupBox("Spacing")
         spacing_group.setLayout(spacing_layout)
         spacing_layout.addLayout(spacing_fields_layout)
-        left_layout.addWidget(spacing_group)
+        right_layout.addWidget(spacing_group)
 
-
-    
         margins = self.editor.margins
-    
         self.top_margin_field = QDoubleSpinBox()
         self.top_margin_field.setMinimum(0)
         self.top_margin_field.setMaximum(500)
@@ -315,12 +324,9 @@ class PageSetupDialog(QDialog):
         margin_fields.addRow("Right margin:", self.right_margin_field)
         margin_fields.addRow("Bottom margin:", self.bottom_margin_field)
         margin_fields.addRow("Left margin:", self.left_margin_field)
+        margin_fields.setFormAlignment(Qt.AlignmentFlag.AlignHCenter)
         margin_group = QGroupBox("Margins")
-        margin_layout = QHBoxLayout()
-        margin_layout.addStretch()
-        margin_layout.addLayout(margin_fields)
-        margin_layout.addStretch()
-        margin_group.setLayout(margin_layout)
+        margin_group.setLayout(margin_fields)
         left_layout.addWidget(margin_group)
 
 
@@ -334,8 +340,7 @@ class PageSetupDialog(QDialog):
         page_color_layout.addWidget(self.page_color_button)
         page_color_layout.addStretch()
         page_color_group.setLayout(page_color_layout)
-        left_layout.addWidget(page_color_group)
-
+        right_layout.addWidget(page_color_group)
 
         button_layout = QHBoxLayout()
         apply_button = QPushButton("Apply")
@@ -368,10 +373,13 @@ class PageSetupDialog(QDialog):
         else:
             self.editor.unit = "millimeter"
         self.editor.set_line_spacing(self.line_spacing_field.value())
+        self.editor.set_paragraph_spacing((self.before_paragraph_spacing_field.value(), self.after_paragraph_spacing_field.value()))
         margins = (self.top_margin_field.value(), self.right_margin_field.value(), self.bottom_margin_field.value(), self.left_margin_field.value())
         self.editor.set_page_margins(margins)
-        self.set_page_size(self.page_size_combo.currentText())
         self.editor.set_page_color(self.page_color)
+        page_size = Vector2(float(self.width_field.value()), float(self.height_field.value()))
+        self.editor.set_page_size(page_size)
+        self.accept()
 
     def unit_change_sync(self):
         if self.inch.isChecked():
@@ -418,18 +426,11 @@ class PageSetupDialog(QDialog):
             self.width_field.blockSignals(False)
             self.height_field.blockSignals(False)
 
-    def set_page_size(self, preset):
-        size = Vector2(float(self.width_field.value()), float(self.height_field.value()))
-        self.editor.set_page_size(size)
-        self.accept()
-
 class InsertLinkDialog(QDialog):
     def __init__(self, editor, main_window):
         super().__init__(main_window)
         self.dialog = True
         self.setWindowTitle("Insert Link")
-        self.setMinimumSize(main_window.size_unit * 7, main_window.size_unit * 4.5)
-        
         self.main_window = main_window
 
         layout = QVBoxLayout()
@@ -501,7 +502,6 @@ class GoToPageDialog(QDialog):
         super().__init__(main_window)
         self.dialog = True
         self.setWindowTitle("Go to Page")
-        self.setMinimumSize(main_window.size_unit * 6, main_window.size_unit * 5.5)
         self.editor = editor
 
         layout = QVBoxLayout()

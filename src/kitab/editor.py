@@ -87,7 +87,7 @@ class Editor(QTextEdit):
             path_list = event.mimeData().urls()
             if len(path_list) == 1:
                 path = path_list[0].toLocalFile()
-                if path.endswith((".txt", ".ktb", "odt", ".md", ".html")):
+                if path.endswith((".txt", ".ktb", ".odt", ".md", ".html")):
                     self.main_window.file_path = path
                     self._open_file()
                 if path.endswith(("jpg", "jpeg", "png", "gif", "bmp", "svg")):
@@ -214,6 +214,7 @@ If you want to open the document in libreoffice, save it in html.""")
                         "page size": self.page_size.to_tuple(),
                         "page margins": self.margins,
                         "line spacing": self.line_spacing,
+                        "paragraph spacing": self.paragraph_spacing,
                         "page color": self.page_color
                         }
             with zipfile.ZipFile(self.main_window.file_path, mode="w") as zip:
@@ -257,18 +258,23 @@ If you want to open the document in libreoffice, save it in html.""")
             self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
             self._save_file()
 
+    def reset_document(self):
+        self.set_line_spacing(self.DEFAULT_LINE_SPACING)
+        self.set_paragraph_spacing(self.DEFAULT_PARAGRAPH_SPACING)
+        self.set_page_size(self.DEFAULT_PAGE_SIZE)
+        self.set_page_color(self.DEFAULT_PAGE_COLOR)
+        self.set_page_margins(self.DEFAULT_MARGINS)
+        self.unit = "millimeter"
+        self.clear_formatting()
+
     def new(self):
         self.main_window.setWindowTitle(self.tr("Kitab"))
         self.main_window.file_path = None
         self.main_window.format_filter = None
         self.main_window.file_name = None
         self.clear()
-        self.set_line_spacing(self.DEFAULT_LINE_SPACING)
-        self.set_page_size(self.DEFAULT_PAGE_SIZE)
-        self.clear_formatting()
+        self.reset_document()
         self.align(Qt.AlignmentFlag.AlignHCenter)
-        self.set_page_color(self.DEFAULT_PAGE_COLOR)
-        self.set_page_margins(self.DEFAULT_MARGINS)
         self.document().setModified(False)
         self.document().clearUndoRedoStacks()
         self.main_window.view.viewport().setFocus()
@@ -284,6 +290,7 @@ If you want to open the document in libreoffice, save it in html.""")
             self.unit = json_data["unit"]
             self.set_page_size(Vector2.tuple_to_vector2(json_data["page size"]))
             self.set_line_spacing(json_data["line spacing"])
+            self.set_paragraph_spacing(json_data["paragraph spacing"])
             self.set_page_margins(json_data["page margins"])
             self.set_page_color(json_data["page color"])
         elif self.main_window.file_path.endswith(".html"):
@@ -294,13 +301,16 @@ If you want to open the document in libreoffice, save it in html.""")
         elif self.main_window.file_path.endswith(".txt"):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
                 data = file.read()
+                self.reset_document()
                 self.setPlainText(data)
         elif self.main_window.file_path.endswith(".md"):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
                 data = file.read()
+                self.reset_document()
                 self.setMarkdown(data)
         elif self.main_window.file_path.endswith(".odt"):
             html_data = parser.odtToKtb(self.main_window.file_path)
+            self.reset_document()
             self.setHtml(html_data)
             self.line_spacing = self.textCursor().blockFormat().lineHeight()
 
@@ -645,7 +655,7 @@ If you want to open the document in libreoffice, save it in html.""")
             char_format = self.currentCharFormat()
             char_format.setBackground(self.highlight_color)
             self.setTextBackgroundColor(self.highlight_color)
-            self.main_window.toolbar.highlight_button.setStyleSheet(f"QPushButton {{background-color: {self.highlight_color.name(s.nam)}; }}")
+            self.main_window.toolbar.highlight_button.setStyleSheet(f"QPushButton {{background-color: {self.highlight_color.name()}; }}")
         self.main_window.view.viewport().setFocus()
 
     def toggle_bold(self):
