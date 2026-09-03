@@ -27,7 +27,7 @@ def main():
         app.installTranslator(translator)
     app.setApplicationDisplayName(QApplication.tr("Kitab"))
 
-    if True:
+    if sys.platform == "win32":
         fallback_icon_path = str(Path(__file__).resolve().parents[2] / "resources" / "icons")
         QIcon.setThemeSearchPaths([fallback_icon_path])
         if app.styleHints().colorScheme() == Qt.ColorScheme.Dark:
