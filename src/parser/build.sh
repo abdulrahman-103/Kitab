@@ -1,1 +1,0 @@
-nim c --app:lib --out:src/kitab/parser.so --verbosity:0 --hints:off src/parser/src/parser.nim

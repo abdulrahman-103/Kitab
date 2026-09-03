@@ -1,5 +1,7 @@
 #!/bin/sh
 
+./build.sh
+
 sudo cp ./data/images/icon.svg /usr/share/icons/hicolor/scalable/apps/kitab.svg
 sudo chmod 644 /usr/share/icons/hicolor/scalable/apps/kitab.svg
 
