@@ -4,77 +4,88 @@
 <context>
     <name>Editor</name>
     <message>
-        <location filename="../editor.py" line="161"/>
+        <location filename="../editor.py" line="154"/>
         <source>Export</source>
         <translation>تصدير</translation>
     </message>
     <message>
-        <location filename="../editor.py" line="161"/>
+        <location filename="../editor.py" line="154"/>
         <source>PDF Document (*.pdf)</source>
         <translation>مستند PDF (*.pdf)</translation>
     </message>
     <message>
-        <location filename="../editor.py" line="165"/>
-        <location filename="../editor.py" line="166"/>
+        <location filename="../editor.py" line="158"/>
+        <location filename="../editor.py" line="159"/>
         <source>Exporting...</source>
         <translation>جارٍ التصدير...</translation>
     </message>
     <message>
-        <location filename="../editor.py" line="191"/>
+        <location filename="../editor.py" line="187"/>
         <source>Save Failed</source>
         <translation>فشل الحفظ</translation>
     </message>
     <message>
-        <location filename="../editor.py" line="192"/>
+        <location filename="../editor.py" line="188"/>
         <source>You can&apos;t save as an odt file.</source>
         <translation>لا تستطيع حفظ ملفات odt.</translation>
     </message>
     <message>
-        <location filename="../editor.py" line="193"/>
+        <location filename="../editor.py" line="189"/>
         <source>Supported save formats are: ktb, html, md, txt.
-If you want to open the document in libreoffice, save it in html.</source>
+        If you want to open the document in libreoffice, save it in html.</source>
         <translation>صيغ ملفات الحفظ المدعومة هي: ktb, html, md, txt.
 اذا كنت تريد أن تفتح المستند في libreoffice، احفظه بصيغة html.</translation>
     </message>
     <message>
-        <location filename="../editor.py" line="198"/>
-        <location filename="../editor.py" line="199"/>
+        <location filename="../editor.py" line="196"/>
+        <location filename="../editor.py" line="197"/>
         <source>Saving...</source>
         <translation>جارٍ الحفظ...</translation>
     </message>
     <message>
-        <location filename="../editor.py" line="252"/>
-        <location filename="../editor.py" line="262"/>
+        <location filename="../editor.py" line="250"/>
+        <location filename="../editor.py" line="260"/>
         <source>Save As</source>
         <translation>حفظ باسم</translation>
     </message>
     <message>
-        <location filename="../editor.py" line="334"/>
+        <location filename="../editor.py" line="250"/>
+        <location filename="../editor.py" line="260"/>
+        <source>Kitab Document (*.ktb);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)</source>
+        <translation>مستند كتاب (*.ktb);;نص (*.txt);;مستند ماركداون (*.md);;مستند HTML (*.html)</translation>
+    </message>
+    <message>
+        <location filename="../editor.py" line="332"/>
         <source>Open</source>
         <translation>فتح</translation>
     </message>
     <message>
-        <location filename="../editor.py" line="492"/>
+        <location filename="../editor.py" line="332"/>
+        <source>(*.ktb *.odt *.txt *.md *.html);;Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)</source>
+        <translation>(*.ktb *.odt *.txt *.md *.html);;مستند كتاب (*.ktb);;مستند OpenDocument النصي (*.odt);;نص (*.txt);;مستند ماركداون (*.md);;مستند HTML (*.html)</translation>
+    </message>
+    <message>
+        <location filename="../editor.py" line="490"/>
         <source>Undo</source>
         <translation>تراجع</translation>
     </message>
     <message>
-        <location filename="../editor.py" line="505"/>
+        <location filename="../editor.py" line="503"/>
         <source>Cut</source>
         <translation>قص</translation>
     </message>
     <message>
-        <location filename="../editor.py" line="511"/>
+        <location filename="../editor.py" line="509"/>
         <source>Copy</source>
         <translation>نسخ</translation>
     </message>
     <message>
-        <location filename="../editor.py" line="517"/>
+        <location filename="../editor.py" line="515"/>
         <source>Paste</source>
         <translation>لصق</translation>
     </message>
     <message>
-        <location filename="../editor.py" line="527"/>
+        <location filename="../editor.py" line="525"/>
         <source>Select All</source>
         <translation>تحديد الجميع</translation>
     </message>

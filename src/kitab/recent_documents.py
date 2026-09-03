@@ -7,18 +7,18 @@ import json
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QListWidgetItem
 from PySide6.QtGui import QPalette
-
-HISTORY_FILE = Path.home() / ".local" / "state" / "kitab" / "recent_history.json"
+from PySide6.QtCore import QStandardPaths
 
 def register_recent_file(file_path):
     if not file_path:
         return
     try:
-        HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+        history_file = Path(QStandardPaths.writableLocation(QStandardPaths.StandardLocation.StateLocation)) / "recent_history.json"
+        history_file.parent.mkdir(parents=True, exist_ok=True)
         history = []
-        if HISTORY_FILE.exists():
+        if history_file.exists():
             try:
-                with open(HISTORY_FILE, "r", encoding="utf-8") as file:
+                with open(history_file, "r", encoding="utf-8") as file:
                     history = json.load(file)
             except json.JSONDecodeError:
                 history = []
@@ -30,28 +30,29 @@ def register_recent_file(file_path):
         # limits the history length to 10 entries
         history = history[:10]
         
-        with open(HISTORY_FILE, "w", encoding="utf-8") as file:
+        with open(history_file, "w", encoding="utf-8") as file:
             json.dump(history, file, ensure_ascii=False)
     except OSError:
         return
 
 def show_recent_dialog(main_window):
-    if not HISTORY_FILE.exists():
+    history_file = Path(QStandardPaths.writableLocation(QStandardPaths.StandardLocation.StateLocation)) / "recent_history.json"
+    if not history_file.exists():
         return
     try:
-        with open(HISTORY_FILE, "r", encoding="utf-8") as file:
+        with open(history_file, "r", encoding="utf-8") as file:
             files = json.load(file)
             # removes deleted paths from variable
             files_after_deletion = [path for path in files if Path(path).exists()]
 
         # removes deleted paths from file if files got deleted
         if len(files_after_deletion) != len(files):
-            with open(HISTORY_FILE, "w", encoding="utf-8") as file:
+            with open(history_file, "w", encoding="utf-8") as file:
                 json.dump(files_after_deletion, file, ensure_ascii=False)
                 files = files_after_deletion
         
     except json.JSONDecodeError:
-        HISTORY_FILE.unlink(missing_ok=True)
+        history_file.unlink(missing_ok=True)
         return
     except OSError:
         return

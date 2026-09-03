@@ -49,13 +49,6 @@ class Editor(QTextEdit):
         self.last_char_format = None
         self.last_font = None
         
-        self.formats = {
-                        "ktb": "Kitab Document (*.ktb)",
-                        "txt": "Plain Text (*.txt)",
-                        "md": "Markdown Document (*.md)",
-                        "html": "HTML Document (*.html)"
-                        }
-
         if self.unit == "inch":
             self.page_size = self.DEFAULT_PAGE_SIZE.inches_to_mm()
         else:
@@ -185,15 +178,20 @@ class Editor(QTextEdit):
 
     # Base of self.save and self.save_as, saves documents without a dialog.
     def _save_file(self):
-        if self.main_window.file_path.endswith(".odt"):
-            message_box = QMessageBox()
-            message_box.setIcon(QMessageBox.Icon.Critical)
-            message_box.setWindowTitle(self.tr("Save Failed"))
-            message_box.setText(self.tr("You can't save as an odt file."))
-            message_box.setInformativeText(self.tr("""Supported save formats are: ktb, html, md, txt.
-If you want to open the document in libreoffice, save it in html."""))
-            message_box.exec()
-            return
+        file_path = Path(self.main_window.file_path)
+        if file_path.suffix:
+            match file_path.suffix:
+                case "odt":
+                    message_box = QMessageBox()
+                    message_box.setIcon(QMessageBox.Icon.Critical)
+                    message_box.setWindowTitle(self.tr("Save Failed"))
+                    message_box.setText(self.tr("You can't save as an odt file."))
+                    message_box.setInformativeText(self.tr("""Supported save formats are: ktb, html, md, txt.
+        If you want to open the document in libreoffice, save it in html."""))
+                    message_box.exec()
+                    return
+                case other:
+                    extension = other.lower()
 
         saving = QProgressDialog(self.tr("Saving..."), None, 0, 0, self.main_window)
         saving.setWindowTitle(self.tr("Saving..."))
@@ -201,20 +199,20 @@ If you want to open the document in libreoffice, save it in html."""))
         save_timer = QElapsedTimer()
         save_timer.start()
         saving.show()
-
-        if self.main_window.format_filter == self.formats["txt"]:
+        
+        if extension == ".txt":
             data = self.toPlainText()
             with open(self.main_window.file_path, "w", encoding="utf-8") as file:
                 file.write(data)
-        elif self.main_window.format_filter == self.formats["html"]:
+        elif extension == ".html":
             data = self.toHtml()
             with open(self.main_window.file_path, "w", encoding="utf-8") as file:
                 file.write(data)
-        elif self.main_window.format_filter == self.formats["md"]:
+        elif  extension == ".md":
             data = self.toMarkdown()
             with open(self.main_window.file_path, "w", encoding="utf-8") as file:
                 file.write(data)
-        elif self.main_window.format_filter == self.formats["ktb"]:
+        elif  extension == ".ktb":
             html_data = self.toHtml()
             self.line_spacing = self.textCursor().blockFormat().lineHeight()
             json_data = {
@@ -249,7 +247,7 @@ If you want to open the document in libreoffice, save it in html."""))
 
     def save(self):
         if not self.main_window.file_path:
-            self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self.main_window, self.tr("Save As"), self.main_window.last_directory, "Kitab Document (*.ktb);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
+            self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self.main_window, self.tr("Save As"), self.main_window.last_directory, self.tr("Kitab Document (*.ktb);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)"))
             if not self.main_window.file_path:
                 return "canceled"
             self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
@@ -259,7 +257,7 @@ If you want to open the document in libreoffice, save it in html."""))
 
     def save_as(self, show_dialog=True):
         file_path, format_filter = self.main_window.file_path, self.main_window.format_filter
-        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self.main_window, self.tr("Save As"), self.main_window.last_directory, "Kitab Document (*.ktb);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
+        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self.main_window, self.tr("Save As"), self.main_window.last_directory, self.tr("Kitab Document (*.ktb);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)"))
         if not self.main_window.file_path:
             self.main_window.file_path, self.main_window.format_filter = file_path, format_filter
         else:
@@ -331,7 +329,7 @@ If you want to open the document in libreoffice, save it in html."""))
         register_recent_file(self.main_window.file_path)
 
     def open_file(self):
-        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getOpenFileName(self.main_window, self.tr("Open"), self.main_window.last_directory, "(*.ktb *.odt *.txt *.md *.html);;Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
+        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getOpenFileName(self.main_window, self.tr("Open"), self.main_window.last_directory, self.tr("(*.ktb *.odt *.txt *.md *.html);;Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)"))
         if not self.main_window.file_path:
             return
         self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
