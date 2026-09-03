@@ -11,3 +11,4 @@ build/
 *.so
 *.pyd
 *.dll
+*.cache
