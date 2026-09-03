@@ -4,25 +4,34 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QApplication
-from main_window import MainWindow
+from PySide6.QtCore import QTranslator, QLocale
+from PySide6.QtGui import QIcon
 import sys
 from pathlib import Path
-from PySide6.QtCore import QTranslator, QLocale, QCoreApplication, Qt
+from main_window import MainWindow
 
 def main():
     app = QApplication(sys.argv)
+
     app.setApplicationName("kitab")
     app.setDesktopFileName("kitab")
     app.setApplicationVersion("0.3.0")
     if len(sys.argv) == 2 and sys.argv[1] == "--version":
         print(app.applicationVersion())
         sys.exit(0)
+        
     locale = QLocale.system().name().split("_")[0]
     translator = QTranslator()
     translation_directory = str(Path(__file__).resolve().parent / "translations")
     if translator.load(locale, translation_directory):
         app.installTranslator(translator)
     app.setApplicationDisplayName(QApplication.tr("Kitab"))
+
+    if sys.platform == "win32":
+        fallback_icon_path = str(Path(__file__).resolve().parents[2] / "resources" / "icons")
+        QIcon.setThemeSearchPaths([fallback_icon_path])
+        QIcon.setThemeName("breeze")
+
     _window = MainWindow()
     app.exec()
 

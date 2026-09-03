@@ -2,10 +2,10 @@
 
 ./build.sh
 
-sudo cp ./data/images/icon.svg /usr/share/icons/hicolor/scalable/apps/kitab.svg
+sudo cp ./resources/icons/kitab.svg /usr/share/icons/hicolor/scalable/apps/kitab.svg
 sudo chmod 644 /usr/share/icons/hicolor/scalable/apps/kitab.svg
 
-sudo cp ./data/images/icon.svg /usr/share/icons/hicolor/scalable/mimetypes/application-prs.ktb+zip.svg
+sudo cp ./resources/icons/kitab.svg /usr/share/icons/hicolor/scalable/mimetypes/application-prs.ktb+zip.svg
 sudo chmod 644 /usr/share/icons/hicolor/scalable/mimetypes/application-prs.ktb+zip.svg
 
 sudo cp ./data/ktb.xml /usr/share/mime/packages/ktb.xml
