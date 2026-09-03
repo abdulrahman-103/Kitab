@@ -69,25 +69,21 @@ class RecentFilesDialog(QDialog):
         super().__init__(main_window)
         self.main_window = main_window
         self.selected_file = None
-        self.setWindowTitle("Recent Documents")
-        self.setMinimumSize(self.main_window.size_unit * 15, self.main_window.size_unit * 10)
-        
+        self.setWindowTitle(self.tr("Recent Documents"))
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         
         self.list_widget = QListWidget()
-        
+        font = self.font()
+        font.setPointSizeF(font.pointSizeF() * 1.25)
+        self.list_widget.setFont(font)
+        self.list_widget.setSpacing(5)
         self.palette = self.main_window.app.palette()
+        
         self.background_color = self.palette.color(QPalette.ColorRole.Dark)
         self.selected_text_color = self.palette.color(QPalette.ColorRole.Highlight)
         self.selected_item_color = self.palette.color(QPalette.ColorRole.Window)
         self.stylesheet = f"""
-            QListWidget {{
-                background-color: {self.background_color.name()};
-                color: #ffffff;
-                font-size: {self.main_window.size_unit / 3}pt;
-                padding: 5px;
-            }}
             QListWidget::item {{
                 padding: 8px;
             }}
@@ -97,7 +93,6 @@ class RecentFilesDialog(QDialog):
             }}
         """
         self.list_widget.setStyleSheet(self.stylesheet)
-        self.main_window.app.styleHints().colorSchemeChanged.connect(self.update_stylesheet)
 
         for file in files:
             item = QListWidgetItem(Path(file).name)
@@ -110,27 +105,7 @@ class RecentFilesDialog(QDialog):
         self.list_widget.itemActivated.connect(self._accept_selection)
         self.list_widget.itemClicked.connect(self._accept_selection)
     
-    def update_stylesheet(self):
-        self.palette = self.main_window.app.palette()
-        self.background_color = self.palette.color(QPalette.ColorRole.Dark)
-        self.selected_text_color = self.palette.color(QPalette.ColorRole.Highlight)
-        self.selected_item_color = self.palette.color(QPalette.ColorRole.Window)
-        self.stylesheet = f"""
-            QListWidget {{
-                background-color: {self.background_color.name()};
-                color: #ffffff;
-                font-size: 12pt;
-                padding: 5px;
-            }}
-            QListWidget::item {{
-                padding: 8px;
-            }}
-            QListWidget::item:selected {{
-                background-color: {self.selected_item_color.name()};
-                color: {self.selected_text_color.name()};
-            }}
-        """
-        self.list_widget.setStyleSheet(self.stylesheet)
+        self.resize(self.sizeHint() * 2)
 
     def _accept_selection(self, item):
         self.selected_file = item.path

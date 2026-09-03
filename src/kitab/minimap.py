@@ -5,8 +5,8 @@
 
 import math
 from PySide6.QtWidgets import QGraphicsView, QFrame, QMenu
-from PySide6.QtGui import QPainter, QColor, QPen, QFont, QShortcut, QKeySequence
-from PySide6.QtCore import Qt, QRectF, QTimer
+from PySide6.QtGui import QPainter, QColor, QPen, QFont, QShortcut, QKeySequence, QCursor
+from PySide6.QtCore import Qt, QRectF, QTimer, QPoint
 
 class Minimap(QGraphicsView):
 
@@ -62,15 +62,18 @@ class Minimap(QGraphicsView):
 
     def contextMenuEvent(self, event):
         menu = QMenu(self)
-        action_label = "Hide Minimap (F7)"
-        action = menu.addAction(action_label)
-        action.triggered.connect(self.main_window.toolbar.toggle_minimap)
+        hide_minimap_action = menu.addAction(self.tr("Hide Minimap"))
+        hide_minimap_action.triggered.connect(self.main_window.toolbar.toggle_minimap)
+        hide_minimap_action.setShortcut("F7")
 
-        side_label = "Move to Left" if self.side == "right" else "Move to Right"
-        side_action = menu.addAction(side_label)
+        side_action = menu.addAction(self.tr("Move to the Other Side"))
         side_action.triggered.connect(self.toggle_side)
 
-        menu.exec(event.globalPos())
+        cursor_position = QCursor.pos()
+        menu_width = menu.sizeHint().width()
+        # solves bug where context menu is far to the left when layout direction of app is rtl
+        fixed_position = cursor_position + QPoint(menu_width, 0) if self.layoutDirection() == Qt.LayoutDirection.RightToLeft else cursor_position
+        menu.exec(fixed_position)
 
     def _get_container_layout(self):
         parent = self.parentWidget()
@@ -205,14 +208,11 @@ class Minimap(QGraphicsView):
 
     def _draw_viewport_box(self, painter: QPainter, rect: QRectF):
         accent = QColor(90, 160, 255) if not self._hovering else QColor(120, 180, 255)
-
         color = QColor(accent.red(), accent.green(), accent.blue(), 100)
         painter.setBrush(color)
-
         pen = QPen(accent, 1.4)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         painter.setPen(pen)
-
         painter.drawRoundedRect(rect, 3, 3)
 
     def _navigate_to(self, pos):

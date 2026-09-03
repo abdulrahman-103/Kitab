@@ -14,20 +14,20 @@ class FindReplaceDialog(QDialog):
         super().__init__(main_window)
         self.main_window = main_window
         self.editor = editor
-        self.setWindowTitle("Find and Replace")
+        self.setWindowTitle(self.tr("Find and Replace"))
 
         self.find_field = QLineEdit()
         self.replace_field = QLineEdit()
-        self.match_case = QCheckBox("Match case")
+        self.match_case = QCheckBox(self.tr("Match case"))
 
         fields = QFormLayout()
-        fields.addRow("Find:", self.find_field)
-        fields.addRow("Replace:", self.replace_field)
+        fields.addRow(self.tr("Find"), self.find_field)
+        fields.addRow(self.tr("Replace"), self.replace_field)
 
-        find_next = QPushButton("Find Next")
-        find_previous = QPushButton("Find Previous")
-        replace = QPushButton("Replace")
-        replace_all = QPushButton("Replace All")
+        find_next = QPushButton(self.tr("Find Next"))
+        find_previous = QPushButton(self.tr("Find Previous"))
+        replace = QPushButton(self.tr("Replace"))
+        replace_all = QPushButton(self.tr("Replace All"))
 
         find_next.setAutoDefault(False)
         find_previous.setAutoDefault(False)
@@ -119,7 +119,7 @@ class InsertTableDialog(QDialog):
     def __init__(self, editor, main_window):
         super().__init__(main_window)
         self.dialog = True
-        self.setWindowTitle("Insert Table")
+        self.setWindowTitle(self.tr("Insert Table"))
 
         layout = QVBoxLayout()
 
@@ -131,9 +131,9 @@ class InsertTableDialog(QDialog):
         self.width_field.setRange(1, 100)
 
         fields = QFormLayout()
-        fields.addRow("Columns:", columns_field)
-        fields.addRow("Rows:", rows_field)
-        fields.addRow("Width:", self.width_field)
+        fields.addRow(self.tr("Columns"), columns_field)
+        fields.addRow(self.tr("Rows"), rows_field)
+        fields.addRow(self.tr("Width"), self.width_field)
 
         fields_layout = QHBoxLayout()
         fields_layout.addStretch()
@@ -142,8 +142,8 @@ class InsertTableDialog(QDialog):
         layout.addLayout(fields_layout)
 
         button_layout = QHBoxLayout()
-        apply_button = QPushButton("Apply")
-        cancel_button = QPushButton("Cancel")
+        apply_button = QPushButton(self.tr("Apply"))
+        cancel_button = QPushButton(self.tr("Cancel"))
         apply_button.setAutoDefault(False)
         cancel_button.setAutoDefault(False)
         button_layout.addWidget(apply_button)
@@ -154,6 +154,8 @@ class InsertTableDialog(QDialog):
         
         apply_button.clicked.connect(lambda: self.insert_table(main_window, editor, columns_field.value(), rows_field.value(), self.width_field.value()))
         cancel_button.clicked.connect(self.reject)
+
+        self.resize(self.sizeHint().width() * 1.25, self.sizeHint().height())
 
     def insert_table(self, main_window, editor, columns, rows, width_percentage):
             table_format = QTextTableFormat()
@@ -183,12 +185,12 @@ class InsertTableDialog(QDialog):
                 self.dialog = False
                 self.deleteLater()
 
-class PageSetupDialog(QDialog):
+class PageLayoutDialog(QDialog):
     def __init__(self, editor, main_window):
         super().__init__(main_window)
         self.main_window = main_window
         self.editor = editor
-        self.setWindowTitle("Page Setup")
+        self.setWindowTitle(self.tr("Page Layout"))
     
         layout = QVBoxLayout()
         horizontal_layout = QHBoxLayout()
@@ -198,8 +200,8 @@ class PageSetupDialog(QDialog):
         horizontal_layout.addLayout(right_layout)
 
         self.units_group = QButtonGroup(self)
-        self.millimeter = QRadioButton("Millimeter")
-        self.inch = QRadioButton("Inch")
+        self.millimeter = QRadioButton(self.tr("Millimeter"))
+        self.inch = QRadioButton(self.tr("Inch"))
         if self.editor.unit == "millimeter":
             self.millimeter.setChecked(True)
         else:
@@ -209,7 +211,7 @@ class PageSetupDialog(QDialog):
         
         units_layout = QHBoxLayout()
         units_layout.addStretch()
-        units_layout.addWidget(QLabel("Unit:"))
+        units_layout.addWidget(QLabel(self.tr("Unit")))
         units_layout.addWidget(self.millimeter)
         units_layout.addWidget(self.inch)
         units_layout.addStretch()
@@ -217,13 +219,13 @@ class PageSetupDialog(QDialog):
         layout.addLayout(horizontal_layout)
 
         page_size_layout = QVBoxLayout()
-        page_size_group = QGroupBox("Page Size")
+        page_size_group = QGroupBox(self.tr("Page Size"))
         page_size_group.setLayout(page_size_layout)
         self.page_size_combo = QComboBox()
         sizes = list(editor.PAGE_SIZES.keys())
         self.page_size_combo.addItems(sizes)
-        self.page_size_combo.addItem("Custom")
-        custom_index = self.page_size_combo.count() - 1
+        self.page_size_combo.addItem(self.tr("Custom"))
+        self.custom_index = self.page_size_combo.count() - 1
         current_size = Vector2(editor.base_width, editor.base_height).pixels_to_mm()
         for i, name in enumerate(sizes):
             if self.editor.unit == "inch":
@@ -235,7 +237,7 @@ class PageSetupDialog(QDialog):
                     self.page_size_combo.setCurrentIndex(i)
                     break
         else:
-            self.page_size_combo.setCurrentIndex(custom_index)
+            self.page_size_combo.setCurrentIndex(self.custom_index)
 
         page_size_layout.addWidget(self.page_size_combo)
 
@@ -250,8 +252,8 @@ class PageSetupDialog(QDialog):
         self.height_field.setValue(y)
 
         size_fields = QFormLayout()
-        size_fields.addRow("Width:", self.width_field)
-        size_fields.addRow("Height:", self.height_field)
+        size_fields.addRow(self.tr("Width"), self.width_field)
+        size_fields.addRow(self.tr("Height"), self.height_field)
 
         size_fields_layout = QHBoxLayout()
         size_fields_layout.addStretch()
@@ -279,12 +281,12 @@ class PageSetupDialog(QDialog):
         self.after_paragraph_spacing_field.setValue(self.editor.paragraph_spacing[1])
 
         line_spacing_field = QFormLayout()
-        line_spacing_field.addRow("Line spacing:", self.line_spacing_field)
-        paragraph_spacing_label = QLabel("Paragraph Spacing")
+        line_spacing_field.addRow(self.tr("Line spacing"), self.line_spacing_field)
+        paragraph_spacing_label = QLabel(self.tr("Paragraph Spacing"))
         paragraph_spacing_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         paragraph_spacing_fields = QFormLayout()
-        paragraph_spacing_fields.addRow("Before:", self.before_paragraph_spacing_field)
-        paragraph_spacing_fields.addRow("After:", self.after_paragraph_spacing_field)
+        paragraph_spacing_fields.addRow(self.tr("Before"), self.before_paragraph_spacing_field)
+        paragraph_spacing_fields.addRow(self.tr("After"), self.after_paragraph_spacing_field)
         paragraph_spacing_fields.setFormAlignment(Qt.AlignmentFlag.AlignHCenter)
         spacing_fields_layout = QVBoxLayout()
         spacing_fields_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
@@ -293,7 +295,7 @@ class PageSetupDialog(QDialog):
         spacing_fields_layout.addLayout(paragraph_spacing_fields)
 
         spacing_layout = QVBoxLayout()
-        spacing_group = QGroupBox("Spacing")
+        spacing_group = QGroupBox(self.tr("Spacing"))
         spacing_group.setLayout(spacing_layout)
         spacing_layout.addLayout(spacing_fields_layout)
         right_layout.addWidget(spacing_group)
@@ -320,12 +322,12 @@ class PageSetupDialog(QDialog):
         self.left_margin_field.setValue(margins[3])
 
         margin_fields = QFormLayout()
-        margin_fields.addRow("Top margin:", self.top_margin_field)
-        margin_fields.addRow("Right margin:", self.right_margin_field)
-        margin_fields.addRow("Bottom margin:", self.bottom_margin_field)
-        margin_fields.addRow("Left margin:", self.left_margin_field)
+        margin_fields.addRow(self.tr("Top margin"), self.top_margin_field)
+        margin_fields.addRow(self.tr("Right margin"), self.right_margin_field)
+        margin_fields.addRow(self.tr("Bottom margin"), self.bottom_margin_field)
+        margin_fields.addRow(self.tr("Left margin"), self.left_margin_field)
         margin_fields.setFormAlignment(Qt.AlignmentFlag.AlignHCenter)
-        margin_group = QGroupBox("Margins")
+        margin_group = QGroupBox(self.tr("Margins"))
         margin_group.setLayout(margin_fields)
         left_layout.addWidget(margin_group)
 
@@ -334,7 +336,7 @@ class PageSetupDialog(QDialog):
         self.page_color_button.setStyleSheet(f"QPushButton {{background-color: {self.editor.page_color}; }}")
         self.page_color_button.clicked.connect(self.set_page_color)
         self.page_color = self.editor.page_color
-        page_color_group = QGroupBox("Page Color")
+        page_color_group = QGroupBox(self.tr("Page Color"))
         page_color_layout = QHBoxLayout()
         page_color_layout.addStretch()
         page_color_layout.addWidget(self.page_color_button)
@@ -343,8 +345,8 @@ class PageSetupDialog(QDialog):
         right_layout.addWidget(page_color_group)
 
         button_layout = QHBoxLayout()
-        apply_button = QPushButton("Apply")
-        cancel_button = QPushButton("Cancel")
+        apply_button = QPushButton(self.tr("Apply"))
+        cancel_button = QPushButton(self.tr("Cancel"))
         apply_button.setAutoDefault(False)
         cancel_button.setAutoDefault(False)
         button_layout.addWidget(apply_button)
@@ -353,10 +355,10 @@ class PageSetupDialog(QDialog):
         layout.addLayout(button_layout)
         self.setLayout(layout)
         
-        self.page_size_combo.currentTextChanged.connect(lambda: self.page_size_combo_sync(self.page_size_combo.currentText()))
+        self.page_size_combo.currentTextChanged.connect(lambda: self.page_size_combo_sync(self.page_size_combo.currentText(), self.page_size_combo.currentIndex))
         self.inch.toggled.connect(lambda: self.unit_change_sync())
-        self.width_field.textChanged.connect(lambda: self.page_size_combo.setCurrentIndex(custom_index))
-        self.height_field.textChanged.connect(lambda: self.page_size_combo.setCurrentIndex(custom_index))
+        self.width_field.textChanged.connect(lambda: self.page_size_combo.setCurrentIndex(self.custom_index))
+        self.height_field.textChanged.connect(lambda: self.page_size_combo.setCurrentIndex(self.custom_index))
         apply_button.clicked.connect(self.on_apply)
         cancel_button.clicked.connect(self.reject)
 
@@ -413,8 +415,8 @@ class PageSetupDialog(QDialog):
             self.bottom_margin_field.setValue(margins[2] * 25.4)
             self.left_margin_field.setValue(margins[3] * 25.4)
 
-    def page_size_combo_sync(self, preset):
-        if preset != "Custom":
+    def page_size_combo_sync(self, preset, index):
+        if index != self.custom_index:
             if self.inch.isChecked():
                 size = self.editor.PAGE_SIZES[preset].mm_to_inches()
             else:
@@ -430,7 +432,7 @@ class InsertLinkDialog(QDialog):
     def __init__(self, editor, main_window):
         super().__init__(main_window)
         self.dialog = True
-        self.setWindowTitle("Insert Link")
+        self.setWindowTitle(self.tr("Insert Link"))
         self.main_window = main_window
 
         layout = QVBoxLayout()
@@ -438,13 +440,13 @@ class InsertLinkDialog(QDialog):
         text_field = QLineEdit()
         url_field = QLineEdit()
         fields = QFormLayout()
-        fields.addRow("Text:", text_field)
-        fields.addRow("URL:", url_field)
+        fields.addRow(self.tr("Text"), text_field)
+        fields.addRow(self.tr("URL"), url_field)
         layout.addLayout(fields)
 
         button_layout = QHBoxLayout()
-        apply_button = QPushButton("Apply")
-        cancel_button = QPushButton("Cancel")
+        apply_button = QPushButton(self.tr("Apply"))
+        cancel_button = QPushButton(self.tr("Cancel"))
         apply_button.setAutoDefault(False)
         cancel_button.setAutoDefault(False)
         button_layout.addWidget(apply_button)
@@ -455,6 +457,8 @@ class InsertLinkDialog(QDialog):
 
         apply_button.clicked.connect(lambda: self.insert_link(editor, text_field.text(), url_field.text()))
         cancel_button.clicked.connect(self.reject)
+
+        self.resize(self.sizeHint().width() * 1.5, self.sizeHint().height())
 
     @staticmethod
     def insert_https(url):
@@ -501,25 +505,25 @@ class GoToPageDialog(QDialog):
     def __init__(self, editor, main_window):
         super().__init__(main_window)
         self.dialog = True
-        self.setWindowTitle("Go to Page")
+        self.setWindowTitle(self.tr("Go to Page"))
         self.editor = editor
 
         layout = QVBoxLayout()
 
         field_layout = QHBoxLayout()
-        label = QLabel("Page:")
+        label = QLabel(self.tr("Page"))
         field_layout.addWidget(label)
         label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.page_field = QSpinBox()
-        self.page_field.setRange(1, editor.page_count)
-        self.page_field.setMinimumWidth(main_window.size_unit * 4)
+        self.page_field.setRange(1, self.editor.page_count)
+        self.page_field.setValue(self.editor.current_page())
         field_layout.addWidget(self.page_field)
         
         layout.addLayout(field_layout)
 
         button_layout = QHBoxLayout()
-        apply_button = QPushButton("Apply")
-        cancel_button = QPushButton("Cancel")
+        apply_button = QPushButton(self.tr("Apply"))
+        cancel_button = QPushButton(self.tr("Cancel"))
         apply_button.setAutoDefault(False)
         cancel_button.setAutoDefault(False)
         button_layout.addWidget(apply_button)
@@ -531,6 +535,8 @@ class GoToPageDialog(QDialog):
         apply_button.clicked.connect(self.go_to_page)
         self.page_field.returnPressed.connect(self.go_to_page)
         cancel_button.clicked.connect(self.reject)
+
+        self.resize(self.sizeHint().width() * 1.5, self.sizeHint().height())
 
     def go_to_page(self):
         self.editor.go_to_page(self.page_field.value())

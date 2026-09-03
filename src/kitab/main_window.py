@@ -20,7 +20,6 @@ class MainWindow(QMainWindow):
         self.app = QApplication.instance()
         self.resolution = self.app.primaryScreen().availableSize()
         self.resize(self.resolution.width()/1.5, self.resolution.height()/1.5)
-        self.setWindowTitle(self.tr("Kitab"))
         self.file_path = None
         self.file_name = None
         self.format_filter = None
@@ -45,7 +44,6 @@ class MainWindow(QMainWindow):
         self.view.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.background_color = self.app.palette().color(QPalette.ColorRole.Dark)
         self.view.setStyleSheet(f"QGraphicsView {{background-color: {self.background_color.name()};}}")
-        self.app.styleHints().colorSchemeChanged.connect(self.update_colors)
         self.view.centerOn(self.editor.width() / 2, 0)
         
         self.minimap = Minimap(self)
@@ -79,33 +77,16 @@ class MainWindow(QMainWindow):
         self.editor.document().setModified(False)
         QTimer.singleShot(0, lambda: (self.view.viewport().setFocus(), self.editor.setFocus()))
 
-    def update_colors(self): #updates colors on system theme change
-        self.color_scheme = self.app.styleHints().colorScheme()
-        self.background_color = self.app.palette().color(QPalette.ColorRole.Dark)
-        self.view.setStyleSheet(f"QGraphicsView {{background-color: {self.background_color.name()};}}")
-        if self.color_scheme == Qt.ColorScheme.Dark:
-            horizontal_line_icon_path = str(Path(__file__).resolve().parents[2] / "data" / "images" / "insert_horizontal_line_dark.svg")
-            horizontal_line_icon = QIcon(horizontal_line_icon_path)
-            self.menubar.horizontal_line_option.setIcon(horizontal_line_icon)
-        elif self.color_scheme == Qt.ColorScheme.Light:
-            horizontal_line_icon_path = str(Path(__file__).resolve().parents[2] / "data" / "images" / "insert_horizontal_line_light.svg")
-            horizontal_line_icon = QIcon(horizontal_line_icon_path)
-            self.menubar.horizontal_line_option.setIcon(horizontal_line_icon)
-        
-        self.minimap.setStyleSheet(f"background-color: {self.background_color.name()};")
-
-        self.statusbar.button.setStyleSheet("color: palette(WindowText); padding-left: 5px;")
-
     def closeEvent(self, event):
         if self.editor.document().isModified():
             msg_box = QMessageBox(self)
-            msg_box.setWindowTitle("Unsaved changes")
-            msg_box.setText("Do you want to save the file?")
+            msg_box.setWindowTitle(self.tr("Unsaved changes"))
+            msg_box.setText(self.tr("Do you want to save the file?"))
             msg_box.setIcon(QMessageBox.Icon.Warning)
 
-            save_button = msg_box.addButton("Save", QMessageBox.ButtonRole.AcceptRole)
-            donotsave_button = msg_box.addButton("Don't Save", QMessageBox.ButtonRole.DestructiveRole)
-            msg_box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+            save_button = msg_box.addButton(self.tr("Save"), QMessageBox.ButtonRole.AcceptRole)
+            donotsave_button = msg_box.addButton(self.tr("Don't Save"), QMessageBox.ButtonRole.DestructiveRole)
+            msg_box.addButton(self.tr("Cancel"), QMessageBox.ButtonRole.RejectRole)
 
             msg_box.setDefaultButton(save_button)
             msg_box.exec()
@@ -133,15 +114,17 @@ class MainWindow(QMainWindow):
             self.go_to_page_dialog.exec()
 
     def add_statusbar(self):
+        def get_text():
+            return self.tr("Page {} of {}").format(self.editor.current_page(), self.editor.page_count)
         self.statusbar = QStatusBar()
         self.statusbar.button = QToolButton()
         self.statusbar.button.setShortcut("Ctrl+G")
         self.statusbar.button.clicked.connect(self.go_to_page)
         self.statusbar.button.setStyleSheet("color: palette(WindowText); padding-left: 5px;")
         self.statusbar.addWidget(self.statusbar.button)
-        self.statusbar.button.setText(f"Page {self.editor.current_page()} of {self.editor.page_count}")
-        self.editor.textChanged.connect(lambda: self.statusbar.button.setText(f"Page {self.editor.current_page()} of {self.editor.page_count}"))
-        self.scroll_bar.valueChanged.connect(lambda: self.statusbar.button.setText(f"Page {self.editor.current_page()} of {self.editor.page_count}"))
+        self.statusbar.button.setText(get_text())
+        self.editor.textChanged.connect(lambda: self.statusbar.button.setText(get_text()))
+        self.scroll_bar.valueChanged.connect(lambda: self.statusbar.button.setText(get_text()))
         self.setStatusBar(self.statusbar)
 
     def eventFilter(self, watched, event):
@@ -225,13 +208,13 @@ class MainWindow(QMainWindow):
         self.addAction(go_to_page_shortcut)
 
         self.find_action = QAction(self)
-        self.find_action.setText("Find")
+        self.find_action.setText(self.tr("Find"))
         self.find_action.setShortcut("Ctrl+F")
         self.find_action.triggered.connect(self.find_replace)
         self.addAction(self.find_action)
 
         self.redo_action = QAction(self)
-        self.redo_action.setText("Redo")
+        self.redo_action.setText(self.tr("Redo"))
         self.redo_action.setShortcuts(["Ctrl+Shift+Z","Ctrl+Y"])
         self.redo_action.triggered.connect(lambda: self.editor.redo())
         self.addAction(self.redo_action)

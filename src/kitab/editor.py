@@ -5,7 +5,7 @@
 
 from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy, QDialog, QProgressDialog, QFileDialog, QColorDialog, QMessageBox
 from PySide6.QtGui import QFont, QTextListFormat, QPageLayout, QTextDocument, QTextDocumentFragment, QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter, QColor
-from PySide6.QtCore import Qt, QRectF, QSizeF, QTimer, QElapsedTimer, QMarginsF
+from PySide6.QtCore import Qt, QRectF, QSizeF, QTimer, QElapsedTimer, QMarginsF, QPoint
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 import zipfile
 import json
@@ -20,11 +20,19 @@ class Editor(QTextEdit):
         super().__init__()
         self.main_window = main_window
         self.unit = "millimeter"
+        # page size presets in millimeter
         self.PAGE_SIZES = {
         "A4": Vector2(210, 297),
-        "A5": Vector2(148, 210),
         "Letter": Vector2(215.9, 279.4),
         "Legal": Vector2(215.9, 355.6),
+        "A0": Vector2(841, 1189),
+        "A1": Vector2(594, 841),
+        "A2": Vector2(420, 594),
+        "A3": Vector2(297, 420),
+        "A5": Vector2(148, 210),
+        "A6": Vector2(105, 148),
+        "A7": Vector2(74, 105),
+        "A8": Vector2(52, 74),
         }
         self.DEFAULT_FONT_SIZE = 14
         self.DEFAULT_PAGE_COLOR = "#ffffff"
@@ -150,12 +158,12 @@ class Editor(QTextEdit):
             self.document().print_(printer)
 
     def export_file(self):
-        file_path, _format_filter = QFileDialog.getSaveFileName(self.main_window, "Export file", self.main_window.last_directory, "PDF Document (*.pdf)")
+        file_path, _format_filter = QFileDialog.getSaveFileName(self.main_window, self.tr("Export"), self.main_window.last_directory, self.tr("PDF Document (*.pdf)"))
         if not file_path:
             return
         self.main_window.last_directory = str(Path(file_path).parent)
-        exporting = QProgressDialog("Exporting...", None, 0, 0, self.main_window)
-        exporting.setWindowTitle("Exporting...")
+        exporting = QProgressDialog(self.tr("Exporting..."), None, 0, 0, self.main_window)
+        exporting.setWindowTitle(self.tr("Exporting..."))
         exporting.setWindowModality(Qt.WindowModality.WindowModal)
         export_timer = QElapsedTimer()
         export_timer.start()
@@ -180,15 +188,15 @@ class Editor(QTextEdit):
         if self.main_window.file_path.endswith(".odt"):
             message_box = QMessageBox()
             message_box.setIcon(QMessageBox.Icon.Critical)
-            message_box.setWindowTitle("Save Failed")
-            message_box.setText("You can't save as an odt file.")
-            message_box.setInformativeText("""Supported save formats are: ktb, html, md, txt.
-If you want to open the document in libreoffice, save it in html.""")
+            message_box.setWindowTitle(self.tr("Save Failed"))
+            message_box.setText(self.tr("You can't save as an odt file."))
+            message_box.setInformativeText(self.tr("""Supported save formats are: ktb, html, md, txt.
+If you want to open the document in libreoffice, save it in html."""))
             message_box.exec()
             return
 
-        saving = QProgressDialog("Saving...", None, 0, 0, self.main_window)
-        saving.setWindowTitle("Saving...")
+        saving = QProgressDialog(self.tr("Saving..."), None, 0, 0, self.main_window)
+        saving.setWindowTitle(self.tr("Saving..."))
         saving.setWindowModality(Qt.WindowModality.WindowModal)
         save_timer = QElapsedTimer()
         save_timer.start()
@@ -224,7 +232,7 @@ If you want to open the document in libreoffice, save it in html.""")
 
         self.document().setModified(False)
         self.main_window.file_name = Path(self.main_window.file_path).name
-        self.main_window.setWindowTitle(f"{self.main_window.file_name}  –  {self.tr('Kitab')}")
+        self.main_window.setWindowTitle(f"{self.main_window.file_name}")
 
         try:
             register_recent_file(self.main_window.file_path)
@@ -241,7 +249,7 @@ If you want to open the document in libreoffice, save it in html.""")
 
     def save(self):
         if not self.main_window.file_path:
-            self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self.main_window, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
+            self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self.main_window, self.tr("Save As"), self.main_window.last_directory, "Kitab Document (*.ktb);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
             if not self.main_window.file_path:
                 return "canceled"
             self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
@@ -251,7 +259,7 @@ If you want to open the document in libreoffice, save it in html.""")
 
     def save_as(self, show_dialog=True):
         file_path, format_filter = self.main_window.file_path, self.main_window.format_filter
-        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self.main_window, "Save As", self.main_window.last_directory, "Kitab Document (*.ktb);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
+        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getSaveFileName(self.main_window, self.tr("Save As"), self.main_window.last_directory, "Kitab Document (*.ktb);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
         if not self.main_window.file_path:
             self.main_window.file_path, self.main_window.format_filter = file_path, format_filter
         else:
@@ -268,7 +276,7 @@ If you want to open the document in libreoffice, save it in html.""")
         self.clear_formatting()
 
     def new(self):
-        self.main_window.setWindowTitle(self.tr("Kitab"))
+        self.main_window.setWindowTitle("")
         self.main_window.file_path = None
         self.main_window.format_filter = None
         self.main_window.file_name = None
@@ -319,11 +327,11 @@ If you want to open the document in libreoffice, save it in html.""")
         total_pages = self.document().pageCount()
         self.setFixedSize(self.width(), total_pages * self.base_height)
         self.main_window.file_name = Path(self.main_window.file_path).name
-        self.main_window.setWindowTitle(f"{self.main_window.file_name}  –  {self.tr('Kitab')}")
+        self.main_window.setWindowTitle(f"{self.main_window.file_name}")
         register_recent_file(self.main_window.file_path)
 
     def open_file(self):
-        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getOpenFileName(self.main_window, "Open", self.main_window.last_directory, "(*.ktb *.odt *.txt *.md *.html);;Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
+        self.main_window.file_path, self.main_window.format_filter = QFileDialog.getOpenFileName(self.main_window, self.tr("Open"), self.main_window.last_directory, "(*.ktb *.odt *.txt *.md *.html);;Kitab Document (*.ktb);;OpenDocument Text (*.odt);;Plain Text (*.txt);;Markdown Document (*.md);;HTML Document (*.html)")
         if not self.main_window.file_path:
             return
         self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
@@ -473,7 +481,6 @@ If you want to open the document in libreoffice, save it in html.""")
                 return
 
             menu = QMenu()
-
             undo_icon = QIcon.fromTheme("edit-undo-symbolic")
             redo_icon = QIcon.fromTheme("edit-redo-symbolic")
             cut_icon = QIcon.fromTheme("edit-cut-symbolic")
@@ -482,7 +489,7 @@ If you want to open the document in libreoffice, save it in html.""")
             find_icon = QIcon.fromTheme("edit-find-symbolic")
             select_all_icon = QIcon.fromTheme("edit-select-all-symbolic")
 
-            undo = menu.addAction("Undo")
+            undo = menu.addAction(self.tr("Undo"))
             undo.setShortcut("Ctrl+Z")
             undo.setIcon(undo_icon)
             undo.setEnabled(self.document().isUndoAvailable())
@@ -495,19 +502,19 @@ If you want to open the document in libreoffice, save it in html.""")
             
             menu.addSeparator()
             
-            cut = menu.addAction("Cut")
+            cut = menu.addAction(self.tr("Cut"))
             cut.setShortcut("Ctrl+X")
             cut.setIcon(cut_icon)
             cut.setEnabled(self.textCursor().hasSelection())
             cut.triggered.connect(self.cut)
             
-            copy = menu.addAction("Copy")
+            copy = menu.addAction(self.tr("Copy"))
             copy.setShortcut("Ctrl+C")
             copy.setIcon(copy_icon)
             copy.setEnabled(self.textCursor().hasSelection())
             copy.triggered.connect(self.copy)
             
-            paste = menu.addAction("Paste")
+            paste = menu.addAction(self.tr("Paste"))
             paste.setShortcut("Ctrl+V")
             paste.setIcon(paste_icon)
             paste.triggered.connect(self.paste)
@@ -517,12 +524,16 @@ If you want to open the document in libreoffice, save it in html.""")
             menu.addAction(self.main_window.find_action)
             self.main_window.find_action.setIcon(find_icon)
             
-            select_all = menu.addAction("Select All")
+            select_all = menu.addAction(self.tr("Select All"))
             select_all.setShortcut("Ctrl+A")
             select_all.setIcon(select_all_icon)
             select_all.triggered.connect(self.selectAll)
 
-            menu.exec(QCursor.pos())
+            cursor_position = QCursor.pos()
+            menu_width = menu.sizeHint().width()
+            # solves bug where context menu is far to the left when layout direction of app is rtl
+            fixed_position = cursor_position + QPoint(menu_width, 0) if self.layoutDirection() == Qt.LayoutDirection.RightToLeft else cursor_position
+            menu.exec(fixed_position)
             event.accept()
             return
             
@@ -536,7 +547,6 @@ If you want to open the document in libreoffice, save it in html.""")
         if event.button() == Qt.MouseButton.RightButton:
             self.was_zooming = False
         super().mousePressEvent(event)
-
 
     def align(self, alignment):
         match alignment:

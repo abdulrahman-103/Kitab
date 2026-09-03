@@ -7,24 +7,22 @@ from PySide6.QtWidgets import QApplication
 from main_window import MainWindow
 import sys
 from pathlib import Path
-from PySide6.QtCore import QTranslator, QLocale
-
-version = "0.3.0"
+from PySide6.QtCore import QTranslator, QLocale, QCoreApplication, Qt
 
 def main():
-    if len(sys.argv) == 2 and sys.argv[1] == "--version":
-        print(version)
-        sys.exit(0)
     app = QApplication(sys.argv)
+    app.setApplicationName("kitab")
     app.setDesktopFileName("kitab")
-
+    app.setApplicationVersion("0.3.0")
+    if len(sys.argv) == 2 and sys.argv[1] == "--version":
+        print(app.applicationVersion())
+        sys.exit(0)
     locale = QLocale.system().name().split("_")[0]
     translator = QTranslator()
     translation_directory = str(Path(__file__).resolve().parent / "translations")
-
     if translator.load(locale, translation_directory):
         app.installTranslator(translator)
-
+    app.setApplicationDisplayName(QApplication.tr("Kitab"))
     _window = MainWindow()
     app.exec()
 
