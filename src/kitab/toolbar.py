@@ -120,7 +120,8 @@ class Toolbar(QToolBar):
         self.addSeparator()
 
         self.numbered_list_button = QPushButton()
-        self.numbered_list_button.setIcon(QIcon.fromTheme("format-list-ordered-symbolic"))
+        numbered_list_icon = QIcon.fromTheme("format-list-ordered-symbolic")
+        self.numbered_list_button.setIcon(numbered_list_icon)
         self.numbered_list_button.setToolTip(self.tr("Numbered List"))
         self.numbered_list_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.numbered_list_button.setCheckable(True)
@@ -128,7 +129,8 @@ class Toolbar(QToolBar):
         self.addWidget(self.numbered_list_button)
 
         self.bulleted_list_button = QPushButton()
-        self.bulleted_list_button.setIcon(QIcon.fromTheme("format-list-unordered-symbolic"))
+        bulleted_list_icon = QIcon.fromTheme("format-list-unordered-symbolic")
+        self.bulleted_list_button.setIcon(bulleted_list_icon)
         self.bulleted_list_button.setToolTip(self.tr("Bulleted List"))
         self.bulleted_list_button.setFixedSize(self.main_window.size_unit*1.5, self.main_window.size_unit)
         self.bulleted_list_button.setCheckable(True)
