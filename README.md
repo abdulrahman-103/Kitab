@@ -20,7 +20,8 @@ Can save documents in `ktb`, `html`, `md` and `txt` formats and exports to PDF.
 ### Debian/Ubuntu Linux
 
 ```bash
-sudo apt install git python3-pyside6
+sudo apt install git python3-pyside6 nim
+nimble install nimpy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -30,7 +31,8 @@ kitab
 ### Arch Linux
 
 ```bash
-sudo pacman -Syu git pyside6
+sudo pacman -Syu git pyside6 nim
+nimble install nimpy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -40,7 +42,8 @@ kitab
 ###  Fedora Linux
 
 ```bash
-sudo dnf install git python3-pyside6
+sudo dnf install git python3-pyside6 nim
+nimble install nimpy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -48,8 +51,9 @@ kitab
 ```
 
 ### Other platforms
-Install git and pyside6
+Install git and pyside6 nim
 ```bash
+nimble install nimpy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -86,7 +90,8 @@ kitab
 ### Debian/Ubuntu Linux
 
 ```bash
-sudo apt install git python3-pyside6
+sudo apt install git python3-pyside6 nim
+nimble install nimpy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -96,7 +101,8 @@ kitab
 ### Arch Linux
 
 ```bash
-sudo pacman -Syu git pyside6
+sudo pacman -Syu git pyside6 nim
+nimble install nimpy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -106,7 +112,8 @@ kitab
 ###  Fedora Linux
 
 ```bash
-sudo dnf install git python3-pyside6
+sudo dnf install git python3-pyside6 nim
+nimble install nimpy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -115,8 +122,9 @@ kitab
 
 #### المنصات الأخرى
 
-ثبت git, pyside6
+ثبت git, pyside6, nim
 ```bash
+nimble install nimpy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
