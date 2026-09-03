@@ -21,7 +21,7 @@ Can save documents in `ktb`, `html`, `md` and `txt` formats and exports to PDF.
 
 ```bash
 sudo apt install git python3-pyside6 nim
-nimble install nimpy
+nimble install nimpy zippy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -32,7 +32,7 @@ kitab
 
 ```bash
 sudo pacman -Syu git pyside6 nim
-nimble install nimpy
+nimble install nimpy zippy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -43,7 +43,7 @@ kitab
 
 ```bash
 sudo dnf install git python3-pyside6 nim
-nimble install nimpy
+nimble install nimpy zippy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -53,7 +53,7 @@ kitab
 ### Other platforms
 Install git and pyside6 nim
 ```bash
-nimble install nimpy
+nimble install nimpy zippy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -91,7 +91,7 @@ kitab
 
 ```bash
 sudo apt install git python3-pyside6 nim
-nimble install nimpy
+nimble install nimpy zippy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -102,7 +102,7 @@ kitab
 
 ```bash
 sudo pacman -Syu git pyside6 nim
-nimble install nimpy
+nimble install nimpy zippy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -113,7 +113,7 @@ kitab
 
 ```bash
 sudo dnf install git python3-pyside6 nim
-nimble install nimpy
+nimble install nimpy zippy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
@@ -124,7 +124,7 @@ kitab
 
 ثبت git, pyside6, nim
 ```bash
-nimble install nimpy
+nimble install nimpy zippy
 git clone https://github.com/abdulrahman-103/kitab
 cd kitab
 ./install.sh
