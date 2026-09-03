@@ -13,7 +13,7 @@ from pathlib import Path
 from dialogs import InsertLinkDialog
 from vector2 import Vector2
 from recent_documents import *
-import kitab_parser
+import parser
 
 class Editor(QTextEdit):
     def __init__(self, main_window):
@@ -315,7 +315,7 @@ class Editor(QTextEdit):
                 self.reset_document()
                 self.setMarkdown(data)
         elif self.main_window.file_path.endswith(".odt"):
-            html_data = kitab_parser.odtToKtb(self.main_window.file_path)
+            html_data = parser.odtToKtb(self.main_window.file_path)
             self.reset_document()
             self.setHtml(html_data)
             self.line_spacing = self.textCursor().blockFormat().lineHeight()
