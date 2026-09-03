@@ -1,0 +1,20 @@
+<svg version="1.1" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <linearGradient id="a" x2="0" y1="392.36" y2="336.36" gradientTransform="translate(-14-332.36)" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#fff" stop-opacity="0" offset="0"/>
+            <stop stop-color="#fff" stop-opacity=".15" offset="1"/>
+        </linearGradient>
+        <path id="b" d="m10 3v58h44v-58h-14z" color="#000000" color-rendering="auto" image-rendering="auto" shape-rendering="auto" text-rendering="auto"/>
+    </defs>
+    <use fill="#da2c2c" xlink:href="#b"/>
+    <g color="#000000" color-rendering="auto" image-rendering="auto" shape-rendering="auto" text-rendering="auto">
+        <rect x="10" y="60" width="44" height="1" opacity=".25"/>
+        <g fill="#fff">
+            <rect x="10" y="3" width="44" height="1" opacity=".5"/>
+            <path d="m36.251102 4.0030377s-0.137687 0.2090134-0.206205 0.3141868c-1.644967 2.5247323-3.168502 5.3053926-4.57025 8.3407335-1.7295 3.812846-3.026726 7.777491-3.891481 11.895361-0.931263 4.117864-1.329383 7.893116-1.196345 11.324676 0.199554 3.355301 0.830582 6.177418 1.894887 8.465129 1.064314 2.287694 2.526758 3.92696 4.389289 4.918297 1.862542 0.991343 4.058873 1.180735 6.586608 0.570684 2.461202-0.610058 4.957652-1.938461 7.4832-4.000914 0.462731-0.37788 3.080822-2.944563 4.880291-4.931322 1.334318-1.473192 2.012077-2.501254 2.378904-2.908273v-6.971379c-0.22216 0.198458-0.752441 1.162934-2.051036 2.554952-1.601528 1.716743-4.02516 3.917695-4.308883 4.134535-1.99558 1.44888-3.926502 2.287143-5.789044 2.515911-1.929056 0.228778-3.556715-0.153114-4.887098-1.144433-1.33038-0.991338-2.362202-2.478467-3.093914-4.461146-0.665194-1.982675-0.998297-4.345338-0.998297-7.090577 0-2.821501 0.398116-5.87335 1.19635-9.152398 0.798229-3.279032 1.930249-6.405429 3.393669-9.3794464 0.837387-1.7454186 1.717916-3.3663194 2.642067-4.8623295 0.02841-0.045968 0.08531-0.137534 0.08531-0.137534z" opacity=".8"/>
+        </g>
+    </g>
+    <rect x="16" y="4" width="1" height="56" fill="#fff" fill-opacity=".252"/>
+    <rect x="17" y="4" width="1" height="56" color="#000000" color-rendering="auto" fill-opacity=".083" image-rendering="auto" shape-rendering="auto" text-rendering="auto"/>
+    <use fill="url(#a)" xlink:href="#b"/>
+</svg>

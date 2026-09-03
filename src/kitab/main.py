@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QTranslator, QLocale
+from PySide6.QtCore import QTranslator, QLocale, Qt
 from PySide6.QtGui import QIcon
 import sys
 from pathlib import Path
@@ -27,10 +27,13 @@ def main():
         app.installTranslator(translator)
     app.setApplicationDisplayName(QApplication.tr("Kitab"))
 
-    if sys.platform == "win32":
+    if True:
         fallback_icon_path = str(Path(__file__).resolve().parents[2] / "resources" / "icons")
         QIcon.setThemeSearchPaths([fallback_icon_path])
-        QIcon.setThemeName("breeze")
+        if app.styleHints().colorScheme() == Qt.ColorScheme.Dark:
+            QIcon.setThemeName("breeze-dark")
+        else:
+            QIcon.setThemeName("breeze")
 
     _window = MainWindow()
     app.exec()
