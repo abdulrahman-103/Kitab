@@ -181,7 +181,7 @@ class Editor(QTextEdit):
         file_path = Path(self.main_window.file_path)
         if file_path.suffix:
             match file_path.suffix:
-                case "odt":
+                case ".odt":
                     message_box = QMessageBox()
                     message_box.setIcon(QMessageBox.Icon.Critical)
                     message_box.setWindowTitle(self.tr("Save Failed"))
