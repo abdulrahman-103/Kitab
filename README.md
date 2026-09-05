@@ -1,12 +1,71 @@
-# Kitab — كتاب
+# كتاب
 
 <img width="1920" height="1020" alt="Screenshot_20260816_172951" src="https://github.com/user-attachments/assets/20731baf-593c-4d71-8cc6-5b1864ebd7f3" />
 
+## (English readme is below)
 
 
 
+## كتاب — معالج نصوص عربي
 
-## (النص العربي في الاسفل)
+معالج نصوص خفيف مبني على **PySide6 (Qt6)**.  
+بديل بسيط لـ LibreOffice Writer و Microsoft Word.  
+يفتح مستندات `ktb`, `html`, `md`, `txt`, `odt`.  
+يحفظ المستندات بصيغة `ktb`, `html`, `md`, `txt` ويُصدّرها إلى PDF.
+
+
+---
+
+### التثبيت
+
+
+### Debian/Ubuntu Linux
+
+```bash
+sudo apt install git python3-pyside6 nim
+nimble install nimpy zippy
+git clone https://github.com/abdulrahman-103/kitab
+cd kitab
+./install.sh
+kitab
+```
+
+### Arch Linux
+
+```bash
+sudo pacman -Syu git pyside6 nim
+nimble install nimpy zippy
+git clone https://github.com/abdulrahman-103/kitab
+cd kitab
+./install.sh
+kitab
+```
+
+###  Fedora Linux
+
+```bash
+sudo dnf install git python3-pyside6 nim
+nimble install nimpy zippy
+git clone https://github.com/abdulrahman-103/kitab
+cd kitab
+./install.sh
+kitab
+```
+
+#### المنصات الأخرى
+
+ثبت git, pyside6, nim
+```bash
+nimble install nimpy zippy
+git clone https://github.com/abdulrahman-103/kitab
+cd kitab
+./install.sh
+kitab
+```
+
+---
+
+# Kitab
 
 A lightweight word processor built with **PySide6 (Qt6)**.  
 A simple alternative to LibreOffice Writer and Microsoft Word.  
@@ -70,63 +129,3 @@ kitab
 
 
 ---
----
-
-
-
-## كتاب — معالج نصوص عربي
-
-معالج نصوص خفيف مبني على **PySide6 (Qt6)**.  
-بديل بسيط لـ LibreOffice Writer و Microsoft Word.  
-يفتح مستندات `ktb`, `html`, `md`, `txt`, `odt`.  
-يحفظ المستندات بصيغة `ktb`, `html`, `md`, `txt` ويُصدّرها إلى PDF.
-
-
----
-
-### التثبيت
-
-
-### Debian/Ubuntu Linux
-
-```bash
-sudo apt install git python3-pyside6 nim
-nimble install nimpy zippy
-git clone https://github.com/abdulrahman-103/kitab
-cd kitab
-./install.sh
-kitab
-```
-
-### Arch Linux
-
-```bash
-sudo pacman -Syu git pyside6 nim
-nimble install nimpy zippy
-git clone https://github.com/abdulrahman-103/kitab
-cd kitab
-./install.sh
-kitab
-```
-
-###  Fedora Linux
-
-```bash
-sudo dnf install git python3-pyside6 nim
-nimble install nimpy zippy
-git clone https://github.com/abdulrahman-103/kitab
-cd kitab
-./install.sh
-kitab
-```
-
-#### المنصات الأخرى
-
-ثبت git, pyside6, nim
-```bash
-nimble install nimpy zippy
-git clone https://github.com/abdulrahman-103/kitab
-cd kitab
-./install.sh
-kitab
-```
