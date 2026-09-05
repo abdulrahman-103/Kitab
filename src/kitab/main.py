@@ -19,13 +19,6 @@ def main():
     if len(sys.argv) == 2 and sys.argv[1] == "--version":
         print(app.applicationVersion())
         sys.exit(0)
-        
-    locale = QLocale.system().name().split("_")[0]
-    translator = QTranslator()
-    translation_directory = str(Path(__file__).resolve().parents[2] / "resources" / "translations")
-    if translator.load(locale, translation_directory):
-        app.installTranslator(translator)
-    app.setApplicationDisplayName(QApplication.tr("Kitab"))
 
     if sys.platform == "win32":
         fallback_icon_path = str(Path(__file__).resolve().parent / "resources" / "icons")
@@ -34,6 +27,16 @@ def main():
             QIcon.setThemeName("breeze-dark")
         else:
             QIcon.setThemeName("breeze")
+        translation_directory = str(Path(__file__).resolve().parent / "resources" / "translations")
+    else:
+        translation_directory = str(Path(__file__).resolve().parents[2] / "resources" / "translations")
+
+    locale = QLocale.system().name().split("_")[0]
+    translator = QTranslator()
+    translation_directory = str(Path(__file__).resolve().parents[2] / "resources" / "translations")
+    if translator.load(locale, translation_directory):
+        app.installTranslator(translator)
+    app.setApplicationDisplayName(QApplication.tr("Kitab"))
 
     _window = MainWindow()
     app.exec()

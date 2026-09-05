@@ -47,15 +47,13 @@ class Toolbar(QToolBar):
         self.font_size_menu.lineEdit().returnPressed.connect(lambda: (self.editor.change_font_size(), self.main_window.view.viewport().setFocus()))
         self.font_size_menu.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.font_size_menu.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
-        self.font_size_menu.setFixedWidth(self.main_window.size_unit*2.5)
-
+        self.font_size_menu.setFixedWidth(self.main_window.size_unit*2)
         pt = QLabel("pt", self.font_size_menu)
-        pt_layout = QHBoxLayout()
-        self.font_size_menu.lineEdit().setLayout(pt_layout)
-        pt_layout.setContentsMargins(self.main_window.size_unit, 0, 0, 0)
-        pt_layout.addWidget(pt)
-
-        self.addWidget(self.font_size_menu)
+        font_size_widget = QWidget()
+        font_size_layout = QHBoxLayout(font_size_widget)
+        font_size_layout.addWidget(self.font_size_menu)
+        font_size_layout.addWidget(pt)
+        self.addWidget(font_size_widget)
         self.addSeparator()
 
         self.addWidget(self.color_button)
