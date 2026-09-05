@@ -526,11 +526,7 @@ class Editor(QTextEdit):
             select_all.setIcon(select_all_icon)
             select_all.triggered.connect(self.selectAll)
 
-            cursor_position = QCursor.pos()
-            menu_width = menu.sizeHint().width()
-            # solves bug where context menu is far to the left when layout direction of app is rtl
-            fixed_position = cursor_position + QPoint(menu_width, 0) if self.layoutDirection() == Qt.LayoutDirection.RightToLeft else cursor_position
-            menu.exec(fixed_position)
+            menu.exec(QCursor.pos())
             event.accept()
             return
             

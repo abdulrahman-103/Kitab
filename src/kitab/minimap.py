@@ -69,11 +69,7 @@ class Minimap(QGraphicsView):
         side_action = menu.addAction(self.tr("Move to the Other Side"))
         side_action.triggered.connect(self.toggle_side)
 
-        cursor_position = QCursor.pos()
-        menu_width = menu.sizeHint().width()
-        # solves bug where context menu is far to the left when layout direction of app is rtl
-        fixed_position = cursor_position + QPoint(menu_width, 0) if self.layoutDirection() == Qt.LayoutDirection.RightToLeft else cursor_position
-        menu.exec(fixed_position)
+        menu.exec(QCursor.pos())
 
     def _get_container_layout(self):
         parent = self.parentWidget()
