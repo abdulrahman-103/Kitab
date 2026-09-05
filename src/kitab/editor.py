@@ -316,9 +316,8 @@ class Editor(QTextEdit):
                 self.setMarkdown(data)
         elif self.main_window.file_path.endswith(".odt"):
             html_data = parser.odtToKtb(self.main_window.file_path)
-            self.reset_document()
             self.setHtml(html_data)
-            self.line_spacing = self.textCursor().blockFormat().lineHeight()
+            self.reset_document()
 
         self.document().setModified(False)
         self.document().setPageSize(QSizeF(self.base_width, self.base_height))
