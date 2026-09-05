@@ -1,12 +1,12 @@
-# كتاب
+# كتاب — معالج نصوص عربي
 
-<img width="1920" height="1020" alt="Screenshot_20260816_172951" src="https://github.com/user-attachments/assets/20731baf-593c-4d71-8cc6-5b1864ebd7f3" />
 
 ## (English readme is below)
 
+<img width="1920" height="1020" alt="Screenshot_20260816_172951" src="https://github.com/user-attachments/assets/20731baf-593c-4d71-8cc6-5b1864ebd7f3" />
 
 
-## كتاب — معالج نصوص عربي
+
 
 معالج نصوص خفيف مبني على **PySide6 (Qt6)**.  
 بديل بسيط لـ LibreOffice Writer و Microsoft Word.  
