@@ -352,6 +352,7 @@ class Editor(QTextEdit):
         char_format.clearProperty(QTextFormat.Property.ImageQuality)
         char_format.clearProperty(QTextFormat.Property.ImageAltText)
         char_format.clearProperty(QTextFormat.Property.ImageMaxWidth)
+        char_format.setObjectType(QTextFormat.ObjectTypes.ImageObject)
         image_format.merge(char_format)
         cursor.insertImage(image_format)
         
