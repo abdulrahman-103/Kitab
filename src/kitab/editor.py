@@ -4,16 +4,17 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy, QDialog, QProgressDialog, QFileDialog, QColorDialog, QMessageBox
-from PySide6.QtGui import QFont, QTextListFormat, QPageLayout, QTextDocument, QTextDocumentFragment, QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter, QColor
-from PySide6.QtCore import Qt, QRectF, QSizeF, QTimer, QElapsedTimer, QMarginsF, QPoint
+from PySide6.QtGui import QFont, QTextListFormat, QPageLayout, QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter, QColor, QTextImageFormat
+from PySide6.QtCore import Qt, QRectF, QSizeF, QTimer, QElapsedTimer, QMarginsF
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 import zipfile
 import json
 from pathlib import Path
-from dialogs import InsertLinkDialog
 from vector2 import Vector2
 from recent_documents import *
 import parser
+from dialogs import PageLayoutDialog, InsertTableDialog, InsertLinkDialog
+import base64
 
 class Editor(QTextEdit):
     def __init__(self, main_window):
@@ -334,6 +335,57 @@ class Editor(QTextEdit):
         self.main_window.last_directory = str(Path(self.main_window.file_path).parent)
         self._open_file()
 
+    def _insert_image(self, path):
+        suffix = Path(path).suffix.lower().lstrip('.')
+        mime = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png", "gif": "gif", "bmp": "bmp", "svg": "svg+xml"}.get(suffix, suffix)
+        with open(path, "rb") as f:
+            data = base64.b64encode(f.read()).decode("ascii")
+        image_base64 = f"data:image/{mime};base64,{data}"
+        cursor = self.textCursor()
+        char_format = cursor.charFormat()
+        image_format = QTextImageFormat()
+        image_format.setName(image_base64)
+        image_format.setWidth(self.base_width * 0.5)
+        image_format.merge(char_format)
+        cursor.insertImage(image_format)
+
+    def insert_image(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Choose image", self.main_window.last_directory, "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.svg);;PNG Image (*.png);;JPEG Image (*.jpg *.jpeg);;SVG Image (*.svg);;BMP Image (*.bmp);;GIF Image (*.gif);;All Files (*)")
+        if not path:
+            return
+        self.main_window.last_directory = str(Path(path).parent)
+        self._insert_image(path)
+
+    def insert_table(self):
+        if getattr(self, "insert_table_dialog", None) is None:
+            self.insert_table_dialog = InsertTableDialog(self, self.main_window)
+        try:
+            self.insert_table_dialog.exec()
+        except RuntimeError:
+            self.insert_table_dialog = InsertTableDialog(self, self.main_window)
+            self.insert_table_dialog.exec()
+            
+    def insert_link(self):
+        if getattr(self, "insert_link_dialog", None) is None:
+            self.insert_link_dialog = InsertLinkDialog(self, self.main_window)
+        try:
+            self.insert_link_dialog.exec()
+        except RuntimeError:
+            self.insert_link_dialog = InsertLinkDialog(self, self.main_window)
+            self.insert_link_dialog.exec()
+
+    def insert_horizontal_line(self):
+        cursor = self.textCursor()
+        block_format = cursor.blockFormat()
+        char_format = cursor.charFormat()
+        cursor.insertHtml("<hr>")
+        cursor.insertBlock(block_format, char_format)
+
+    def page_layout(self):
+        page_layout_dialog = PageLayoutDialog(self, self.main_window)
+        page_layout_dialog.exec()
+        page_layout_dialog.deleteLater()
+
     def set_page_color(self, page_color):
         self.setStyleSheet(f"QTextEdit {{ background-color: {page_color}; color: {self.DEFAULT_FONT_COLOR}; border: none; }}")
         self.page_color = page_color
@@ -382,7 +434,7 @@ class Editor(QTextEdit):
                     cursor.setPosition(pos)
                     cursor.setPosition(beginning, QTextCursor.MoveMode.KeepAnchor)
                     cursor.removeSelectedText()
-                    self.main_window.menubar.insert_horizontal_line()
+                    self.insert_horizontal_line()
                     return
             cursor.setPosition(pos)
             cursor.insertBlock(block_format, char_format)

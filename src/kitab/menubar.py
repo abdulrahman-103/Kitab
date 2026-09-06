@@ -4,12 +4,11 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QFileDialog, QMenuBar, QPushButton
-from PySide6.QtGui import QIcon, QTextImageFormat
+from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt
 from pathlib import Path
 from recent_documents import *
-from dialogs import PageLayoutDialog, InsertTableDialog, InsertLinkDialog
-import base64
+
 
 class MenuBar(QMenuBar):
     def __init__(self, main_window, parent=None):
@@ -71,17 +70,17 @@ class MenuBar(QMenuBar):
         table_option = insert_menu.addAction(self.tr("Table"))
         insert_table_icon = QIcon.fromTheme("insert-table-symbolic")
         table_option.setIcon(insert_table_icon)
-        table_option.triggered.connect(self.insert_table)
+        table_option.triggered.connect(self.editor.insert_table)
 
         image_option = insert_menu.addAction(self.tr("Image"))
         insert_image_icon = QIcon.fromTheme("insert-image-symbolic")
         image_option.setIcon(insert_image_icon)
-        image_option.triggered.connect(self.insert_image)
+        image_option.triggered.connect(self.editor.insert_image)
         
         link_option = insert_menu.addAction(self.tr("Link"))
         link_icon = QIcon.fromTheme("insert-link-symbolic")
         link_option.setIcon(link_icon)
-        link_option.triggered.connect(self.insert_link)
+        link_option.triggered.connect(self.editor.insert_link)
 
         self.horizontal_line_option = insert_menu.addAction(self.tr("Horizontal Line"))
         if self.main_window.color_scheme == Qt.ColorScheme.Dark:
@@ -90,67 +89,11 @@ class MenuBar(QMenuBar):
             horizontal_line_icon_path = str(Path(__file__).resolve().parents[2] / "resources" / "icons" / "insert_horizontal_line_light.svg")
         horizontal_line_icon = QIcon(horizontal_line_icon_path)
         self.horizontal_line_option.setIcon(horizontal_line_icon)
-        self.horizontal_line_option.triggered.connect(self.insert_horizontal_line)
+        self.horizontal_line_option.triggered.connect(self.editor.insert_horizontal_line)
 
         page = self.addAction(self.tr("Page"))
-        page.triggered.connect(self.page_layout)
+        page.triggered.connect(self.editor.page_layout)
         #page_margins_option = page_menu.addAction("Page Margins")
         #page_margins_option.triggered.connect(self.page_margins)
 
         self.main_window.setMenuBar(self)
-
-    def _insert_image(self, path):
-        suffix = Path(path).suffix.lower().lstrip('.')
-        mime = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png", "gif": "gif", "bmp": "bmp", "svg": "svg+xml"}.get(suffix, suffix)
-        with open(path, "rb") as f:
-            data = base64.b64encode(f.read()).decode("ascii")
-        image_base64 = f"data:image/{mime};base64,{data}"
-        cursor = self.editor.textCursor()
-        block_format = cursor.blockFormat()
-        char_format = cursor.charFormat()
-        image_format = QTextImageFormat()
-        image_format.setName(image_base64)
-        image_format.setWidth(self.editor.base_width * 0.5)
-        image_format.merge(char_format)
-        
-        cursor.insertImage(image_format)
-        cursor.setBlockFormat(block_format)
-        cursor.setCharFormat(char_format)
-        #cursor.insertBlock(block_format, char_format)
-
-    def insert_image(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Choose image", self.main_window.last_directory, "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.svg);;PNG Image (*.png);;JPEG Image (*.jpg *.jpeg);;SVG Image (*.svg);;BMP Image (*.bmp);;GIF Image (*.gif);;All Files (*)")
-        if not path:
-            return
-        self.main_window.last_directory = str(Path(path).parent)
-        self._insert_image(path)
-
-    def insert_table(self):
-        if getattr(self, "insert_table_dialog", None) is None:
-            self.insert_table_dialog = InsertTableDialog(self.editor, self.main_window)
-        try:
-            self.insert_table_dialog.exec()
-        except RuntimeError:
-            self.insert_table_dialog = InsertTableDialog(self.editor, self.main_window)
-            self.insert_table_dialog.exec()
-            
-    def insert_link(self):
-        if getattr(self, "insert_link_dialog", None) is None:
-            self.insert_link_dialog = InsertLinkDialog(self.editor, self.main_window)
-        try:
-            self.insert_link_dialog.exec()
-        except RuntimeError:
-            self.insert_link_dialog = InsertLinkDialog(self.editor, self.main_window)
-            self.insert_link_dialog.exec()
-
-    def insert_horizontal_line(self):
-        cursor = self.editor.textCursor()
-        block_format = cursor.blockFormat()
-        char_format = cursor.charFormat()
-        cursor.insertHtml("<hr>")
-        cursor.insertBlock(block_format, char_format)
-
-    def page_layout(self):
-        page_layout_dialog = PageLayoutDialog(self.editor, self.main_window)
-        page_layout_dialog.exec()
-        page_layout_dialog.deleteLater()
