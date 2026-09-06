@@ -336,7 +336,6 @@ class Editor(QTextEdit):
 
     def set_page_color(self, page_color):
         self.setStyleSheet(f"QTextEdit {{ background-color: {page_color}; color: {self.DEFAULT_FONT_COLOR}; border: none; }}")
-        self.document().setDefaultStyleSheet(f"body {{background-color: {page_color};}}")
         self.page_color = page_color
         root = self.document().rootFrame()
         format = root.frameFormat()
@@ -455,7 +454,7 @@ class Editor(QTextEdit):
             block_cursor.setBlockFormat(block_format)
             block = block.next()
         cursor = self.textCursor()
-        self.textCursor().insertFragment(QTextDocumentFragment(temporary_document))
+        cursor.insertFragment(QTextDocumentFragment(temporary_document))
         self.setTextCursor(cursor)
 
     # Paints the page seperators, contains a bug (github issue #2).
