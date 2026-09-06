@@ -128,7 +128,9 @@ class InsertTableDialog(QDialog):
         rows_field = QSpinBox()
         rows_field.setRange(1, 100)
         self.width_field = QSpinBox()
+        self.width_field.setSuffix("%")
         self.width_field.setRange(1, 100)
+        self.width_field.setValue(100)
 
         fields = QFormLayout()
         fields.addRow(self.tr("Columns"), columns_field)
@@ -266,7 +268,7 @@ class PageLayoutDialog(QDialog):
 
         self.editor.line_spacing = self.editor.textCursor().blockFormat().lineHeight()
         self.line_spacing_field = QSpinBox()
-        self.line_spacing_field.setSuffix(" %")
+        self.line_spacing_field.setSuffix("%")
         self.line_spacing_field.setRange(100, 300)
         self.line_spacing_field.setValue(self.editor.line_spacing)
         
