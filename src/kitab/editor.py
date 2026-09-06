@@ -34,7 +34,7 @@ class Editor(QTextEdit):
         "A7": Vector2(74, 105),
         "A8": Vector2(52, 74),
         }
-        self.DEFAULT_FONT_SIZE = 14
+        self.DEFAULT_FONT_SIZE = 12
         self.DEFAULT_PAGE_COLOR = "#ffffff"
         self.DEFAULT_FONT_COLOR = "black"
         self.font_color = self.DEFAULT_FONT_COLOR
@@ -303,17 +303,17 @@ class Editor(QTextEdit):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
                 html_data = file.read()
             self.setHtml(html_data)
-            self.line_spacing = self.textCursor().blockFormat().lineHeight()
+            self.reset_document()
         elif self.main_window.file_path.endswith(".txt"):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
                 data = file.read()
-                self.reset_document()
                 self.setPlainText(data)
+                self.reset_document()
         elif self.main_window.file_path.endswith(".md"):
             with open(self.main_window.file_path, "r", encoding="utf-8") as file:
                 data = file.read()
-                self.reset_document()
                 self.setMarkdown(data)
+                self.reset_document()
         elif self.main_window.file_path.endswith(".odt"):
             html_data = parser.odtToKtb(self.main_window.file_path)
             self.setHtml(html_data)
