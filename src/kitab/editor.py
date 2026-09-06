@@ -408,7 +408,6 @@ class Editor(QTextEdit):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             cursor = self.textCursor()
             alignment = cursor.blockFormat().alignment()
-            self.line_spacing = self.textCursor().blockFormat().lineHeight()
             block_format = QTextBlockFormat()
             block_format.setObjectIndex(cursor.blockFormat().objectIndex())
             block_format.setAlignment(alignment)
