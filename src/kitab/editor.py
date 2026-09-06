@@ -266,12 +266,12 @@ class Editor(QTextEdit):
             self._save_file()
 
     def reset_document(self):
+        self.unit = "millimeter"
         self.set_line_spacing(self.DEFAULT_LINE_SPACING)
         self.set_paragraph_spacing(self.DEFAULT_PARAGRAPH_SPACING)
         self.set_page_size(self.DEFAULT_PAGE_SIZE)
-        self.set_page_color(self.DEFAULT_PAGE_COLOR)
         self.set_page_margins(self.DEFAULT_MARGINS)
-        self.unit = "millimeter"
+        self.set_page_color(self.DEFAULT_PAGE_COLOR)
         self.clear_formatting()
 
     def new(self):
