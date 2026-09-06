@@ -436,26 +436,25 @@ class Editor(QTextEdit):
     
     # Applies self.line_spacing to pasted text/html.
     def insertFromMimeData(self, data):
-        temporary_document = QTextDocument()
-        temporary_cursor = QTextCursor(temporary_document)
+        cursor = self.textCursor()
+        cursor.beginEditBlock()
+        start = cursor.position()
         if data.hasHtml():
-            temporary_cursor.insertHtml(data.html())
+            cursor.insertHtml(data.html())
         elif data.hasText():
-            temporary_cursor.insertText(data.text())
+            cursor.insertText(data.text())
         else:
             return
-        block = temporary_document.firstBlock()
-        while block.isValid():
-            block_cursor = QTextCursor(block)
-            block_format = block_cursor.blockFormat()
-            block_format.setLineHeight(self.line_spacing, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
-            block_format.setTopMargin(self.paragraph_spacing[0])
-            block_format.setBottomMargin(self.paragraph_spacing[1])
-            block_cursor.setBlockFormat(block_format)
-            block = block.next()
-        cursor = self.textCursor()
-        cursor.insertFragment(QTextDocumentFragment(temporary_document))
-        self.setTextCursor(cursor)
+        end = cursor.position()
+        cursor.setPosition(start)
+        cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
+        block_format = cursor.blockFormat()
+        block_format.setLineHeight(self.line_spacing, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+        block_format.setTopMargin(self.paragraph_spacing[0])
+        block_format.setBottomMargin(self.paragraph_spacing[1])
+        cursor.setBlockFormat(block_format)
+        cursor.endEditBlock()
+        
 
     # Paints the page seperators, contains a bug (github issue #2).
     def paintEvent(self, event):
