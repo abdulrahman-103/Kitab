@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QSizePolicy, QLabel, QPushButton, QSpinBox, QDoubleSpinBox, QHBoxLayout, QMessageBox, QDialog, QLineEdit, QCheckBox, QFormLayout, QVBoxLayout, QComboBox, QRadioButton, QButtonGroup, QGroupBox, QColorDialog
-from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength, QDesktopServices, QTextBlockFormat
+from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat, QTextLength, QDesktopServices, QColor
 from PySide6.QtCore import Qt, QUrl
 from urllib.parse import urlparse
 from vector2 import Vector2
@@ -486,6 +486,7 @@ class InsertLinkDialog(QDialog):
         char_format = cursor.charFormat()
         char_format.setFontPointSize(font_size)
         char_format.setFontFamilies(font_family)
+        char_format.setForeground(QColor("#0000ff"))
         cursor.mergeCharFormat(char_format)
         cursor.endEditBlock()
         self.main_window.toolbar.font_size_menu.setCurrentText(str(font_size))
