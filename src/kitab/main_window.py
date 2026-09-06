@@ -24,8 +24,10 @@ class MainWindow(QMainWindow):
         self.file_name = None
         self.format_filter = None
         self.last_directory = None
-        
-        icon_path = str(Path(__file__).resolve().parents[2] / "resources" / "icons" / "kitab.svg")
+        if sys.platform == "win32":
+            icon_path = str(Path(__file__).resolve().parent / "resources" / "icons" / "kitab.svg")
+        else:
+            icon_path = str(Path(__file__).resolve().parents[2] / "resources" / "icons" / "kitab.svg")
         self.setWindowIcon(QIcon(icon_path))
 
         self.showMaximized()
