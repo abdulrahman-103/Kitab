@@ -96,7 +96,7 @@ class Editor(QTextEdit):
                     pos = event.position().toPoint()
                     cursor = self.cursorForPosition(pos)
                     self.setTextCursor(cursor)
-                    self.main_window.menubar._insert_image(path)
+                    self._insert_image(path)
             event.acceptProposedAction()
         else:
             super().dropEvent(event)
