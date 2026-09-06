@@ -4,7 +4,7 @@
 #You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy, QDialog, QProgressDialog, QFileDialog, QColorDialog, QMessageBox
-from PySide6.QtGui import QFont, QTextListFormat, QPageLayout, QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter, QColor, QTextImageFormat
+from PySide6.QtGui import QFont, QTextListFormat, QPageLayout, QIcon, QPainter, QCursor, QTextCursor, QTextBlockFormat, QTextOption, QTextCharFormat, QPageSize, QPdfWriter, QColor, QTextImageFormat, QTextFormat
 from PySide6.QtCore import Qt, QRectF, QSizeF, QTimer, QElapsedTimer, QMarginsF
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 import zipfile
@@ -84,7 +84,6 @@ class Editor(QTextEdit):
     
     # Drag and drop files.
     def dropEvent(self, event):
-        print(555)
         if event.mimeData().hasUrls():
             path_list = event.mimeData().urls()
             if len(path_list) == 1:
@@ -92,12 +91,12 @@ class Editor(QTextEdit):
                 if path.endswith((".txt", ".ktb", ".odt", ".md", ".html")):
                     self.main_window.file_path = path
                     self._open_file()
-                if path.endswith(("jpg", "jpeg", "png", "gif", "bmp", "svg")):
+                elif path.endswith(("jpg", "jpeg", "png", "gif", "bmp", "svg")):
                     pos = event.position().toPoint()
                     cursor = self.cursorForPosition(pos)
                     self.setTextCursor(cursor)
                     self._insert_image(path)
-            event.acceptProposedAction()
+                event.acceptProposedAction()
         else:
             super().dropEvent(event)
 
@@ -346,8 +345,16 @@ class Editor(QTextEdit):
         image_format = QTextImageFormat()
         image_format.setName(image_base64)
         image_format.setWidth(self.base_width * 0.5)
+        char_format.clearProperty(QTextFormat.Property.ImageName)
+        char_format.clearProperty(QTextFormat.Property.ImageWidth)
+        char_format.clearProperty(QTextFormat.Property.ImageHeight)
+        char_format.clearProperty(QTextFormat.Property.ImageTitle)
+        char_format.clearProperty(QTextFormat.Property.ImageQuality)
+        char_format.clearProperty(QTextFormat.Property.ImageAltText)
+        char_format.clearProperty(QTextFormat.Property.ImageMaxWidth)
         image_format.merge(char_format)
         cursor.insertImage(image_format)
+        
 
     def insert_image(self):
         path, _ = QFileDialog.getOpenFileName(self.main_window, "Choose image", self.main_window.last_directory, "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.svg);;PNG Image (*.png);;JPEG Image (*.jpg *.jpeg);;SVG Image (*.svg);;BMP Image (*.bmp);;GIF Image (*.gif);;All Files (*)")
