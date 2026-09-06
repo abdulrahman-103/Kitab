@@ -475,6 +475,7 @@ class InsertLinkDialog(QDialog):
         url = self.insert_https(url)
         display_text = text if text else url
         cursor = editor.textCursor()
+        cursor.beginEditBlock()
         font_size = cursor.charFormat().font().pointSize()
         font_family = cursor.charFormat().font().families()
         old_pos = cursor.position()
@@ -484,6 +485,7 @@ class InsertLinkDialog(QDialog):
         char_format.setFontPointSize(font_size)
         char_format.setFontFamilies(font_family)
         cursor.mergeCharFormat(char_format)
+        cursor.endEditBlock()
         self.main_window.toolbar.font_size_menu.setCurrentText(str(font_size))
         self.main_window.toolbar.font_family_menu.setCurrentFont(font_family)
         if self.dialog:
