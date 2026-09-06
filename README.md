@@ -19,6 +19,10 @@
 ### التثبيت
 
 
+### Windows
+
+[رابط التحميل](https://github.com/abdulrahman-103/kitab/releases/download/v0.3.0/kitab-x64.exe) 
+
 ### Debian/Ubuntu Linux
 
 ```bash
@@ -75,6 +79,10 @@ Can save documents in `ktb`, `html`, `md` and `txt` formats and exports to PDF.
 ---
 
 ## Installation
+
+### Windows
+
+[Download link](https://github.com/abdulrahman-103/kitab/releases/download/v0.3.0/kitab-x64.exe)
 
 ### Debian/Ubuntu Linux
 
