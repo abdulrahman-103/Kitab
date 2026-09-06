@@ -33,7 +33,6 @@ def main():
 
     locale = QLocale.system().name().split("_")[0]
     translator = QTranslator()
-    translation_directory = str(Path(__file__).resolve().parents[2] / "resources" / "translations")
     if translator.load(locale, translation_directory):
         app.installTranslator(translator)
     app.setApplicationDisplayName(QApplication.tr("Kitab"))
